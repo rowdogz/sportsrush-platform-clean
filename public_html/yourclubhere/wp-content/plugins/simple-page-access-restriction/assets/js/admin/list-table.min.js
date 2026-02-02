@@ -1,0 +1,1 @@
+!function(e,n,t,i){"use strict";var o={onDocumentReady:function e(){s.moveElements()}},s={init:function n(){e(o.onDocumentReady)},moveElements:function n(){e("#ps-simple-par-bulk-edit").insertAfter(e("#bulk-edit .inline-edit-wrapper fieldset").last())}};s.init()}(jQuery,window,document);

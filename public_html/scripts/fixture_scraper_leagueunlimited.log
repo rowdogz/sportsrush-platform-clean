@@ -1,0 +1,10 @@
+2026-01-28 09:38:23,668 INFO ✅ Database connection established.
+2026-01-28 09:38:23,668 INFO 📦 Using competitions table: wpkl_pool_wpkl_scrape_competitions
+2026-01-28 09:38:23,669 INFO 📘 Active competitions loaded for 2026-02-12: ['Betfred Challenge Cup', 'Betfred Championship', 'Betfred Super League']
+2026-01-28 09:38:23,669 INFO 🔍 Scraping LeagueUnlimited: Betfred Challenge Cup -> https://www.rugby-league.com/competitions/pro-national/betfred-challenge-cup/match-centre
+2026-01-28 09:38:23,772 INFO ✅ Betfred Challenge Cup fixtures for 2026-02-12: 0
+2026-01-28 09:38:23,772 INFO 🔍 Scraping LeagueUnlimited: Betfred Championship -> https://www.rugby-league.com/competitions/pro-national/betfred-championship
+2026-01-28 09:38:24,099 INFO ✅ Betfred Championship fixtures for 2026-02-12: 0
+2026-01-28 09:38:24,099 INFO 🔍 Scraping LeagueUnlimited: Betfred Super League -> https://leagueunlimited.com/competition/show/super-league/2026/draw/full
+2026-01-28 09:38:25,049 INFO ✅ Betfred Super League fixtures for 2026-02-12: 0
+2026-01-28 09:38:25,050 INFO 🏁 Done. Total fixtures processed for 2026-02-12: 0

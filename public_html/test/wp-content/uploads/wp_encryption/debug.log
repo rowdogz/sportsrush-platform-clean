@@ -1,0 +1,32 @@
+<b>7.4.0  SINGLE DOMAIN SSL 1 - https://sportsrush.co.uk - ROOT</b>
+Domain covered:
+["sportsrush.co.uk","www.sportsrush.co.uk"]
+
+[25-09-2024 07:14:49] :
+LEClient finished constructing
+
+[25-09-2024 07:14:49] :
+Order data for 'sportsrush.co.uk' invalid. Deleting order data and creating new order. Order exception is Invalid response: 404 <b>(No order for ID 283028790977)</b>
+
+[25-09-2024 07:14:49] :
+Created order for 'sportsrush.co.uk'.
+
+Offering manual verification procedure. 
+
+Syncing debug log
+Local check - All HTTP challenges verified
+
+[25-09-2024 07:15:58] :
+LEClient finished constructing
+
+Starting HTTP verification
+Finalizing the order
+[25-09-2024 07:16:05] :
+Order for 'sportsrush.co.uk' finalized.
+
+Getting SSL certificates
+[25-09-2024 07:16:05] :
+Certificate for 'sportsrush.co.uk' saved
+
+<h2>SSL Certificate generated successfully!</h2>
+Syncing debug log

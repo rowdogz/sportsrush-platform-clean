@@ -1,0 +1,148 @@
+:root {
+    --rm-label-font-family:inherit;
+    --rm-form-label-min-width:156px;
+    --rm-form-label-max-width:156px;
+}
+
+.rmformui .rmform-row .rmform-field input[type="email"][readonly="readonly"],
+.rmformui .rmform-row .rmform-field input[type="email"]:read-only,
+.rmformui .rmform-row .rmform-field input[type="password"]:disabled,
+.rmformui .rmform-row .rmform-field input[type="password"]:read-only,
+.rmformui .rmform-row .rmform-field input[type="text"][readonly="readonly"],
+.rmformui .rmform-row .rmform-field input[type="text"]:read-only,
+.rmformui .rmform-row .rmform-field input[type="text"]:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+    color: rgba(128, 128, 128, 0.5);
+}
+
+.rmformui .rmform-row .rmform-error-message:empty{
+    display: none;
+}
+
+.rmformui .rmform-row .rmform-error-message{
+    color: rgb(204 0 41);
+    font-size: 12px;
+}
+
+.rmformui .rmform-row .rmform-error-message::before {
+    content: "\2191\00a0";
+    font-size: 14px;
+}
+
+
+.rmformui .rmform-row .rmform-field  select.rmform-control {
+
+    background-color: transparent;
+    border: 1px solid #e1e1e1;
+    border: 1px solid rgba(150, 150, 150, 0.4);
+    min-width: 50%;
+    width: 100%;
+    font-size: 1em;
+    min-height: 36px;
+    line-height: 16px;
+    max-width: 100%;
+}
+
+/* --- form theme issues ----*/
+
+.rmformui .rmform-row .rmform-field input[type="number"]{
+    max-width: 100%;
+}
+
+.rmformui .rmform-row .rmform-field textarea{
+    width: 100%;
+}
+
+.rmformui .rmform-custom-form .rmform-row .rmform-field .rmform-check input[type="checkbox"],
+.rmformui .rmform-custom-form .rmform-row .rmform-field .rmform-check input[type="radio"]{
+    height: fit-content;
+    margin-top: 4px;
+}
+
+.rmformui .rmform-row .rmform-field .rmform-check .rmform-label.rmform-radio-check{
+      font-size: 0.9em;
+}
+
+.rmformui .rmform-row .rmform-field .rmform-privicy-wrap .rmform-label p {
+    margin: 0px;
+    padding: 0px;
+}
+
+.rmformui .rmform-row .rmform-field span.rmform-label{
+    margin-bottom: 5px;
+    display: block;
+  
+}
+
+
+/*-- Privacy Field----*/
+
+
+.rmformui .rmform-row .rmform-field .rmform-privicy-wrap{
+    background-color: rgba(150, 150, 150, 0.1);
+    margin: 10px 0;
+    padding: 24px 10px;
+    font-weight: normal;
+    border-radius: 3px;
+}
+
+/*-- Privacy Field End----*/
+
+
+/*--- Label Left-----*/
+
+.rmform-ui.rmform-custom-form[data-style=label_left] .rmform-row .rmform-col > .rmform-field{
+    display: flex;
+
+}
+
+.rmform-ui.rmform-custom-form[data-style=label_left] .rmform-row  .rm-address-field-wrap.rmform-col > .rmform-field .rmform-field {
+    display: block;
+}
+
+.rmform-ui.rmform-custom-form[data-style=label_left] .rmform-row .rm-address-field-wrap.rmform-col > .rmform-field .rmform-field input.rmform-control {
+    width:100%;
+}
+
+.rmform-ui.rmform-custom-form[data-style=label_left] .rmform-row .rmform-col > .rmform-field > .rmform-control-wrap {
+    flex: 1;
+
+}
+
+.rmform-ui.rmform-custom-form[data-style=label_left] .rmform-row .rmform-col > .rmform-field > label.rmform-label,
+.rmform-ui.rmform-custom-form[data-style=label_left] .rmform-row .rmform-col > .rmform-field > span.rmform-label{
+    min-width: var(--rm-form-label-min-width);
+    max-width: var(--rm-form-label-max-width);
+    margin-right: 18px;
+
+}
+
+.rmform-ui.rmform-custom-form[data-style=label_left] .rmform-row .rmform-col > .rmform-field > .rmform-control-wrap,
+.rmform-ui.rmform-custom-form[data-style=label_left] .rmform-row .rmform-col > .rmform-field > .rmform-toggle-wrap,
+.rmform-ui.rmform-custom-form[data-style=label_left] .rmform-row .rmform-col > .rmform-field > .rmform-c-toggle-wrap{
+    /* -- width: calc(100% - var(--rm-form-label-min-width));---*/
+    flex: 1;
+}
+
+.rmform-ui.rmform-custom-form[data-style=label_left] .rmform-row .rmform-col > .rmform-field > input.rmform-control,
+.rmform-ui.rmform-custom-form[data-style=label_left] .rmform-row .rmform-col > .rmform-field > .rmform-toggle-wrap,
+.rmform-ui.rmform-custom-form[data-style=label_left] .rmform-row .rmform-col > .rmform-field > .rmform-c-toggle-wrap{
+    width: calc(100% - var(--rm-form-label-min-width));
+    display: inline-block;
+}
+
+.rmform-ui.rmform-custom-form[data-style=label_left] .rmform-row .rmform-col > .rmform-field > .rmform-error-message,
+.rmform-ui.rmform-custom-form[data-style=label_left] .rmform-row .rmform-col > .rmform-field > .rmform-note{
+    width: calc(100% - var(--rm-form-label-min-width));
+
+}
+
+.rmform-ui.rmform-custom-form[data-style=label_left] .rmform-row .rmform-col > .rmform-field.rmform-password-field-col{
+    margin-bottom: 20px;
+}
+
+
+.rmform-ui.rmform-custom-form[data-style=label_left] .rmform-row .rmform-col > .rmform-field .rmform-privicy-wrap{
+    width: 100%
+}

@@ -1,0 +1,226 @@
+2024-11-19 10:48:28,293 INFO Matches in progress
+2024-11-19 10:52:13,135 INFO Today's matches are being processed.
+2024-11-19 10:52:13,135 INFO Fixture print placeholder for date: 2024-11-19 00:00:00
+2024-11-19 10:54:23,409 INFO Scraping URL: https://www.bbc.co.uk/sport/rugby-league/scores-fixtures/2024-11-19
+2024-11-19 10:54:23,411 DEBUG Starting new HTTPS connection (1): www.bbc.co.uk:443
+2024-11-19 10:54:23,556 DEBUG https://www.bbc.co.uk:443 "GET /sport/rugby-league/scores-fixtures/2024-11-19 HTTP/1.1" 200 36040
+2024-11-19 10:54:23,583 INFO Scraped fixtures: []
+2024-11-19 10:54:23,584 INFO No fixtures found for the given date.
+2024-11-19 10:55:36,761 INFO Scraping URL: https://www.bbc.co.uk/sport/rugby-league/scores-fixtures/2024-11-19
+2024-11-19 10:55:36,762 DEBUG Starting new HTTPS connection (1): www.bbc.co.uk:443
+2024-11-19 10:55:36,798 DEBUG https://www.bbc.co.uk:443 "GET /sport/rugby-league/scores-fixtures/2024-11-19 HTTP/1.1" 200 36040
+2024-11-19 10:55:36,826 INFO Scraped fixtures: []
+2024-11-19 10:55:36,826 INFO No fixtures found for the given date.
+2024-11-19 10:58:01,027 INFO Scraping URL: https://www.bbc.co.uk/sport/rugby-league/scores-fixtures/2024-11-19
+2024-11-19 10:58:01,028 DEBUG Starting new HTTPS connection (1): www.bbc.co.uk:443
+2024-11-19 10:58:01,071 DEBUG https://www.bbc.co.uk:443 "GET /sport/rugby-league/scores-fixtures/2024-11-19 HTTP/1.1" 200 36042
+2024-11-19 10:58:01,096 INFO Scraped fixtures: []
+2024-11-19 10:58:01,096 INFO No fixtures found for the given date.
+2025-01-22 13:09:18,249 INFO Scraping URL: https://www.bbc.co.uk/sport/rugby-league/scores-fixtures/2025-01-25
+2025-01-22 13:09:18,251 DEBUG Starting new HTTPS connection (1): www.bbc.co.uk:443
+2025-01-22 13:09:18,411 DEBUG https://www.bbc.co.uk:443 "GET /sport/rugby-league/scores-fixtures/2025-01-25 HTTP/1.1" 200 39963
+2025-01-22 13:09:18,442 INFO Scraped fixtures: []
+2025-01-22 13:09:18,442 INFO No fixtures found for the given date.
+2025-01-22 13:09:18,610 INFO Scraping URL: https://www.bbc.co.uk/sport/rugby-league/scores-fixtures/2025-01-26
+2025-01-22 13:09:18,611 DEBUG Starting new HTTPS connection (1): www.bbc.co.uk:443
+2025-01-22 13:09:18,779 DEBUG https://www.bbc.co.uk:443 "GET /sport/rugby-league/scores-fixtures/2025-01-26 HTTP/1.1" 200 40734
+2025-01-22 13:09:18,818 INFO Scraped fixtures: []
+2025-01-22 13:09:18,818 INFO No fixtures found for the given date.
+2025-01-22 13:09:18,977 INFO Scraping URL: https://www.bbc.co.uk/sport/rugby-league/scores-fixtures/2025-01-27
+2025-01-22 13:09:18,978 DEBUG Starting new HTTPS connection (1): www.bbc.co.uk:443
+2025-01-22 13:09:20,282 DEBUG https://www.bbc.co.uk:443 "GET /sport/rugby-league/scores-fixtures/2025-01-27 HTTP/1.1" 200 36177
+2025-01-22 13:09:20,317 INFO Scraped fixtures: []
+2025-01-22 13:09:20,317 INFO No fixtures found for the given date.
+2025-01-22 13:09:20,474 INFO Scraping URL: https://www.bbc.co.uk/sport/rugby-league/scores-fixtures/2025-01-28
+2025-01-22 13:09:20,475 DEBUG Starting new HTTPS connection (1): www.bbc.co.uk:443
+2025-01-22 13:09:21,765 DEBUG https://www.bbc.co.uk:443 "GET /sport/rugby-league/scores-fixtures/2025-01-28 HTTP/1.1" 200 36191
+2025-01-22 13:09:21,806 INFO Scraped fixtures: []
+2025-01-22 13:09:21,807 INFO No fixtures found for the given date.
+2025-01-22 13:09:21,968 INFO Scraping URL: https://www.bbc.co.uk/sport/rugby-league/scores-fixtures/2025-01-29
+2025-01-22 13:09:21,970 DEBUG Starting new HTTPS connection (1): www.bbc.co.uk:443
+2025-01-22 13:09:23,392 DEBUG https://www.bbc.co.uk:443 "GET /sport/rugby-league/scores-fixtures/2025-01-29 HTTP/1.1" 200 36173
+2025-01-22 13:09:23,430 INFO Scraped fixtures: []
+2025-01-22 13:09:23,430 INFO No fixtures found for the given date.
+2025-01-22 13:15:39,022 INFO Scraping URL: https://www.bbc.co.uk/sport/rugby-league/scores-fixtures/2025-01-25
+2025-01-22 13:15:39,024 DEBUG Starting new HTTPS connection (1): www.bbc.co.uk:443
+2025-01-22 13:15:39,180 DEBUG https://www.bbc.co.uk:443 "GET /sport/rugby-league/scores-fixtures/2025-01-25 HTTP/1.1" 200 39962
+2025-01-22 13:15:39,218 INFO Scraped fixtures: []
+2025-01-22 13:15:39,218 INFO No fixtures found for the given date.
+2025-01-22 13:15:39,416 INFO Scraping URL: https://www.bbc.co.uk/sport/rugby-league/scores-fixtures/2025-01-26
+2025-01-22 13:15:39,417 DEBUG Starting new HTTPS connection (1): www.bbc.co.uk:443
+2025-01-22 13:15:39,558 DEBUG https://www.bbc.co.uk:443 "GET /sport/rugby-league/scores-fixtures/2025-01-26 HTTP/1.1" 200 40724
+2025-01-22 13:15:39,609 INFO Scraped fixtures: []
+2025-01-22 13:15:39,609 INFO No fixtures found for the given date.
+2025-01-22 13:15:39,764 INFO Scraping URL: https://www.bbc.co.uk/sport/rugby-league/scores-fixtures/2025-01-27
+2025-01-22 13:15:39,765 DEBUG Starting new HTTPS connection (1): www.bbc.co.uk:443
+2025-01-22 13:15:39,894 DEBUG https://www.bbc.co.uk:443 "GET /sport/rugby-league/scores-fixtures/2025-01-27 HTTP/1.1" 200 36185
+2025-01-22 13:15:39,925 INFO Scraped fixtures: []
+2025-01-22 13:15:39,925 INFO No fixtures found for the given date.
+2025-01-22 13:15:40,097 INFO Scraping URL: https://www.bbc.co.uk/sport/rugby-league/scores-fixtures/2025-01-28
+2025-01-22 13:15:40,099 DEBUG Starting new HTTPS connection (1): www.bbc.co.uk:443
+2025-01-22 13:15:40,218 DEBUG https://www.bbc.co.uk:443 "GET /sport/rugby-league/scores-fixtures/2025-01-28 HTTP/1.1" 200 36177
+2025-01-22 13:15:40,247 INFO Scraped fixtures: []
+2025-01-22 13:15:40,248 INFO No fixtures found for the given date.
+2025-01-22 13:15:40,402 INFO Scraping URL: https://www.bbc.co.uk/sport/rugby-league/scores-fixtures/2025-01-29
+2025-01-22 13:15:40,403 DEBUG Starting new HTTPS connection (1): www.bbc.co.uk:443
+2025-01-22 13:15:40,537 DEBUG https://www.bbc.co.uk:443 "GET /sport/rugby-league/scores-fixtures/2025-01-29 HTTP/1.1" 200 36179
+2025-01-22 13:15:40,574 INFO Scraped fixtures: []
+2025-01-22 13:15:40,574 INFO No fixtures found for the given date.
+2025-01-22 13:21:12,161 INFO Scraping URL: https://www.bbc.co.uk/sport/rugby-league/scores-fixtures/2025-01-25
+2025-01-22 13:21:12,162 DEBUG Starting new HTTPS connection (1): www.bbc.co.uk:443
+2025-01-22 13:21:12,312 DEBUG https://www.bbc.co.uk:443 "GET /sport/rugby-league/scores-fixtures/2025-01-25 HTTP/1.1" 200 39964
+2025-01-22 13:21:12,362 INFO Scraped fixtures: []
+2025-01-22 13:21:12,362 INFO No fixtures found for the given date.
+2025-01-22 13:21:12,523 INFO Scraping URL: https://www.bbc.co.uk/sport/rugby-league/scores-fixtures/2025-01-26
+2025-01-22 13:21:12,525 DEBUG Starting new HTTPS connection (1): www.bbc.co.uk:443
+2025-01-22 13:21:12,677 DEBUG https://www.bbc.co.uk:443 "GET /sport/rugby-league/scores-fixtures/2025-01-26 HTTP/1.1" 200 40731
+2025-01-22 13:21:12,723 INFO Scraped fixtures: []
+2025-01-22 13:21:12,723 INFO No fixtures found for the given date.
+2025-01-22 13:21:12,879 INFO Scraping URL: https://www.bbc.co.uk/sport/rugby-league/scores-fixtures/2025-01-27
+2025-01-22 13:21:12,880 DEBUG Starting new HTTPS connection (1): www.bbc.co.uk:443
+2025-01-22 13:21:13,027 DEBUG https://www.bbc.co.uk:443 "GET /sport/rugby-league/scores-fixtures/2025-01-27 HTTP/1.1" 200 36186
+2025-01-22 13:21:13,074 INFO Scraped fixtures: []
+2025-01-22 13:21:13,074 INFO No fixtures found for the given date.
+2025-01-22 13:21:13,257 INFO Scraping URL: https://www.bbc.co.uk/sport/rugby-league/scores-fixtures/2025-01-28
+2025-01-22 13:21:13,259 DEBUG Starting new HTTPS connection (1): www.bbc.co.uk:443
+2025-01-22 13:21:13,400 DEBUG https://www.bbc.co.uk:443 "GET /sport/rugby-league/scores-fixtures/2025-01-28 HTTP/1.1" 200 36177
+2025-01-22 13:21:13,440 INFO Scraped fixtures: []
+2025-01-22 13:21:13,440 INFO No fixtures found for the given date.
+2025-01-22 13:21:13,601 INFO Scraping URL: https://www.bbc.co.uk/sport/rugby-league/scores-fixtures/2025-01-29
+2025-01-22 13:21:13,603 DEBUG Starting new HTTPS connection (1): www.bbc.co.uk:443
+2025-01-22 13:21:13,754 DEBUG https://www.bbc.co.uk:443 "GET /sport/rugby-league/scores-fixtures/2025-01-29 HTTP/1.1" 200 36161
+2025-01-22 13:21:13,786 INFO Scraped fixtures: []
+2025-01-22 13:21:13,786 INFO No fixtures found for the given date.
+2025-01-22 13:21:13,938 INFO Scraping URL: https://www.bbc.co.uk/sport/rugby-league/scores-fixtures/2025-01-30
+2025-01-22 13:21:13,940 DEBUG Starting new HTTPS connection (1): www.bbc.co.uk:443
+2025-01-22 13:21:15,217 DEBUG https://www.bbc.co.uk:443 "GET /sport/rugby-league/scores-fixtures/2025-01-30 HTTP/1.1" 200 36178
+2025-01-22 13:21:15,249 INFO Scraped fixtures: []
+2025-01-22 13:21:15,249 INFO No fixtures found for the given date.
+2025-01-22 13:21:15,400 INFO Scraping URL: https://www.bbc.co.uk/sport/rugby-league/scores-fixtures/2025-01-31
+2025-01-22 13:21:15,402 DEBUG Starting new HTTPS connection (1): www.bbc.co.uk:443
+2025-01-22 13:21:16,754 DEBUG https://www.bbc.co.uk:443 "GET /sport/rugby-league/scores-fixtures/2025-01-31 HTTP/1.1" 200 36176
+2025-01-22 13:21:16,796 INFO Scraped fixtures: []
+2025-01-22 13:21:16,796 INFO No fixtures found for the given date.
+2025-01-22 13:21:16,958 INFO Scraping URL: https://www.bbc.co.uk/sport/rugby-league/scores-fixtures/2025-02-01
+2025-01-22 13:21:16,960 DEBUG Starting new HTTPS connection (1): www.bbc.co.uk:443
+2025-01-22 13:21:17,100 DEBUG https://www.bbc.co.uk:443 "GET /sport/rugby-league/scores-fixtures/2025-02-01 HTTP/1.1" 200 36194
+2025-01-22 13:21:17,143 INFO Scraped fixtures: []
+2025-01-22 13:21:17,143 INFO No fixtures found for the given date.
+2025-01-22 13:21:17,298 INFO Scraping URL: https://www.bbc.co.uk/sport/rugby-league/scores-fixtures/2025-02-02
+2025-01-22 13:21:17,300 DEBUG Starting new HTTPS connection (1): www.bbc.co.uk:443
+2025-01-22 13:21:17,438 DEBUG https://www.bbc.co.uk:443 "GET /sport/rugby-league/scores-fixtures/2025-02-02 HTTP/1.1" 200 38325
+2025-01-22 13:21:17,470 INFO Scraped fixtures: []
+2025-01-22 13:21:17,470 INFO No fixtures found for the given date.
+2025-01-22 13:21:17,633 INFO Scraping URL: https://www.bbc.co.uk/sport/rugby-league/scores-fixtures/2025-02-03
+2025-01-22 13:21:17,634 DEBUG Starting new HTTPS connection (1): www.bbc.co.uk:443
+2025-01-22 13:21:18,282 DEBUG https://www.bbc.co.uk:443 "GET /sport/rugby-league/scores-fixtures/2025-02-03 HTTP/1.1" 200 36271
+2025-01-22 13:21:18,324 INFO Scraped fixtures: []
+2025-01-22 13:21:18,324 INFO No fixtures found for the given date.
+2025-01-22 13:21:18,484 INFO Scraping URL: https://www.bbc.co.uk/sport/rugby-league/scores-fixtures/2025-02-04
+2025-01-22 13:21:18,486 DEBUG Starting new HTTPS connection (1): www.bbc.co.uk:443
+2025-01-22 13:21:19,755 DEBUG https://www.bbc.co.uk:443 "GET /sport/rugby-league/scores-fixtures/2025-02-04 HTTP/1.1" 200 36195
+2025-01-22 13:21:19,787 INFO Scraped fixtures: []
+2025-01-22 13:21:19,787 INFO No fixtures found for the given date.
+2025-01-22 13:21:19,957 INFO Scraping URL: https://www.bbc.co.uk/sport/rugby-league/scores-fixtures/2025-02-05
+2025-01-22 13:21:19,958 DEBUG Starting new HTTPS connection (1): www.bbc.co.uk:443
+2025-01-22 13:21:21,229 DEBUG https://www.bbc.co.uk:443 "GET /sport/rugby-league/scores-fixtures/2025-02-05 HTTP/1.1" 200 36185
+2025-01-22 13:21:21,261 INFO Scraped fixtures: []
+2025-01-22 13:21:21,261 INFO No fixtures found for the given date.
+2025-01-22 13:21:21,425 INFO Scraping URL: https://www.bbc.co.uk/sport/rugby-league/scores-fixtures/2025-02-06
+2025-01-22 13:21:21,426 DEBUG Starting new HTTPS connection (1): www.bbc.co.uk:443
+2025-01-22 13:21:21,547 DEBUG https://www.bbc.co.uk:443 "GET /sport/rugby-league/scores-fixtures/2025-02-06 HTTP/1.1" 200 36264
+2025-01-22 13:21:21,589 INFO Scraped fixtures: []
+2025-01-22 13:21:21,589 INFO No fixtures found for the given date.
+2025-01-22 13:21:21,748 INFO Scraping URL: https://www.bbc.co.uk/sport/rugby-league/scores-fixtures/2025-02-07
+2025-01-22 13:21:21,749 DEBUG Starting new HTTPS connection (1): www.bbc.co.uk:443
+2025-01-22 13:21:21,898 DEBUG https://www.bbc.co.uk:443 "GET /sport/rugby-league/scores-fixtures/2025-02-07 HTTP/1.1" 200 42865
+2025-01-22 13:21:21,943 INFO Scraped fixtures: []
+2025-01-22 13:21:21,944 INFO No fixtures found for the given date.
+2025-01-22 13:21:22,098 INFO Scraping URL: https://www.bbc.co.uk/sport/rugby-league/scores-fixtures/2025-02-08
+2025-01-22 13:21:22,100 DEBUG Starting new HTTPS connection (1): www.bbc.co.uk:443
+2025-01-22 13:21:22,251 DEBUG https://www.bbc.co.uk:443 "GET /sport/rugby-league/scores-fixtures/2025-02-08 HTTP/1.1" 200 36258
+2025-01-22 13:21:22,283 INFO Scraped fixtures: []
+2025-01-22 13:21:22,283 INFO No fixtures found for the given date.
+2025-01-22 13:21:22,435 INFO Scraping URL: https://www.bbc.co.uk/sport/rugby-league/scores-fixtures/2025-02-09
+2025-01-22 13:21:22,436 DEBUG Starting new HTTPS connection (1): www.bbc.co.uk:443
+2025-01-22 13:21:22,558 DEBUG https://www.bbc.co.uk:443 "GET /sport/rugby-league/scores-fixtures/2025-02-09 HTTP/1.1" 200 36253
+2025-01-22 13:21:22,590 INFO Scraped fixtures: []
+2025-01-22 13:21:22,590 INFO No fixtures found for the given date.
+2025-01-22 13:21:22,744 INFO Scraping URL: https://www.bbc.co.uk/sport/rugby-league/scores-fixtures/2025-02-10
+2025-01-22 13:21:22,745 DEBUG Starting new HTTPS connection (1): www.bbc.co.uk:443
+2025-01-22 13:21:23,940 DEBUG https://www.bbc.co.uk:443 "GET /sport/rugby-league/scores-fixtures/2025-02-10 HTTP/1.1" 200 36135
+2025-01-22 13:21:23,973 INFO Scraped fixtures: []
+2025-01-22 13:21:23,973 INFO No fixtures found for the given date.
+2025-01-22 13:21:24,133 INFO Scraping URL: https://www.bbc.co.uk/sport/rugby-league/scores-fixtures/2025-02-11
+2025-01-22 13:21:24,134 DEBUG Starting new HTTPS connection (1): www.bbc.co.uk:443
+2025-01-22 13:21:25,666 DEBUG https://www.bbc.co.uk:443 "GET /sport/rugby-league/scores-fixtures/2025-02-11 HTTP/1.1" 200 36141
+2025-01-22 13:21:25,697 INFO Scraped fixtures: []
+2025-01-22 13:21:25,698 INFO No fixtures found for the given date.
+2025-01-22 13:21:25,856 INFO Scraping URL: https://www.bbc.co.uk/sport/rugby-league/scores-fixtures/2025-02-12
+2025-01-22 13:21:25,857 DEBUG Starting new HTTPS connection (1): www.bbc.co.uk:443
+2025-01-22 13:21:27,079 DEBUG https://www.bbc.co.uk:443 "GET /sport/rugby-league/scores-fixtures/2025-02-12 HTTP/1.1" 200 36129
+2025-01-22 13:21:27,120 INFO Scraped fixtures: []
+2025-01-22 13:21:27,120 INFO No fixtures found for the given date.
+2025-01-22 13:21:27,279 INFO Scraping URL: https://www.bbc.co.uk/sport/rugby-league/scores-fixtures/2025-02-13
+2025-01-22 13:21:27,280 DEBUG Starting new HTTPS connection (1): www.bbc.co.uk:443
+2025-01-22 13:21:27,457 DEBUG https://www.bbc.co.uk:443 "GET /sport/rugby-league/scores-fixtures/2025-02-13 HTTP/1.1" 200 38185
+2025-01-22 13:21:27,491 INFO Scraped fixtures: [{'competition': 'Super League', 'home_team': 'Wigan Warriors', 'away_team': 'Leigh Leopards', 'match_time': '20:00'}]
+2025-01-22 13:21:27,520 ERROR Database connection error: 1045 (28000): Access denied for user 'editor_wp343'@'::1' (using password: YES)
+2025-01-22 13:21:27,679 INFO Scraping URL: https://www.bbc.co.uk/sport/rugby-league/scores-fixtures/2025-02-14
+2025-01-22 13:21:27,680 DEBUG Starting new HTTPS connection (1): www.bbc.co.uk:443
+2025-01-22 13:21:27,845 DEBUG https://www.bbc.co.uk:443 "GET /sport/rugby-league/scores-fixtures/2025-02-14 HTTP/1.1" 200 38461
+2025-01-22 13:21:27,877 INFO Scraped fixtures: [{'competition': 'Super League', 'home_team': 'Catalans Dragons', 'away_team': 'Hull FC', 'match_time': '20:00'}, {'competition': 'Super League', 'home_team': 'Hull Kingston Rovers', 'away_team': 'Castleford Tigers', 'match_time': '20:00'}]
+2025-01-22 13:21:27,911 ERROR Database connection error: 1045 (28000): Access denied for user 'editor_wp343'@'::1' (using password: YES)
+2025-01-22 13:21:28,078 INFO Scraping URL: https://www.bbc.co.uk/sport/rugby-league/scores-fixtures/2025-02-15
+2025-01-22 13:21:28,079 DEBUG Starting new HTTPS connection (1): www.bbc.co.uk:443
+2025-01-22 13:21:28,224 DEBUG https://www.bbc.co.uk:443 "GET /sport/rugby-league/scores-fixtures/2025-02-15 HTTP/1.1" 200 38742
+2025-01-22 13:21:28,266 INFO Scraped fixtures: [{'competition': 'Super League', 'home_team': 'Leeds Rhinos', 'away_team': 'Wakefield Trinity', 'match_time': '15:00'}, {'competition': 'Super League', 'home_team': 'St Helens', 'away_team': 'Salford Red Devils', 'match_time': '17:30'}, {'competition': 'Championship', 'home_team': 'Toulouse', 'away_team': 'Widnes Vikings', 'match_time': '18:00'}]
+2025-01-22 13:21:28,289 ERROR Database connection error: 1045 (28000): Access denied for user 'editor_wp343'@'::1' (using password: YES)
+2025-01-22 13:21:28,452 INFO Scraping URL: https://www.bbc.co.uk/sport/rugby-league/scores-fixtures/2025-02-16
+2025-01-22 13:21:28,454 DEBUG Starting new HTTPS connection (1): www.bbc.co.uk:443
+2025-01-22 13:21:28,608 DEBUG https://www.bbc.co.uk:443 "GET /sport/rugby-league/scores-fixtures/2025-02-16 HTTP/1.1" 200 39476
+2025-01-22 13:21:28,649 INFO Scraped fixtures: [{'competition': 'Super League', 'home_team': 'Huddersfield Giants', 'away_team': 'Warrington Wolves', 'match_time': '15:00'}, {'competition': 'Championship', 'home_team': 'Barrow Raiders', 'away_team': 'Hunslet', 'match_time': '15:00'}, {'competition': 'Championship', 'home_team': 'Bradford Bulls', 'away_team': 'London Broncos', 'match_time': '15:00'}, {'competition': 'Championship', 'home_team': 'Featherstone Rovers', 'away_team': 'Doncaster', 'match_time': '15:00'}, {'competition': 'Championship', 'home_team': 'Oldham', 'away_team': 'York Knights', 'match_time': '15:00'}, {'competition': 'Championship', 'home_team': 'Sheffield Eagles', 'away_team': 'Halifax Panthers', 'match_time': '15:00'}]
+2025-01-22 13:21:28,672 ERROR Database connection error: 1045 (28000): Access denied for user 'editor_wp343'@'::1' (using password: YES)
+2025-01-22 13:24:59,322 INFO Scraping URL: https://www.bbc.co.uk/sport/rugby-league/scores-fixtures/2025-02-15
+2025-01-22 13:24:59,324 DEBUG Starting new HTTPS connection (1): www.bbc.co.uk:443
+2025-01-22 13:24:59,479 DEBUG https://www.bbc.co.uk:443 "GET /sport/rugby-league/scores-fixtures/2025-02-15 HTTP/1.1" 200 38731
+2025-01-22 13:24:59,514 INFO Scraped fixtures: [{'competition': 'Super League', 'home_team': 'Leeds Rhinos', 'away_team': 'Wakefield Trinity', 'match_time': '15:00'}, {'competition': 'Super League', 'home_team': 'St Helens', 'away_team': 'Salford Red Devils', 'match_time': '17:30'}, {'competition': 'Championship', 'home_team': 'Toulouse', 'away_team': 'Widnes Vikings', 'match_time': '18:00'}]
+2025-01-22 13:24:59,538 ERROR Database connection error: 1045 (28000): Access denied for user 'editor_wp343'@'::1' (using password: YES)
+2025-01-22 13:29:13,885 INFO Scraping URL: https://www.bbc.co.uk/sport/rugby-league/scores-fixtures/2025-02-15
+2025-01-22 13:29:13,886 DEBUG Starting new HTTPS connection (1): www.bbc.co.uk:443
+2025-01-22 13:29:14,086 DEBUG https://www.bbc.co.uk:443 "GET /sport/rugby-league/scores-fixtures/2025-02-15 HTTP/1.1" 200 38738
+2025-01-22 13:29:14,120 INFO Competition title found: Betfred Super League
+2025-01-22 13:29:14,121 INFO Competition title found: Betfred Super League
+2025-01-22 13:29:14,121 INFO Competition title found: Betfred Championship
+2025-01-22 13:29:14,121 INFO Scraped fixtures: [{'competition': 'Super League', 'home_team': 'Leeds Rhinos', 'away_team': 'Wakefield Trinity', 'match_time': '15:00'}, {'competition': 'Super League', 'home_team': 'St Helens', 'away_team': 'Salford Red Devils', 'match_time': '17:30'}, {'competition': 'Championship', 'home_team': 'Toulouse', 'away_team': 'Widnes Vikings', 'match_time': '18:00'}]
+2025-01-22 13:29:14,154 ERROR Database connection error: 1045 (28000): Access denied for user 'editor_wp343'@'::1' (using password: YES)
+2025-01-22 13:33:45,990 INFO Scraping URL: https://www.bbc.co.uk/sport/rugby-league/scores-fixtures/2025-02-15
+2025-01-22 13:33:45,992 DEBUG Starting new HTTPS connection (1): www.bbc.co.uk:443
+2025-01-22 13:33:46,038 DEBUG https://www.bbc.co.uk:443 "GET /sport/rugby-league/scores-fixtures/2025-02-15 HTTP/1.1" 200 38738
+2025-01-22 13:33:46,082 INFO Competition title found: Betfred Super League
+2025-01-22 13:33:46,083 INFO Competition title found: Betfred Super League
+2025-01-22 13:33:46,083 INFO Competition title found: Betfred Championship
+2025-01-22 13:33:46,083 INFO Scraped fixtures: [{'competition': 'Super League', 'home_team': 'Leeds Rhinos', 'away_team': 'Wakefield Trinity', 'match_time': '15:00'}, {'competition': 'Super League', 'home_team': 'St Helens', 'away_team': 'Salford Red Devils', 'match_time': '17:30'}, {'competition': 'Championship', 'home_team': 'Toulouse', 'away_team': 'Widnes Vikings', 'match_time': '18:00'}]
+2025-01-22 13:33:46,106 ERROR Database connection error: 1045 (28000): Access denied for user 'u108848352_Ewka1'@'::1' (using password: YES)
+2025-01-22 13:35:54,561 INFO Scraping URL: https://www.bbc.co.uk/sport/rugby-league/scores-fixtures/2025-02-15
+2025-01-22 13:35:54,562 DEBUG Starting new HTTPS connection (1): www.bbc.co.uk:443
+2025-01-22 13:35:54,713 DEBUG https://www.bbc.co.uk:443 "GET /sport/rugby-league/scores-fixtures/2025-02-15 HTTP/1.1" 200 38743
+2025-01-22 13:35:54,756 INFO Competition title found: Betfred Super League
+2025-01-22 13:35:54,756 INFO Competition title found: Betfred Super League
+2025-01-22 13:35:54,756 INFO Competition title found: Betfred Championship
+2025-01-22 13:35:54,756 INFO Scraped fixtures: [{'competition': 'Super League', 'home_team': 'Leeds Rhinos', 'away_team': 'Wakefield Trinity', 'match_time': '15:00'}, {'competition': 'Super League', 'home_team': 'St Helens', 'away_team': 'Salford Red Devils', 'match_time': '17:30'}, {'competition': 'Championship', 'home_team': 'Toulouse', 'away_team': 'Widnes Vikings', 'match_time': '18:00'}]
+2025-01-22 13:35:54,798 INFO Database connection established.
+2025-01-22 13:35:54,883 ERROR Error inserting fixture: 1054 (42S22): Unknown column 'home_team' in 'INSERT INTO'
+2025-01-22 13:35:54,883 ERROR Error inserting fixture: 1054 (42S22): Unknown column 'home_team' in 'INSERT INTO'
+2025-01-22 13:35:54,884 ERROR Error inserting fixture: 1054 (42S22): Unknown column 'home_team' in 'INSERT INTO'
+2025-01-22 14:57:44,335 INFO Scraping URL: https://www.bbc.co.uk/sport/rugby-league/scores-fixtures/2025-02-15
+2025-01-22 14:57:44,336 DEBUG Starting new HTTPS connection (1): www.bbc.co.uk:443
+2025-01-22 14:57:44,388 DEBUG https://www.bbc.co.uk:443 "GET /sport/rugby-league/scores-fixtures/2025-02-15 HTTP/1.1" 200 38735
+2025-01-22 14:57:44,418 INFO Competition title found: Betfred Super League
+2025-01-22 14:57:44,418 INFO Competition title found: Betfred Super League
+2025-01-22 14:57:44,418 INFO Competition title found: Betfred Championship
+2025-01-22 14:57:44,418 INFO Scraped fixtures: [{'competition': 'Super League', 'home_team': 'Leeds Rhinos', 'away_team': 'Wakefield Trinity', 'match_time': '15:00'}, {'competition': 'Super League', 'home_team': 'St Helens', 'away_team': 'Salford Red Devils', 'match_time': '17:30'}, {'competition': 'Championship', 'home_team': 'Toulouse', 'away_team': 'Widnes Vikings', 'match_time': '18:00'}]
+2025-01-22 14:57:44,441 INFO Database connection established.
+2025-01-22 14:57:44,442 ERROR Error inserting fixture: 1146 (42S02): Table 'u108848352_KDqxs.teams' doesn't exist
+2025-01-22 14:57:44,442 ERROR Error inserting fixture: 1146 (42S02): Table 'u108848352_KDqxs.teams' doesn't exist
+2025-01-22 14:57:44,442 ERROR Error inserting fixture: 1146 (42S02): Table 'u108848352_KDqxs.teams' doesn't exist

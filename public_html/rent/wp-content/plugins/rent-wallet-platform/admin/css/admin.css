@@ -1,0 +1,162 @@
+/* Rent Wallet Admin Styles */
+
+.rw-admin {
+    max-width: 1200px;
+}
+
+.rw-admin-section {
+    background: #fff;
+    padding: 20px;
+    margin: 20px 0;
+    border: 1px solid #ccd0d4;
+    box-shadow: 0 1px 1px rgba(0,0,0,.04);
+}
+
+.rw-admin-section h2 {
+    margin-top: 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+/* KPI Grid */
+.rw-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.rw-kpi-card {
+    background: #fff;
+    padding: 20px;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.rw-kpi-card h3 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    color: #666;
+    font-weight: normal;
+}
+
+.rw-kpi-value {
+    font-size: 32px;
+    font-weight: bold;
+    color: #1d2327;
+}
+
+.rw-kpi-warning {
+    border-color: #d63638;
+    background: #fcf0f1;
+}
+
+.rw-kpi-warning .rw-kpi-value {
+    color: #d63638;
+}
+
+/* Quick Actions */
+.rw-quick-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* Status badges */
+.rw-status {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.rw-status-active,
+.rw-status-pass,
+.rw-status-sent {
+    background: #d4edda;
+    color: #155724;
+}
+
+.rw-status-ended,
+.rw-status-fail,
+.rw-status-failed {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.rw-status-paused,
+.rw-status-pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.rw-status-simulated_paid {
+    background: #cce5ff;
+    color: #004085;
+}
+
+/* Amount colors */
+.rw-positive {
+    color: #155724;
+}
+
+.rw-negative {
+    color: #721c24;
+}
+
+/* Forms */
+.rw-form .form-table th {
+    width: 200px;
+}
+
+/* Verification results */
+.rw-verification-result {
+    padding: 20px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+}
+
+.rw-verification-result h3 {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.rw-result-pass {
+    background: #d4edda;
+    border: 1px solid #c3e6cb;
+}
+
+.rw-result-pass h3 {
+    color: #155724;
+}
+
+.rw-result-fail {
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+}
+
+.rw-result-fail h3 {
+    color: #721c24;
+}
+
+/* Tables */
+.rw-admin .wp-list-table code {
+    background: #f0f0f1;
+    padding: 2px 6px;
+    font-size: 11px;
+}
+
+/* Responsive */
+@media screen and (max-width: 782px) {
+    .rw-kpi-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .rw-form .form-table th {
+        width: auto;
+    }
+}

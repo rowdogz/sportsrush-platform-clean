@@ -1,0 +1,48 @@
+/* Styles for signature plugin v1.2.0. */
+.rm-sign-canvas {
+	display: inline-block;
+	border: 1px solid #a0a0a0;
+	-ms-touch-action: none;
+}
+/*----Signature---*/
+
+.rm-sign-canvas { 
+    width: 100% !important; 
+    height: 100px !important; 
+}
+.rm-sign-canvas canvas {
+    border-width: 1px !important;
+    border-style: dashed !important;
+}
+.rm-form-hidden-signature {
+    display:none !important;
+}
+
+
+/*--- Signature CSS---*/
+
+.rmformui .rm-sign-canvas.kbw-signature{
+    position: relative;
+    cursor: cell;
+}
+
+.rmformui .rm-sign-canvas.kbw-signature .rm-sign-clear{
+    position: absolute;
+    right: 2px;
+    top: 5px;
+    background-color: #f0f0f0;
+    line-height: 0;
+    border-radius: 50%;
+    z-index: 2;
+    cursor: pointer;
+}
+
+.rmformui .rm-sign-canvas.kbw-signature .rm-sign-clear .material-icons{
+    font-size: 16px;
+    padding: 3px;
+    color: #524e4e;
+}
+
+.rmformui .rm-sign-canvas.kbw-signature .rm-sign-clear:hover{
+        background-color: #e7e3e3;
+}

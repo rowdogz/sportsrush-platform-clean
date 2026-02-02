@@ -1,0 +1,90 @@
+.rmformui .rm-togglePassword,
+.rmagic .rm-login-wrapper .rm-togglePassword,
+.rmagic #rm_reset_pass_form .rm-togglePassword{
+    left: 7px;
+    right:auto;
+}
+
+.rmagic .rm-login-wrapper .rminput.rm-password-toggle-wrap input[type="password"],
+.rmagic .rm-login-wrapper .rminput.rm-password-toggle-wrap input[type="text"] {
+    padding-left: 30px !important;
+    padding-right: 5px !important;
+}
+
+.rmagic .rmcontent.rm-login-wrapper .rm-c-password-toggle-wrap input[type="password"],
+.rmagic .rmcontent.rm-login-wrapper .rm-c-password-toggle-wrap input[type="text"] {
+    padding-left: 30px !important;
+    padding-right: 5px !important;
+}
+
+.rmformui #rm-form-container .rmform-row .rmform-field.rmform-password-field-col input[type="password"], 
+.rmformui #rm-form-container .rmform-row .rmform-field.rmform-password-field-col input[type="text"] {
+    padding-left: 30px !important;
+    padding-right: 5px !important;
+}
+
+.rmformui .rmform-row .rmform-field .pass-wrapper .pass-colorbar{
+    right:0px;
+    left: auto;
+}
+
+.rmformui .rmform-row .rmform-field .pass-wrapper{
+    text-align: left;
+}
+
+.rmformui .rmform-row .rmform-field.rmform-has-error input[type="text"], .rmformui .rmform-row .rmform-field.rmform-has-error input[type="password"], .rmformui .rmform-row .rmform-field.rmform-has-error input[type="email"], .rmformui .rmform-row .rmform-field.rmform-has-error input[type="url"], .rmformui .rmform-row .rmform-field.rmform-has-error input[type="file"], .rmformui .rmform-row .rmform-field.rmform-has-error input[type="number"] {
+    background-position: calc(0% + 10px) 50%;
+   padding-left: 30px !important;
+
+}
+
+.rmformui .rmform-row .rmform-field .rmform-check input[type="radio"], 
+.rmformui .rmform-row .rmform-field .rmform-check input[type="checkbox"]{
+    margin-left: .5em;
+}
+
+.rmformui .rmform-row .rmform-field select.rmform-control {
+    padding-right: 25px !important;
+}
+
+.rmagic .rmagic-row .rmagic-field .rminput .iti--allow-dropdown input, 
+.rmagic .rmagic-row .rmagic-field .rminput .iti--allow-dropdown input[type=tel],
+.rmagic .rmagic-row .rmagic-field .rminput .iti--allow-dropdown input[type=text], 
+.rmagic .rmagic-row .rmagic-field .rminput .iti--separate-dial-code input, 
+.rmagic .rmagic-row .rmagic-field .rminput .iti--separate-dial-code input[type=tel],
+.rmagic .rmagic-row .rmagic-field .rminput .iti--separate-dial-code input[type=text],
+.rmformui #rm-form-container .rmform-row .rmform-field .iti--allow-dropdown input, 
+.rmformui #rm-form-container .rmform-row .rmform-field .iti--allow-dropdown input[type=tel],
+.rmformui #rm-form-container .rmform-row .rmform-field .iti--allow-dropdown input[type=text], 
+.rmformui #rm-form-container .rmform-row .rmform-field .iti--separate-dial-code input, 
+.rmformui #rm-form-container .rmform-row .rmform-field .iti--separate-dial-code input[type=tel], 
+.rmformui #rm-form-container .rmform-row .rmform-field .iti--separate-dial-code input[type=text] {
+    padding-right: 52px !important;
+    padding-left: 6px !important;
+    margin-left: 0
+}
+
+.rmformui .rmform-row .rmform-field .rmform-terms-checkbox input[type="checkbox"] {
+    margin-left: 6px;
+    margin-right: 0px;
+}
+
+.rmagic .rmrow li input[type=radio], 
+.rmagic .rmrow li input[type=checkbox] {
+    margin-right: 0px;
+    margin-left: 10px;
+}
+.rmagic #rm_reset_pass_form .rminput.rm-password-toggle-wrap input[type="password"],
+.rmagic #rm_reset_pass_form .rminput.rm-password-toggle-wrap input[type="text"] {
+    padding-left: 46px !important;
+    padding-right: 10px !important;
+}
+
+.rm_error_msg-wrap .rm_pr_success_msg{    
+    align-items: center;
+}
+
+.rm_error_msg-wrap .rm_pr_success_msg .rm_green_tik{
+        margin-right: 0px;
+        margin-left: 10px;
+}

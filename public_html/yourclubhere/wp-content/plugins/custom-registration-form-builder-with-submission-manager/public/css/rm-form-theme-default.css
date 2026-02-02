@@ -1,0 +1,236 @@
+:root {
+    --rm-input-padding-y:6px;
+    --rm-input-padding-x:10px;
+    --rm-input-border-width: 1px;
+    --rm-input-border-color: 128,128,128;
+    --rm-input-border-opacity:0.5;
+    --rm-input-font-size:13px;
+    --rm-input-bg-opacity:0.33;
+    --rm-input-bg-color:255,255,255;
+    --rm-input-border-radius:3px;
+    --rm-label-font-family:sans-serif;
+    --rm-form-font-family:sans-serif;
+}
+
+
+.rmformui .rmform-row .rmform-field input[type="text"],
+.rmformui .rmform-row .rmform-field input[type="password"],
+.rmformui .rmform-row .rmform-field input[type="email"],
+.rmformui .rmform-row .rmform-field input[type="url"],
+.rmformui .rmform-row .rmform-field input[type="file"],
+.rmformui .rmform-row .rmform-field input[type="tel"],
+.rmformui .rmform-row .rmform-field input[type="number"],
+.rmformui .rmform-row .rmform-field textarea,
+.rmformui .rmform-row .rmform-field select{
+    box-shadow: inset 0 .0625em .125em rgb(9 10 12 / 5%);
+}
+
+.rmformui .rmform-row .rmform-field input[type="text"]:hover,
+.rmformui .rmform-row .rmform-field input[type="password"]:hover,
+.rmformui .rmform-row .rmform-field input[type="email"]:hover,
+.rmformui .rmform-row .rmform-field input[type="url"]:hover,
+.rmformui .rmform-row .rmform-field input[type="file"]:hover,
+.rmformui .rmform-row .rmform-field input[type="tel"]:hover,
+.rmformui .rmform-row .rmform-field input[type="number"]:hover,
+.rmformui .rmform-row .rmform-field textarea:hover,
+.rmformui .rmform-row .rmform-field select:hover {
+    background-color: rgba(255,255,255,0.66);
+    border: 1px solid rgba(128,128,128,0.66);
+    outline: none!important;
+}
+
+.rmformui .rmform-row .rmform-field input[type="text"]:focus,
+.rmformui .rmform-row .rmform-field input[type="password"]:focus,
+.rmformui .rmform-row .rmform-field input[type="email"]:focus,
+.rmformui .rmform-row .rmform-field input[type="url"]:focus,
+.rmformui .rmform-row .rmform-field input[type="file"]:focus,
+.rmformui .rmform-row .rmform-field input[type="tel"]:focus,
+.rmformui .rmform-row .rmform-field input[type="number"]:focus,
+.rmformui .rmform-row .rmform-field textarea:focus,
+.rmformui .rmform-row .rmform-field select:focus {
+    background-color: rgba(255,255,255,0.94);
+    border: 1px solid rgba(128,128,128,0.94);
+    outline: none!important;
+}
+
+.rmformui .rmform-row .rmform-field select {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='%2328303d'><polygon points='0,0 10,0 5,5'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 10px top 60%;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+
+.rmformui .rmform-row .rmform-field input[type="password"]:disabled,
+.rmformui .rmform-row .rmform-field input[type="text"]:disabled {
+    opacity: 0.7;
+}
+
+.rmformui #rm-form-container .rmform-row .rmform-field input[type="password"] {
+    padding-right: 30px !important;
+}
+
+
+.rmformui .rmform-row .rmform-field .rmform-label {
+    display: block;
+    font-weight: 700;
+    font-size: var(--rm-label-font-size);
+    float: none;
+    line-height: 1.6;
+    margin: 0 0 6px 0;
+    padding: 0;
+    word-break: break-word;
+    word-wrap: break-word;
+}
+
+.rmformui .rmform-row .rmform-field span.rmform-label{
+     font-weight: 700;
+}
+
+.rmformui .rmform-row .rmform-field .rmform-label.rmform-check-label{
+    font-weight: normal;
+}
+
+.rmformui .rmform-row .rmform-field .rmform-checkbox-label span {
+    font-size: var(--rm-label-font-size);
+}
+
+.rmagic .rmagic-row .rmagic-field .rminput select{
+    background-image: url(data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='%2328303d'><polygon points='0,0 10,0 5,5'/></svg>);
+    background-repeat: no-repeat;
+    background-position: right 10px top 60%;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+
+
+
+.rmformui .rmform-row *:not(:where(.rm-togglePassword, .rmform-note,.rmform-field .rateit-font .rateit-range > div, .rmform-field .rateit, .rmform-field .rateit *,.intl-tel-input, .intl-tel-input *, .iti.iti--allow-dropdown, i.rm_front_field_icon, .iti.iti--allow-dropdown *,.rmformui .flip-clock-wrapper,.rmformui .flip-clock-wrapper *,.rm-box-graph,.rm-box-graph *,.rmform-divider,.rm-avatar,.rm-avatar img, .rmformui input[type=radio],.rmformui input[type=radio]:after, .select2-container--default, .select2-container--default *,.rmform-field-type-heading,.rmform-req-symbol,.rm-image-widget,.rm-image-widget *,.rm_mapv_container, .rm_mapv_container *,.rmmap_container, .rmmap_container *,.rmformui .rmform-row .rmform-field iframe.rmform-control,.rmformui .rmform-row .rmform-field iframe.rmform-control *)) {
+    background: none;
+    border: 0 none;
+    border-radius: 0;
+    -webkit-border-radius: 0;
+    -moz-border-radius: 0;
+    float: none;
+    font-size: 100%;
+    height: auto;
+    letter-spacing: normal;
+    list-style: none;
+    outline: none;
+    position: static;
+    text-decoration: none;
+    text-indent: 0;
+    text-shadow: none;
+    text-transform: none;
+    width: auto;
+    visibility: visible;
+    overflow: visible;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    -ms-box-shadow: none;
+    -o-box-shadow: none;
+    box-shadow: none;
+}
+
+.rmform-ui .rmform-row .rmform-field.rmform-has-error .rmform-error-message{
+    background-color: #F9E4E8;
+    color: #A65665;
+    font-size: 12px;
+    display: block;
+    padding: 5px 10px;
+    border-radius: 3px;
+    line-height: 1.6;
+    margin-top: 3px;
+    border: 1px solid #F1E4E7;
+    font-family: sans-serif;
+}
+
+.rmformui .rmform-row .rmform-field.rmform-has-error input[type="email"],
+.rmformui .rmform-row .rmform-field.rmform-has-error input[type="text"]{
+    border: 1px solid #E04562;
+}
+
+
+/*--- Radio and checkbox Field ---*/
+
+.rmformui .rmform-row .rmform-field .rmform-check {
+    align-items: flex-start;
+}
+
+.rmformui .rmform-row .rmform-field .rmform-check input[type="radio"],
+.rmformui .rmform-row .rmform-field .rmform-check input[type="checkbox"]{
+
+}
+
+.rmformui .rmform-custom-form .rmform-row .rmform-field .rmform-check input[type="radio"], 
+.rmformui .rmform-custom-form .rmform-row .rmform-field .rmform-check input[type="checkbox"] {
+    margin-top: 4px;
+}
+
+
+/*---- Submit Button---*/
+
+.rmformui #rm_form_submit_button input[type='button'],
+.rmformui #rm_form_submit_button input[type='submit'] {
+    background-color: #eee;
+    background-color: rgba(0, 0, 0, 0.80);
+    border: 1px solid #ddd;
+    border: 1px solid rgba(0, 0, 0, 0.9);
+    color: #fff;
+    color: rgba(255, 255, 255, 1);
+    font-size: 16px;
+    padding: 10px 15px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: 0.2s;
+    box-shadow: 0 0 1px 1px rgba(255, 255, 255, 0.25);
+}
+
+.rmformui #rm_form_submit_button input[type='button']:hover,
+.rmformui #rm_form_submit_button input[type='submit']:hover {
+    background-color: rgba(0, 0, 0, 0.90);
+}
+
+/* --- Theme Issues----*/
+
+@supports (-webkit-appearance: none) or (-moz-appearance: none) {
+
+    .rmformui .rmform-row .rmform-field input[type=checkbox]:focus,
+        .rmformui .rmform-row .rmform-field input[type=radio]:focus {
+        outline: 0px !important;
+    }
+
+    .rmformui .rmform-row .rmform-field input[type=checkbox],
+    .rmformui .rmform-row .rmform-field input[type="checkbox"]{
+        -webkit-appearance: checkbox;
+        -moz-appearance: checkbox;
+
+    }
+
+    .rmformui .rmform-row .rmform-field .rmform-pricefield input[type=checkbox]{
+        width: 1em;
+        height: 1em;
+        margin-top: .20em;
+        vertical-align: top;
+    }
+
+
+    .rmformui .rmform-row .rmform-field input[type=radio] {
+        -webkit-appearance: radio;
+        -moz-appearance: radio;
+    }
+    .rmformui .rmform-row .rmform-field input[type=checkbox]:after,
+        .rmformui .rmform-row .rmform-field input[type=radio]:after,
+        .rmformui .rmform-row .rmform-field input[type="checkbox"]:after{
+        content: none;
+    }
+
+
+
+}
+

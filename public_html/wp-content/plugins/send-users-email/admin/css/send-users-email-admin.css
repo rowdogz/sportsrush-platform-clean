@@ -1,0 +1,65 @@
+.sue-row .card {
+    max-width: 100% !important;
+}
+
+button .dashicons {
+    margin-top: 3px;
+}
+
+.sue-user-email-datatable-wrapper {
+    visibility: hidden;
+}
+
+label {
+    font-weight: bold;
+}
+
+.sue-spinner {
+    display: none;
+}
+
+.sue-dashboard .badge {
+    font-size: 1.1em;
+}
+#wpcontent {
+    background-color: #f0f0f1;
+    min-height: calc(100vh - 32px);
+}
+
+.sue-dashboard .alert-secondary a {
+    text-decoration: none;
+}
+
+/** pro features list section **/
+.pro-features-list .col-sm-4 {
+    display: flex;
+}
+.pro-features-list .col-sm-4 .card {
+    max-width: unset;
+    width: 100%;
+}
+.pro-features-list .card img {
+    max-width: 100px;
+}
+.pro-features-list .card-body {
+    display: flex;
+    align-items: flex-start;
+    align-content: flex-start;
+    gap: 2rem;
+}
+@media (max-width: 1400px) {
+    .pro-features-list .card-body {
+        flex-wrap: wrap;
+    }
+}
+
+.pro-features-list .card-body li {
+    font-size: 13px;
+}
+
+
+/* </fs_premium_only> */
+.delete-queue-email {
+    cursor: pointer;
+}
+/* </fs_premium_only> */

@@ -1,0 +1,20 @@
+.CodeMirror {
+  border: 1px solid #eee;
+  min-height: 500px;
+  resize: vertical;
+  overflow: hidden !important;
+}
+
+/* Add to your admin CSS or in a <style> tag */
+/* .wp-editor-wrap {
+  resize: both;
+  overflow: auto;
+  min-width: 300px;
+  min-height: 500px;
+  max-width: 100%;
+  max-height: 90vh;
+}
+.wp-editor-wrap .CodeMirror {
+  width: 100% !important;
+  height: 100% !important;
+} */

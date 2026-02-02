@@ -1,0 +1,193 @@
+:root {
+    --rm-input-padding-y:6px;
+    --rm-input-padding-x:10px;
+    --rm-input-border-width: 1px;
+    --rm-input-border-color: 128,128,128;
+    --rm-input-border-opacity:0.5;
+    --rm-input-font-size:13px;
+    --rm-input-bg-opacity:0.33;
+    --rm-input-bg-color:255,255,255;
+    --rm-input-border-radius:3px;
+    --rm-form-font-family:"Inter", sans-serif;
+    --rm-label-font-family:"Inter", sans-serif;
+   
+
+}
+
+
+.rmformui .rmform-row .rmform-field input[type="text"],
+.rmformui .rmform-row .rmform-field input[type="password"],
+.rmformui .rmform-row .rmform-field input[type="email"],
+.rmformui .rmform-row .rmform-field input[type="url"],
+.rmformui .rmform-row .rmform-field input[type="file"],
+.rmformui .rmform-row .rmform-field input[type="number"],
+.rmformui .rmform-row .rmform-field textarea,
+.rmformui .rmform-row .rmform-field select{
+    --rm-input-min-height:45px;
+     --rm-input-border-color: 202,202,202;
+     -webkit-box-shadow: inset 0 1px 2px rgba(10, 10, 10, 0.1);
+    box-shadow: inset 0 1px 2px rgba(10, 10, 10, 0.1);
+
+}
+
+
+
+.rmformui .rmform-row .rmform-field input[type="text"]:hover, 
+.rmformui .rmform-row .rmform-field input[type="password"]:hover, 
+.rmformui .rmform-row .rmform-field input[type="email"]:hover,
+.rmformui .rmform-row .rmform-field input[type="url"]:hover, 
+.rmformui .rmform-row .rmform-field input[type="file"]:hover, 
+.rmformui .rmform-row .rmform-field input[type="number"]:hover, 
+.rmformui .rmform-row .rmform-field textarea:hover,
+.rmformui .rmform-row .rmform-field select:hover {
+    background-color: rgba(255,255,255,0.66);
+    border: 1px solid rgba(128,128,128,0.66); 
+    outline: none!important;
+}
+
+.rmformui .rmform-row .rmform-field input[type="text"]:focus, 
+.rmformui .rmform-row .rmform-field input[type="password"]:focus, 
+.rmformui .rmform-row .rmform-field input[type="email"]:focus,
+.rmformui .rmform-row .rmform-field input[type="url"]:focus, 
+.rmformui .rmform-row .rmform-field input[type="file"]:focus, 
+.rmformui .rmform-row .rmform-field input[type="number"]:focus, 
+.rmformui .rmform-row .rmform-field textarea:focus,
+.rmformui .rmform-row .rmform-field select:focus {
+    box-shadow: 0 0 0 0.2575em rgba(var(--themeColor), .30);
+    border-color: rgba(var(--themeColor), 1);
+}
+
+.rmformui .rmform-row .rmform-field select {
+   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='%2328303d'><polygon points='0,0 10,0 5,5'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 10px top 60%;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+
+
+.rmformui .rmform-row .rmform-field input[type="email"][readonly="readonly"],
+.rmformui .rmform-row .rmform-field input[type="password"]:disabled,
+.rmformui .rmform-row .rmform-field input[type="text"][readonly="readonly"], 
+.rmformui .rmform-row .rmform-field input[type="text"]:disabled {
+    cursor: not-allowed;
+    background-color: rgba(128, 128, 128, 0.08);
+    color: rgba(128, 128, 128, 0.5);
+}
+
+.rmformui .rmform-row .rmform-field input[type="password"]:disabled,
+.rmformui .rmform-row .rmform-field input[type="text"]:disabled {
+    opacity: 0.7;
+}
+
+
+.rmformui .rmform-row .rmform-field .rmform-label {
+    display: block;
+    font-weight: 700;
+    font-size: var(--rm-label-font-size);
+    float: none;
+    line-height: 1.6;
+    margin: 0 0 6px 0;
+    padding: 0;
+    word-break: break-word;
+    word-wrap: break-word;
+}
+
+.rmformui .rmform-row .rmform-field span.rmform-label{
+     font-weight: 700;
+}
+
+.rmformui .rmform-row .rmform-field .rmform-label.rmform-check-label{
+     font-weight: normal;
+}
+
+.rmagic .rmagic-row .rmagic-field .rminput select{
+    background-image: url(data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='%2328303d'><polygon points='0,0 10,0 5,5'/></svg>);
+    background-repeat: no-repeat;
+    background-position: right 10px top 60%;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+
+
+.rmformui .rmform-row *:not(:where(.rm-togglePassword, .rmform-note,.rmform-field .rateit-font .rateit-range > div, .rmform-field .rateit, .rmform-field .rateit *,.intl-tel-input, .intl-tel-input *, .iti.iti--allow-dropdown, i.rm_front_field_icon, .iti.iti--allow-dropdown *,.rmformui .flip-clock-wrapper,.rmformui .flip-clock-wrapper *,.rm-box-graph,.rm-box-graph *,.rmform-divider,.rm-avatar,.rm-avatar img, .rmformui input[type=radio],.rmformui input[type=radio]:after, .select2-container--default, .select2-container--default *,.rmform-field-type-heading,.rmform-req-symbol,.rm-image-widget,.rm-image-widget *,.rm_mapv_container, .rm_mapv_container *,.rmmap_container, .rmmap_container *)) {
+    background: none;
+    border: 0 none;
+    border-radius: 0;
+    -webkit-border-radius: 0;
+    -moz-border-radius: 0;
+    float: none;
+    font-size: 100%;
+    height: auto;
+    letter-spacing: normal;
+    list-style: none;
+    outline: none;
+    position: static;
+    text-decoration: none;
+    text-indent: 0;
+    text-shadow: none;
+    text-transform: none;
+    width: auto;
+    visibility: visible;
+    overflow: visible;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    -ms-box-shadow: none;
+    -o-box-shadow: none;
+    box-shadow: none;
+}
+
+.rmagic .rmagic-row .rmagic-field.rmform-has-error {}
+
+.rmformui .rmform-row .rmform-error-message{
+    color: rgb(204 0 41);
+    font-size: 12px;
+}
+
+
+
+
+.rmformui .rmform-row .rmform-field.rmform-has-error input[type="text"]:focus, 
+.rmformui .rmform-row .rmform-field.rmform-has-error input[type="password"]:focus, 
+.rmformui .rmform-row .rmform-field.rmform-has-error input[type="email"]:focus,
+.rmformui .rmform-row .rmform-field.rmform-has-error input[type="url"]:focus, 
+.rmformui .rmform-row .rmform-field.rmform-has-error input[type="file"]:focus, 
+.rmformui .rmform-row .rmform-field.rmform-has-error input[type="number"]:focus, 
+.rmformui .rmform-row .rmform-field.rmform-has-error textarea:focus,
+.rmformui .rmform-row .rmform-field.rmform-has-error select:focus {
+    box-shadow: 0 0 0 0.2575em rgba(var(--rm-error-input-border-color), .20);
+    border-color: rgba(var(--rm-error-input-border-color), 1);
+}
+
+
+/*--- Radio and checkbox Field ---*/
+
+.rmformui .rmform-row .rmform-field .rmform-check input[type="radio"],
+.rmformui .rmform-row .rmform-field .rmform-check input[type="checkbox"]{
+    width: 18px;
+    height: 18px;
+}
+
+
+.rmformui #rm-form-container .rmform-note{
+display: block !important;
+    box-shadow: none;
+    padding: 3px 0px;
+    opacity: 1 !important;
+    background-color: transparent;
+    color: rgb(146 145 145);  
+}
+
+.rmformui #rm-form-container .rmform-note:before,
+.rmformui #rm-form-container .rmform-note:after{
+    display: none;
+}
+
+.rmformui .rmform-row .rmform-field .rmform-checkbox-label span{
+     font-size: var(--rm-label-font-size);
+}

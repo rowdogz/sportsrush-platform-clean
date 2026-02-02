@@ -1,0 +1,150 @@
+/**
+ * SportsRush Gamification - Admin Styles
+ */
+
+.sr-admin-wrap {
+    max-width: 1200px;
+}
+
+.sr-admin-content {
+    background: #fff;
+    padding: 20px;
+    margin-top: 20px;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Feature Flags Toggle */
+.sr-flags-table td {
+    vertical-align: top;
+}
+
+.sr-toggle {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 26px;
+}
+
+.sr-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.sr-toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.3s;
+    border-radius: 26px;
+}
+
+.sr-toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+}
+
+.sr-toggle input:checked + .sr-toggle-slider {
+    background-color: #2ecc71;
+}
+
+.sr-toggle input:checked + .sr-toggle-slider:before {
+    transform: translateX(24px);
+}
+
+/* Status indicators */
+.sr-status-ok {
+    color: #27ae60;
+    font-weight: 600;
+}
+
+.sr-status-error {
+    color: #e74c3c;
+    font-weight: 600;
+}
+
+/* Stats Grid */
+.sr-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.sr-stat-card {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    border: 1px solid #e9ecef;
+}
+
+.sr-stat-value {
+    display: block;
+    font-size: 32px;
+    font-weight: 700;
+    color: #1e3a5f;
+    line-height: 1;
+    margin-bottom: 8px;
+}
+
+.sr-stat-label {
+    font-size: 13px;
+    color: #666;
+}
+
+/* Cron buttons */
+.sr-run-cron-now {
+    min-width: 80px;
+}
+
+.sr-run-cron-now.running {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+/* Tables */
+.sr-admin-wrap .wp-list-table th {
+    font-weight: 600;
+}
+
+.sr-admin-wrap .wp-list-table code {
+    font-size: 12px;
+    background: #f0f0f0;
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+/* Form sections */
+.sr-admin-content h2 {
+    margin-top: 30px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.sr-admin-content h2:first-child {
+    margin-top: 0;
+}
+
+/* Responsive */
+@media (max-width: 782px) {
+    .sr-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .sr-stat-value {
+        font-size: 24px;
+    }
+}

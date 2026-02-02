@@ -1,0 +1,17 @@
+# WordPress
+wp-content/uploads
+wp-content/cache
+wp-content/wflogs
+wp-config.php
+
+# Node / Next
+node_modules
+.next
+
+# Env
+.env
+.env.*
+
+# OS
+.DS_Store
+Thumbs.db

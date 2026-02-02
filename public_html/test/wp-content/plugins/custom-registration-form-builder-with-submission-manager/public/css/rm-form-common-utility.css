@@ -1,0 +1,894 @@
+/*--- Form Builder CSS---*/
+
+:root {
+    --rm-field-gutter: 10px;
+    --rm-input-min-height:36px;
+    --rm-label-font-size:13px;
+    --rm-field-error : rgb(204 0 41);
+    --rm-error-input-border-color: 204,0,41;
+
+}
+
+.rmformui * {
+    box-sizing: border-box;
+}
+
+.rmformui .rmheader{
+    width: 100%;
+    margin: 20px 0;
+}
+
+.rmformui .rmform-row .rmform-field .rmform-label sup.rmform-req-symbol,
+.rmformui .rmform-row .rmform-field .rmform-label span.rmform-req-symbol{
+    color: #E04562;
+    font-size: 12px;
+    vertical-align: top;
+}
+
+
+
+.rmformui .rmform-row .rmform-field .pass-wrapper{
+    position: relative;
+    margin-bottom: 28px;
+    height: 0;
+}
+
+
+.rmformui .rmform-row {
+    /* width: 100%;*/
+    margin: 0px auto 20px auto;
+}
+
+.rmformui .rmform-row .rmform-field{
+}
+
+@media (min-width: 783px) {
+    .rmformui .rmform-row .rmform-row-field-wrap{
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        margin-right: calc(var(--rm-field-gutter) * -1);
+        margin-left: calc(var(--rm-field-gutter) * -1);
+    }
+    .rmformui .rmform-row .rmform-row-field-wrap  .rmform-col {
+        min-width: 0;
+        -webkit-box-flex: 1;
+        -ms-flex: 1;
+        flex: 1;
+        padding-right: calc(var(--rm-field-gutter) * 1);
+        padding-left: calc(var(--rm-field-gutter) * 1);
+    }
+    .rmformui .rmform-row .rmform-row-field-wrap   .rmform-col-8 {
+        -webkit-box-flex: 2;
+        -ms-flex: 2;
+        flex: 2;
+    }
+
+}
+
+.rmformui .rmform-row .rmform-field input[type="text"],
+.rmformui .rmform-row .rmform-field input[type="password"],
+.rmformui .rmform-row .rmform-field input[type="email"],
+.rmformui .rmform-row .rmform-field input[type="url"],
+.rmformui .rmform-row .rmform-field input[type="file"],
+.rmformui .rmform-row .rmform-field input[type="tel"],
+.rmformui .rmform-row .rmform-field input[type="number"],
+.rmformui .rmform-row .rmform-field input textarea {
+    width: 100%;
+    min-height: var(--rm-input-min-height);
+    max-width: 100%;
+    height: auto;
+    transition: none;
+    margin: 0px;
+    
+}
+
+.rmformui #rm-form-container .rmform-row .rmform-field.rmform-password-field-col input[type="password"],
+.rmformui #rm-form-container .rmform-row .rmform-field.rmform-password-field-col input[type="text"]{
+    padding-right: 46px !important;
+}
+
+
+.rmformui .rmform-row .rmform-field .rmform-control{
+    
+}
+
+.rmformui .rmform-row .rmform-field.rmform-password-field-col.rmform-has-error input.rmform-control {
+       background-image: none;
+    
+}
+
+.rmform-ui.rmform-custom-form[data-design=matchmytheme] .rmform-row .rmform-field input[type="text"]:read-only  {
+    
+}
+
+
+.rmformui .rmform-row .rmform-field input[type="email"][readonly="readonly"]:not(:where(.rmform-ui.rmform-custom-form[data-design=matchmytheme] .rmform-row .rmform-field input[type="email"]:read-only)),
+.rmformui .rmform-row .rmform-field input[type="email"]:read-only:not(:where(.rmform-ui.rmform-custom-form[data-design=matchmytheme] .rmform-row .rmform-field input[type="email"]:read-only )),
+.rmformui .rmform-row .rmform-field input[type="password"]:disabled,
+.rmformui .rmform-row .rmform-field input[type="password"]:read-only:not(:where(.rmform-ui.rmform-custom-form[data-design=matchmytheme] .rmform-row .rmform-field input[type="password"]:read-only)),
+.rmformui .rmform-row .rmform-field input[type="text"][readonly="readonly"],
+.rmformui .rmform-row .rmform-field input[type="text"]:read-only:not(:where(.rmform-ui.rmform-custom-form[data-design=matchmytheme] .rmform-row .rmform-field input[type="text"]:read-only)),
+.rmformui .rmform-row .rmform-field input[type="text"]:disabled {
+    cursor: not-allowed;
+    background-color: rgba(128, 128, 128, 0.08);
+    color: rgba(128, 128, 128, 0.5);
+}
+
+.rmformui .rmform-row .rmform-field input.hasDatepicker:read-only{
+    cursor: default;
+    background-color: rgba(var(--rm-input-bg-color), var(--rm-input-bg-opacity));
+    color: #333;
+}
+/*-- Form Theme---*/
+
+.rmformui .rmform-row .rmform-field input[type="text"]:not(:where(.rmform-ui.rmform-custom-form[data-design=matchmytheme] .rmform-row .rmform-field input[type="text"] )),
+.rmformui .rmform-row .rmform-field input[type="password"]:not(:where(.rmform-ui.rmform-custom-form[data-design=matchmytheme] .rmform-row .rmform-field input[type="password"] )),
+.rmformui .rmform-row .rmform-field input[type="email"]:not(:where(.rmform-ui.rmform-custom-form[data-design=matchmytheme] .rmform-row .rmform-field input[type="email"] )),
+.rmformui .rmform-row .rmform-field input[type="url"]:not(:where(.rmform-ui.rmform-custom-form[data-design=matchmytheme] .rmform-row .rmform-field input[type="url"] )),
+.rmformui .rmform-row .rmform-field input[type="file"]:not(:where(.rmform-ui.rmform-custom-form[data-design=matchmytheme] .rmform-row .rmform-field input[type="file"] )),
+.rmformui .rmform-row .rmform-field input[type="tel"]:not(:where(.rmform-ui.rmform-custom-form[data-design=matchmytheme] .rmform-row .rmform-field input[type="tel"] )),
+.rmformui .rmform-row .rmform-field input[type="number"]:not(:where(.rmform-ui.rmform-custom-form[data-design=matchmytheme] .rmform-row .rmform-field input[type="number"] )),
+.rmformui .rmform-row .rmform-field textarea:not(:where(.rmform-ui.rmform-custom-form[data-design=matchmytheme] .rmform-row .rmform-field textarea )),
+.rmformui .rmform-row .rmform-field select:not(:where(.rmform-ui.rmform-custom-form[data-design=matchmytheme] .rmform-row .rmform-field select )){
+    box-sizing: border-box;
+    border-radius: 2px;
+    color: #333;
+    color: rgba(0, 0, 0, 0.75);
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    display: block;
+    float: none;
+    font-size: var(--rm-input-font-size);
+    background-color: rgba(var(--rm-input-bg-color),var(--rm-input-bg-opacity));
+    border-style: solid;
+    border-width:var(--rm-input-border-width);
+    border-color:rgba(var(--rm-input-border-color),var(--rm-input-border-opacity));
+    border-radius: var(--rm-input-border-radius);
+    padding: var(--rm-input-padding-y) var(--rm-input-padding-x) !important;
+    margin: 0px;
+    height: 38px;
+    width: 100%;
+    max-width: 100%;
+    line-height: 1.3;
+    box-shadow: none;
+    transition: background-color 0.2s, border 0.2s;
+}
+
+/*-- Form Theme Ends----*/
+
+.rmformui .rmform-row .rmform-row-heading{
+    font-size: 17px;
+    font-weight: bold;
+    font-family: var(--rm-form-font-family);
+    padding-bottom: 6px;
+}
+
+.rmformui .rmform-row .rmform-row-subheading{
+    font-size: 13px;
+    color: rgba(128, 128, 128, 0.9);
+   font-family: var(--rm-form-font-family);
+    padding-bottom: 20px;
+}
+
+.rmformui #rm-form-container{
+    font-family: var(--rm-form-font-family);
+}
+
+/*-- Form Labels----*/
+
+.rmformui .rmform-row .rmform-field label.rmform-label{
+    display: block;
+    font-family: var(--rm-label-font-family);
+
+    float: none;
+    line-height: 1.6;
+    margin: 0 0 6px 0;
+    padding: 0;
+    word-break: break-word;
+    word-wrap: break-word;
+}
+
+/*-- Form Labels Ends----*/
+
+/*--- Radio and checkbox Field ---*/
+
+.rmformui .rmform-row .rmform-field .rmform-check {
+    display: flex;
+    width: fit-content;
+    cursor: pointer;
+    min-height: 1.5rem;
+    padding-left: 1.5em;
+    margin-bottom: .125rem;
+}
+
+.rmformui .rmform-row .rmform-field .rmform-check:checked:before{
+    display: none;
+}
+
+.rmformui .rmform-row .rmform-field .rmform-check .rmform-label.rmform-radio-check{
+    font-weight: normal;
+
+}
+
+.rmformui .rmform-row .rmform-field .rmform-check input[type="radio"],
+.rmformui .rmform-row .rmform-field .rmform-check input[type="checkbox"]{
+    float: left;
+    margin-left: -1.5em;
+    margin-right: 6px;
+    opacity: 1;
+    outline: 0;
+}
+
+.rmformui .rmform-row .rmform-field .rmform-check input[type="checkbox"] {
+    margin-top: 0;
+    vertical-align: top;
+}
+
+
+/*-- Horizontal Style---*/
+
+.rmformui .rmform-row .rmform-field .rmform-field-horizontal-row{
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.rmformui .rmform-row .rmform-field .rmform-field-horizontal-row label.rmform-check{
+    margin-right: 12px;
+}
+
+.rmformui .rmform-row .rmform-field .rmform-field-vertical-row {
+  display: grid;
+  gap: 2px 10px;
+  grid-template-columns: repeat(var(--field-col-count), 1fr);
+}
+
+
+.rmformui .rmform-row .rmform-field .rmform-field-horizontal-row .rmform-check{
+    margin-right: 6px;
+}
+
+.rmformui .rmform-row .rmform-field .rmform-field-vertical-row label.rmform-check {
+
+}
+
+/*-- Password Meter---*/
+
+.rmformui .rmform-row .rmform-field .pass-wrapper .pass-text{
+    font-size: calc(var(--rm-label-font-size) - 2px);
+    
+}
+
+.rmformui .rmform-row .rmform-field .pass-wrapper .pass-graybar {
+    height: 3px;
+    background-color: #ccc;
+    width: 100%;
+    position: relative;
+    top: -2px;
+}
+
+.rmformui .rmform-row .rmform-field .pass-wrapper .pass-colorbar {
+    height: 3px;
+    background-image: url(../../images/rmpasswordstrength.jpg);
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+/*--- Textarea---*/
+
+.rmformui .rmform-row .rmform-field textarea {
+    min-height: 100px;
+    height: auto;
+    resize: vertical;
+}
+
+/*-- Total Price --*/
+
+.rmformui .rm_total_price,
+.rmformui .rm-total-price-widget{
+    text-align: center;
+    font-size: larger;
+    line-height: 60px;
+    background-color: rgba(150, 150, 150, 0.1);
+    margin: 10px 0;
+}
+
+/*--Multiform Progressbar---*/
+
+#rmagic-progressbar li .rm-progressbar-counter{
+    color: rgba(var(--ep-white-color), 1) !important;
+    background-color: rgba(var(--themeColor), 1);
+    border-color: rgba(var(--themeColor), 1);
+}
+
+
+ul#rmagic-progressbar {
+    margin: 0px 0px 24px 0px;
+    padding: 0px;
+    width: 100%;
+}
+
+ul#rmagic-progressbar li {
+    margin: 0px;
+    padding: 0px;
+    list-style: none;
+}
+
+ul#rmagic-progressbar li .rm-form-page-name {
+}
+
+@media only screen and (max-width:781px) {
+
+    #rmagic-progressbar li span.rm-form-page-name{
+        display: none;
+    }
+
+    #rmagic-progressbar li span.rm-progressbar-counter:before{
+        width: 40px;
+        height: 40px;
+        line-height: 40px;
+        font-size: 18px;
+    }
+}
+
+@media only screen and (max-width:479px) {
+
+    #rmagic-progressbar li span.rm-progressbar-counter:before{
+        width: 30px;
+        height: 30px;
+        line-height: 30px;
+        font-size: 16px;
+    }
+}
+
+/*--End Multiform Progressbar---*/
+
+
+/* -- Error Messages--*/
+
+.rmformui .rmform-row .rmform-error-message:empty{
+    display: none;
+}
+
+.rmformui .rmform-row .rmform-field.rmform-has-error input[type="text"],
+.rmformui .rmform-row .rmform-field.rmform-has-error input[type="password"],
+.rmformui .rmform-row .rmform-field.rmform-has-error input[type="email"],
+.rmformui .rmform-row .rmform-field.rmform-has-error input[type="url"],
+.rmformui .rmform-row .rmform-field.rmform-has-error input[type="file"],
+.rmformui .rmform-row .rmform-field.rmform-has-error input[type="number"]{
+    border-color: rgba(var(--rm-error-input-border-color), 1);
+    background-image: url('data:image/svg+xml;charset=UTF-8,%3Csvg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="%23cc0029"%3E%3Cpath d="M0 0h24v24H0z" fill="none"/%3E%3Cpath d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/%3E%3C/svg%3E');
+    background-repeat: no-repeat;
+    background-position: calc(100% - 10px) 50%;
+    background-size: 18px;
+}
+
+.rmformui .rmform-row .rmform-field.rmform-has-error input[type="file"]{
+    background-image: none;
+}
+
+.rmformui .rmform-row .rmform-field.rmform-has-error textarea,
+.rmformui .rmform-row .rmform-field.rmform-has-error select {
+    border-color: rgba(var(--rm-error-input-border-color), 1);
+}
+
+.rmformui .rmform-row .rmform-field.rmform-has-error input[type="number"]:hover{
+    background-image: none;
+}
+
+.rmformui .rmform-row .rmform-field.rmform-has-error.rmform-is_filled input[type="text"],
+.rmformui .rmform-row .rmform-field.rmform-has-error.rmform-is_filled input[type="email"]{
+      padding-right: 30px;
+}
+
+.rmformui .rmform-row .rmform-field .rmform-toggle-wrap,
+.rmformui .rmform-row .rmform-field .rmform-c-toggle-wrap{
+    position: relative;
+}
+
+.rmformui .rmform-row .rmform-field.rmform-has-error .rmform-toggle-wrap input.rmform-control {
+    background-image: none;
+}
+
+.rmformui .rmform-row .rmform-field input[type="password"]:before{
+
+}
+
+#rm-form-errors.rmform-errors-message{
+    background-color: #F9E4E8;
+    box-shadow: inset 2px 0 0 0 #E04562;
+    -moz-box-shadow: inset 3px 0 0 0 #E04562;
+    -webkit-box-shadow: inset 3px 0 0 0 #E04562;
+    border: 0px;
+    color: #333333;
+    font-family: inherit;
+    font-weight: 400;
+    text-transform: none;
+    font-size: 14px;
+    margin: 0 0 20px;
+    border-top-right-radius: 2px;
+    border-bottom-right-radius: 2px;
+    text-align: left;
+    padding: 10px 14px;
+}
+
+/*--- Hover Note----*/
+
+.rmformui .rmform-note {
+    background-color: rgba(var(--themeColor), 1);
+    color: rgba(var(--rm-note-color), 1);
+    padding: 10px;
+    line-height: 22px;
+    box-shadow: 2px 2px 2px 0px rgba(150, 150, 150, 0.4);
+    font-size: 13px;
+    border-radius: 3px;
+    position: relative
+}
+
+.rmformui .rmform-note:empty{
+    display: none !important;
+}
+
+.rmformui .rmform-note:after {
+    border-left: solid transparent 10px;
+    border-right: solid transparent 10px;
+    border-bottom: solid rgba(var(--themeColor), 1) 10px;
+    top: -10px;
+    content: " ";
+    height: 0;
+    left: 35px;
+    margin-left: -13px;
+    position: absolute;
+    width: 0;
+}
+
+.rmformui .rmform-note:before {
+    top: 0px;
+    content: " ";
+    display: block;
+    height: 20px;
+    left: 0;
+    position: absolute;
+    width: 100%;
+}
+
+/* Product Field---*/
+
+.rmformui .rmform-row .rmform-field .rmform-checkbox-label{
+    cursor: pointer;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-flex: 0;
+    -ms-flex: 0 0 auto;
+    flex: 0 0 auto;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    position: relative;
+    margin: 0px 0px 16px 0px;
+}
+
+.rmformui .rmform-row .rmform-field .rmform-checkbox-label input[type=checkbox]{
+    margin-right: 5px;
+}
+
+/* Address Field--*/
+
+.rmformui .rmform-row .rmform-field label.rmform-label.rmform-label-address{
+    color: rgba(100, 100, 100, 0.8) !important;
+    font-size: calc(var(--rm-label-font-size) - 2px);
+    font-weight: normal;
+
+}
+
+/* Multi Dropdown Field---*/
+
+.rmformui .rmform-row .rmform-field span.rm-field-hint {
+    width: 100%;
+    font-size: 12px !important;
+    opacity: 0.5;
+    display: inline-block;
+}
+
+.rmformui .rmform-row .rmform-field select[multiple] {
+    height: auto;
+    background-image: none;
+    overflow-y: auto;
+    padding: 6px 8px;
+}
+
+.rmformui .rmform-row .rmform-field select[multiple] option{
+    padding: 2px 3px;
+    margin-bottom: 1px;
+}
+
+.rmformui .rmform-row .rmform-field select[multiple] option:checked {
+    background-color: #c4ddf7;
+    color: #000;
+    font-weight: bold;
+}
+
+/* Ensure the dropdown has enough height to show multiple selections */
+.rmformui .rmform-row .rmform-field select[multiple] {
+    padding: 8px;
+    border: 1px solid #ccc; /* Optional: Customize the border */
+    border-radius: 4px; /* Optional: Customize border-radius */
+}
+
+
+/*--- Repeatable Field----*/
+
+.rmformui .rmform-row .rmform-field .appendable_options .rm_actions{
+    cursor: pointer;
+    display: inline-block;
+    margin-right: 8px;
+    font-size: 12px;
+}
+
+.rmformui .rmform-row .rmform-field .appendable_options .rm_actions a{
+    text-decoration: none;
+}
+
+.rmformui .rmform-row .rmform-field .appendable_options {
+    margin-bottom: 12px;
+}
+
+.rmformui .rmform-row .rmform-field .appendable_options #rm_delete_repeatable_field.rm_actions a{
+    color:#ff0000;
+}
+
+/*--- Submit Button----*/
+
+.rmformui #rm_form_submit_button input[type='button'],
+.rmformui #rm_form_submit_button input[type='submit'] {
+    width: auto;
+    min-width: 150px;
+    min-height: 50px !important;
+    float: none;
+    margin-bottom: 10px;
+    display: inline-block;
+}
+
+.rmformui #rm_form_submit_button input#rm-form-next-btn{
+    margin-right: 0px;
+}
+
+#rm_form_submit_button{
+    display: flex;
+    gap: 16px;
+    width: 100%;
+}
+
+#rm_form_submit_button.rm-form-btn-align-center {
+    text-align: center;
+    justify-content: center;
+}
+
+#rm_form_submit_button.rm-form-btn-align-left {
+    text-align: left;
+    justify-content: flex-start;
+}
+
+#rm_form_submit_button.rm-form-btn-align-right {
+    text-align: right;
+    justify-content: flex-end;
+}
+
+/*---Product ----*/
+
+.rmformui .rmform-row .rmform-field .rmform-pricefield{
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.rmformui .rmform-row .rmform-field .rmform-pricefield.rm-fixed-price-field input[type="text"]:read-only{
+    opacity: 1;
+    color: inherit;
+}
+
+.rmformui .rmform-row .rmform-field .rmform-pricefield span{
+    margin: 0px 6px;
+    font-size: 12px;
+
+}
+
+.rmformui .rmform-row .rmform-field .rmform-pricefield input[type="number"]{
+    max-width: 70px;
+}
+
+.rmformui .rmform-row .rmform-field .rmform-pricefield .rmform-multiselect-price-checkbox {
+    display: flex;
+    align-items: center;
+    margin-bottom: 14px;
+    vertical-align: top;
+    width: 100%;
+}
+
+/*-- Form Data---*/
+
+.rmformui .rmform-row  .rmrow.rm-box-graph .rm-box-title {
+    text-align: center;
+    margin-bottom: 18px;
+}
+
+/*---- Divider---*/
+
+.rmform-divider {
+    width: 100%;
+    size: 8px;
+    height: 1px;
+    clear: both;
+    float: left;
+}
+
+/* Registration Feed---*/
+
+.rmformui .rmform-row .rmform-field .rmform-sumission-widget-row  {
+    display: block;
+    float: left;
+    position: inherit;
+    padding: 11px 0px 13px 0px;
+    min-height: 60px;
+    width: 100%;
+}
+
+.rmformui .rmform-row .rmform-field .rmform-sumission-widget-row .rm-rgfeed {
+    border: 1px solid #f2f2f2;
+    margin-bottom: -1px;
+    font-size: 13px;
+    padding: 5px 12px;
+    float: left;
+    width: 100%;
+}
+
+.rmformui .rmform-row .rmform-field .rmform-sumission-widget-row .rm-rgfeed .rm-rgfeed-user-info {
+    float: left;
+    padding: 6px 6px 0px 10px;
+    width: 88%;
+    width: calc(100% - 36px);
+}
+
+.rmformui .rmform-row .rmform-field .rmform-sumission-widget-row .rm-rgfeed .rm-rgfeed-user-info {
+    font-weight: 700;
+}
+
+.rmformui .rmform-row .rmform-field .rmform-sumission-widget-row .rm-rgfeed .rm-avatar {
+    float: left;
+    width: 36px;
+    height: 36px;
+}
+
+
+.rmformui .rmform-row .rmform-field .rmform-sumission-widget-row .rm-rgfeed .rm-avatar img {
+    border-radius: 100%;
+    -moz-border-radius: 100%;
+    -webkit-border-radius: 100%;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+}
+
+/*-- Form Data---*/
+
+.rmformui .rmform-row .rmform-field .fdata-row{
+    float: left;
+    width: 98%;
+    border: 1px solid #f1f1f1;
+    padding: 10px 2%;
+    font-size: 12px;
+}
+
+.rmformui .rmform-row .rmform-field .fdata-row span {
+    font-weight: 600;
+}
+
+/*-- Terms Field---*/
+
+.rmformui .rmform-row .rmform-field .rmform-terms-checkbox{
+    margin-top: 6px;
+    display: flex;
+}
+
+.rmformui .rmform-row .rmform-field .rmform-terms-checkbox label{
+    margin: 0px;
+    padding: 0px;
+}
+
+.rmformui .rmform-row .rmform-field .rmform-terms-checkbox input[type="checkbox"]{
+    margin-right: 6px;
+}
+
+.rmformui .rmform-row .rmform-field .rmform-terms-checkbox input[type="checkbox"]:focus{
+    
+}
+
+/*--- Privacy Policy Field--*/
+
+.rmformui .rmform-row .rmform-field .rmform-privicy-wrap{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+}
+
+.rmformui .rmform-row .rmform-field .rmform-privicy-wrap input[type="checkbox"]{
+    margin-right: 5px;
+}
+
+.rmformui .rmform-row .rmform-field .rmform-privicy-wrap .rmform-label{
+    margin-bottom: 0px;
+}
+
+.rmformui .rmform-row .rmform-field .rmform-privicy-wrap p{
+    padding: 0px;
+    margin: 0px;
+}
+
+/*----Select Field-----*/
+
+.rmformui .rmform-row .rmform-field select.rmform-control{
+    padding-right: 25px
+}
+
+/*--- Payment Selector---*/
+
+.rmform-payment-selector{
+    margin: 30px 0px;
+}
+
+.rmform-payment-selector .rmform-label{
+     display: block;
+    font-family: var(--rm-label-font-family);
+    float: none;
+    line-height: 1.6;
+    margin: 0 0 6px 0;
+    padding: 0;
+    word-break: break-word;
+    word-wrap: break-word;
+}
+
+.rmform-payment-selector .rm_payment_options{
+    
+}
+
+.rmform-payment-selector .rm_payment_options input[type="radio"]{
+     margin-right: 8px;
+}
+
+.rmform-payment-selector .rm_payment_options .rmform-payment-option{
+    margin-bottom: 14px;
+    display: flex;
+    align-items: flex-start;
+}
+
+.rmform-payment-selector .rm_payment_options .rmform-payment-option label {
+    line-height: 20px;
+    text-transform: uppercase;
+    font-size: 13px;
+}
+
+/* Form Limit----*/
+
+.rmformui #rm-form-container #rm_limit_stat_msg{
+    padding: 10px;
+    width: 100%;
+    text-align: center;
+}
+
+/*-- Spacing Field ---*/
+
+.rmformui .rmform-row .rmform-field .rmform-control.rm_spacing{
+    margin-top: 100px;
+    clear: both;
+    width: 100%;
+    float: left;
+}
+
+/*--- Theme Fixes-----*/
+
+.rmformui .rmform-row .rmform-field textarea.rmform-terms-text-area{
+    min-height: 100px;
+    height: auto;
+    resize: vertical;
+}
+
+#rm-last-fields .g-recaptcha > div {
+    margin: 30px auto;
+}
+
+#rm-recaptcha-error {
+    max-width: 308px;
+    margin: 0px auto;
+}
+
+.rmformui .rmform-row .rmform-field .g-recaptcha iframe{
+    height: 78px;
+}
+
+.rmformui .rmform-row .rmform-col.rmform-col-3 .flip-clock-wrapper{
+    zoom: 0.4;
+}
+.rmformui .rmform-row .rmform-col.rmform-col-4 .flip-clock-wrapper{
+    zoom: 0.6;
+}
+
+.rmformui .rmform-row .rmform-field ul:after,
+.rmformui .rmform-row .rmform-field ul:before,
+.rmformui .rmform-row .rmform-field ul li:after,
+.rmformui .rmform-row .rmform-field ul li:before{
+    display: none;
+}
+
+.rmformui .rmform-row .rmform-field ul {
+    list-style: none !important;
+}
+
+.rmformui .rmform-row .rmform-field ul li::marker {
+    display: none;
+}
+
+.rmformui .rmform-row .rmform-field .rmform-control P {
+    padding: 0px;
+    margin: 0px;
+}
+
+/*---- Image field----*/
+
+.rmformui .rmform-row .rmform-field .rm-image-widget {
+    position: relative;
+    text-align: center;
+    width: auto;
+    margin: 0px auto;
+    
+}
+
+.rmformui .rmform-row .rmform-field .rm-image-widget.imgv_shape_circle{
+    width: 400px;
+    height: 400px;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    
+}
+
+.rmformui .rmform-row .rmform-field .rm-image-widget.imgv_shape_circle img{
+    border-radius: 50%;
+    object-fit: cover;
+    height: 100%;
+}
+
+/*---Map---*/
+
+.rmformui .rm_mapv_container {
+    margin: 0px auto;
+    max-width: 100%;
+}
+
+.rmformui .rm_mapv_container .rm-map-widget {
+    height: 100% !important;
+    padding-bottom: 50%;
+    width: 100%;
+}
+
+.rmformui .rm_mapv_container.rm_mapvlg {
+       display: block;
+}
+
+/*-- Newsletter---*/
+
+.rm-subscription-wrap {
+    display: flex;
+    justify-content: center;
+}
+
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}
+
+input[type="password"]{}

@@ -1,0 +1,30 @@
+/*
+ * Football Pool WordPress plugin
+ *
+ * @copyright Copyright (c) 2012-2022 Antoine Hurkmans
+ * @link https://wordpress.org/plugins/football-pool/
+ * @license https://plugins.svn.wordpress.org/football-pool/trunk/LICENSE
+ */
+
+@media print {
+	body.football-pool.fp-audit-log {
+		#adminmenuwrap, #adminmenuback, #wpadminbar, #screen-meta-links, #wpfooter, p.submit, p.user-search, p.text-search, .tablenav {
+			/* Hide WordPress menus*/
+			display: none;
+		}
+
+		#wpcontent{
+			/* Drop the left-hand margin on the content wrapper*/
+			margin: 0;
+		}
+
+		body{
+			/* For Chrome and Safari, force display background colours */
+			-webkit-print-color-adjust:exact;
+		}
+
+		@page {
+			size: A4 landscape;
+		}
+	}
+}

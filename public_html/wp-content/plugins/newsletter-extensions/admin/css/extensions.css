@@ -1,0 +1,77 @@
+#tnp-body .tnp-promo {
+    margin-bottom: 40px;
+}
+
+#tnp-body .tnp-promo-box {
+    background-color: #fff;
+    border: 1px solid #eee;
+    padding: 20px;
+    height: 220px; /* Usare flex! */
+}
+
+#tnp-body .tnp-promo h1 {
+    font-size: 40px;
+    font-weight: bold;
+    /*color: var(--tnp-blue-dark);*/
+    color: #000;
+}
+
+#tnp-body .tnp-promo h1 span {
+    color: var(--tnp-green-dark);
+}
+
+#tnp-body .tnp-promo-box h2 {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+
+
+#tnp-body .tnp-promo h2 {
+    font-size: 24px;
+}
+
+#tnp-body .tnp-promo input[type="text"],
+#tnp-body .tnp-promo input[type="email"]
+{
+    width: 270px;
+}
+
+
+/* Table title */
+#tnp-body h3 {
+    font-weight: bold;
+}
+
+
+#tnp-body table.tnp-extensions {
+    margin-bottom: 3rem;
+}
+
+#tnp-body .tnp-action {
+    color: #fff !important;
+    background-color: var(--tnp-blue);
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 3px;
+    min-width: 120px;
+    text-align: left;
+    line-height: normal;
+}
+
+#tnp-body .tnp-action.tnp-deactivate {
+    background-color: var(--tnp-red);
+    color: #fff;
+}
+
+/* FREE badge */
+#tnp-body .tnp-free {
+    display: inline-block;
+    background-color: #27AE60;
+    color: #fff;
+    padding: 2px 5px;;
+    border-radius: 2px;
+    font-size: .8em;
+    line-height: normal;
+    text-transform: uppercase;
+}

@@ -1,0 +1,102 @@
+# Translation of Plugins - Customizer Export/Import - Stable (latest release) in English (UK)
+# This file is distributed under the same license as the Plugins - Customizer Export/Import - Stable (latest release) package.
+msgid ""
+msgstr ""
+"PO-Revision-Date: 2024-09-23 18:42:05+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: GlotPress/4.0.1\n"
+"Language: en_GB\n"
+"Project-Id-Version: Plugins - Customizer Export/Import - Stable (latest release)\n"
+
+#: includes/control.php:30
+msgid "You must have the ability to install plugins to upload an export file. Please contact the site administrator for assistance."
+msgstr "You must have the ability to install plugins to upload an export file. Please contact the site administrator for assistance."
+
+#. translators: Accessibility text.
+#: classes/class-cei-core.php:131
+msgid "(opens in a new tab)"
+msgstr "(opens in a new tab)"
+
+#: classes/class-cei-core.php:125
+msgid "Assistant makes tasks like this easier!"
+msgstr "Assistant makes tasks like this easier!"
+
+#: classes/class-cei-core.php:128
+msgid "https://assistant.pro/"
+msgstr "https://assistant.pro/"
+
+#: classes/class-cei-core.php:129
+msgid "Get started with a Free Account"
+msgstr "Get started with a free account"
+
+#: includes/control.php:12 includes/control.php:27
+msgid "Import"
+msgstr "Import"
+
+#: includes/control.php:2 includes/control.php:7
+msgid "Export"
+msgstr "Export"
+
+#: includes/control.php:26
+msgid "Uploading..."
+msgstr "Uploading..."
+
+#. Author of the plugin
+#: customizer-export-import.php
+msgid "The Beaver Builder Team"
+msgstr "The Beaver Builder Team"
+
+#. Description of the plugin
+#: customizer-export-import.php
+msgid "Adds settings export and import functionality to the WordPress customizer."
+msgstr "Adds settings export and import functionality to the WordPress Customiser."
+
+#. Plugin Name of the plugin
+#: customizer-export-import.php
+msgid "Customizer Export/Import"
+msgstr "Customizer Export/Import"
+
+#: includes/control.php:22
+msgid "Download and import image files?"
+msgstr "Download and import image files?"
+
+#: includes/control.php:17
+msgid "Upload a file to import customization settings for this theme."
+msgstr "Upload a file to import customisation settings for this theme."
+
+#: includes/control.php:5
+msgid "Click the button below to export the customization settings for this theme."
+msgstr "Click the button below to export the customisation settings for this theme."
+
+#: classes/class-cei-core.php:309
+msgid "Error importing settings! The settings you uploaded are not for the current theme."
+msgstr "Error importing settings! The settings you uploaded are not for the current theme."
+
+#: classes/class-cei-core.php:288
+msgid "Error importing settings! Please try again."
+msgstr "Error importing settings! Please try again."
+
+#: classes/class-cei-core.php:138
+msgid "Export/Import"
+msgstr "Export/Import"
+
+#: classes/class-cei-core.php:98
+msgid "Please choose a file to import."
+msgstr "Please choose a file to import."
+
+#: classes/class-cei-core.php:301 classes/class-cei-core.php:305
+msgid "Error importing settings! Please check that you uploaded a customizer export file."
+msgstr "Error importing settings! Please check that you uploaded a Customiser export file."
+
+#. Author URI of the plugin
+#: customizer-export-import.php
+msgid "https://www.wpbeaverbuilder.com/?utm_source=external&utm_medium=customizer-export&utm_campaign=plugins-page"
+msgstr "https://www.wpbeaverbuilder.com/?utm_source=external&utm_medium=customizer-export&utm_campaign=plugins-page"
+
+#. Plugin URI of the plugin
+#: customizer-export-import.php
+msgid "https://www.wpbeaverbuilder.com/wordpress-customizer-export-import-plugin/?utm_source=external&utm_medium=customizer-export&utm_campaign=plugins-page"
+msgstr "https://www.wpbeaverbuilder.com/wordpress-customizer-export-import-plugin/?utm_source=external&utm_medium=customizer-export&utm_campaign=plugins-page"

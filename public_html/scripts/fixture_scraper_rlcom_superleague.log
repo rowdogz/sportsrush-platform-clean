@@ -1,0 +1,61 @@
+2026-01-16 10:22:46,351 INFO 🔍 Scraping Super League match centre: https://www.rugby-league.com/competitions/pro-national/betfred-super-league/match-centre
+2026-01-16 10:22:46,490 INFO 🔎 Fixture blocks found (heuristic): 0
+2026-01-16 10:22:46,490 INFO ✅ Fixtures for 2026-02-12: 0
+2026-01-16 10:22:46,491 INFO ⚠ No fixtures found for the given date.
+2026-01-16 10:28:40,699 INFO 🔍 Scraping Super League match centre: https://www.rugby-league.com/competitions/pro-national/betfred-super-league/match-centre
+2026-01-16 10:28:40,786 INFO 🧾 Saved HTML to: /home/u108848352/domains/sportsrush.co.uk/public_html/scripts/rlcom_superleague_2026-02-12.html (len=69646)
+2026-01-16 10:28:40,815 INFO 🔎 Fixture blocks found (heuristic): 0
+2026-01-16 10:28:40,816 INFO ✅ Fixtures for 2026-02-12: 0
+2026-01-16 10:28:40,817 INFO ⚠ No fixtures found for the given date.
+2026-01-16 10:33:16,145 INFO 🔍 Scraping Super League match centre: https://www.rugby-league.com/competitions/pro-national/betfred-super-league/match-centre
+2026-01-16 10:33:16,229 INFO 🧾 Saved HTML to: /home/u108848352/domains/sportsrush.co.uk/public_html/scripts/rlcom_superleague_2026-02-12.html (len=69646)
+2026-01-16 10:33:16,263 INFO 🔎 venue-label spans found: 12
+2026-01-16 10:33:16,266 INFO 🔎 Fixture blocks found: 12
+2026-01-16 10:33:16,274 INFO ✅ Fixtures for 2026-02-12: 1
+2026-01-16 10:33:16,286 ERROR ❌ Database connection error: 1045 (28000): Access denied for user 'YOUR_USER'@'127.0.0.1' (using password: YES)
+2026-01-16 10:34:18,999 INFO 🔍 Scraping Super League match centre: https://www.rugby-league.com/competitions/pro-national/betfred-super-league/match-centre
+2026-01-16 10:34:19,100 INFO 🧾 Saved HTML to: /home/u108848352/domains/sportsrush.co.uk/public_html/scripts/rlcom_superleague_2026-02-12.html (len=69646)
+2026-01-16 10:34:19,123 INFO 🔎 venue-label spans found: 12
+2026-01-16 10:34:19,125 INFO 🔎 Fixture blocks found: 12
+2026-01-16 10:34:19,132 INFO ✅ Fixtures for 2026-02-12: 1
+2026-01-16 10:34:19,143 INFO ✅ Database connection established.
+2026-01-16 10:34:19,144 ERROR ❌ matchtype_id not found for 'Betfred Super League' in pool_wpkl_matchtypes.
+2026-01-16 10:39:57,227 INFO 🔍 Scraping Super League match centre: https://www.rugby-league.com/competitions/pro-national/betfred-super-league/match-centre
+2026-01-16 10:39:57,316 INFO 🧾 Saved HTML to: /home/u108848352/domains/sportsrush.co.uk/public_html/scripts/rlcom_superleague_2026-02-12.html (len=69646)
+2026-01-16 10:39:57,346 INFO 🔎 venue-label spans found: 12
+2026-01-16 10:39:57,349 INFO 🔎 Fixture blocks found: 12
+2026-01-16 10:39:57,355 INFO ✅ Fixtures for 2026-02-12: 1
+2026-01-16 10:39:57,370 INFO ✅ Database connection established.
+2026-01-16 10:39:57,370 INFO 📦 Using competitions table: wpkl_pool_wpkl_scrape_competitions
+2026-01-16 10:39:57,451 WARNING 🆕 Team not found in DB. Creating team: Knights
+2026-01-16 10:39:57,451 INFO ✅ Created team 'Knights' with ID 127
+2026-01-16 10:39:57,452 WARNING 🆕 Team not found in DB. Creating team: York RLFC
+2026-01-16 10:39:57,452 INFO ✅ Created team 'York RLFC' with ID 128
+2026-01-16 10:39:57,453 INFO 🆕 Inserted fixture: {'home_team': 'Knights', 'away_team': 'York RLFC', 'match_time': '20:00', 'round': 1, 'venue': 'LNER Community Stadium'}
+2026-01-16 10:47:00,368 INFO 🔍 Scraping Super League match centre: https://www.rugby-league.com/competitions/pro-national/betfred-super-league/match-centre
+2026-01-16 10:47:00,463 INFO 🧾 Saved HTML to: /home/u108848352/domains/sportsrush.co.uk/public_html/scripts/rlcom_superleague_2026-02-12.html (len=69646)
+2026-01-16 10:47:00,484 INFO 🔎 venue-label spans found: 12
+2026-01-16 10:47:00,486 INFO 🔎 Fixture blocks found: 12
+2026-01-16 10:47:00,493 INFO ✅ Fixtures for 2026-02-12: 1
+2026-01-16 10:47:00,502 INFO ✅ Database connection established.
+2026-01-16 10:47:00,503 INFO 📦 Using competitions table: wpkl_pool_wpkl_scrape_competitions
+2026-01-16 10:47:00,530 WARNING 🆕 Team not found in DB. Creating team: Hull KR
+2026-01-16 10:47:00,531 INFO ✅ Created team 'Hull KR' with ID 129
+2026-01-16 10:47:00,532 INFO 🆕 Inserted fixture: {'home_team': 'York RLFC', 'away_team': 'Hull KR', 'match_time': '20:00', 'round': 1, 'venue': 'LNER Community Stadium'}
+2026-01-16 11:00:37,061 INFO 🔍 Scraping Super League match centre: https://www.rugby-league.com/competitions/pro-national/betfred-super-league/match-centre
+2026-01-16 11:00:37,177 INFO 🧾 Saved HTML to: /home/u108848352/domains/sportsrush.co.uk/public_html/scripts/rlcom_superleague_2026-02-12.html (len=69646)
+2026-01-16 11:00:37,205 INFO 🔎 venue-label spans found: 12
+2026-01-16 11:00:37,207 INFO 🔎 Fixture blocks found: 12
+2026-01-16 11:00:37,213 INFO ✅ Fixtures for 2026-02-12: 1
+2026-01-16 11:00:37,224 INFO ✅ Database connection established.
+2026-01-16 11:00:37,225 INFO 📦 Using competitions table: wpkl_pool_wpkl_scrape_competitions
+2026-01-16 11:00:37,255 INFO 🔄 Updated fixture 1465: {'home_team': 'York RLFC', 'away_team': 'Hull KR', 'match_time': '20:00', 'round': 1, 'venue': 'LNER Community Stadium'}
+2026-01-16 12:01:35,832 INFO 🔍 Scraping Super League match centre: https://www.rugby-league.com/competitions/pro-national/betfred-super-league/match-centre
+2026-01-16 12:01:35,933 INFO 🧾 Saved HTML to: /home/u108848352/domains/sportsrush.co.uk/public_html/scripts/rlcom_superleague_2026-02-14.html (len=70086)
+2026-01-16 12:01:35,963 INFO 🔎 venue-label spans found: 12
+2026-01-16 12:01:35,965 INFO 🔎 Fixture blocks found: 12
+2026-01-16 12:01:35,974 INFO ✅ Fixtures for 2026-02-14: 2
+2026-01-16 12:01:35,985 INFO ✅ Database connection established.
+2026-01-16 12:01:35,986 INFO 📦 Using competitions table: wpkl_pool_wpkl_scrape_competitions
+2026-01-16 12:01:36,015 INFO 🔄 Updated fixture 1468: {'home_team': 'Hull FC', 'away_team': 'Bradford Bulls', 'match_time': '17:30', 'round': 1, 'venue': 'MKM Stadium'}
+2026-01-16 12:01:36,016 INFO 🔄 Updated fixture 1469: {'home_team': 'Wakefield Trinity', 'away_team': 'Toulouse Olympique XIII', 'match_time': '20:00', 'round': 1, 'venue': 'The Diy Kitchens Stadium'}

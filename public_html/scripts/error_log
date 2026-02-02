@@ -1,0 +1,11 @@
+[12-Mar-2025 10:43:37 UTC] WordPress database error You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '%s LIMIT 1' at line 2 for query 
+    SELECT * FROM wpkl_mailpoet_newsletters 
+    WHERE hash = %s LIMIT 1
+[12-Mar-2025 10:45:46 UTC] WordPress database error You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '%s LIMIT 1' at line 2 for query 
+    SELECT * FROM wpkl_wpkl_mailpoet_newsletters 
+    WHERE hash = %s LIMIT 1
+[12-Mar-2025 10:48:01 UTC] WordPress database error You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '%s LIMIT 1' at line 2 for query 
+    SELECT * FROM wpkl_mailpoet_newsletters 
+    WHERE hash = %s LIMIT 1
+[12-Mar-2025 10:49:44 UTC] WordPress database error Unknown column 'content' in 'INSERT INTO' for query INSERT INTO `wpkl_mailpoet_newsletters` (`subject`, `content`, `status`, `scheduled_at`, `is_scheduled`, `created_at`, `updated_at`) VALUES ('Prediction Time!', NULL, 'scheduled', '2025-03-19 10:00:00', '1', '2025-03-12 10:49:44', '2025-03-12 10:49:44')
+[12-Mar-2025 10:50:58 UTC] WordPress database error Unknown column 'content' in 'INSERT INTO' for query INSERT INTO `wpkl_mailpoet_newsletters` (`subject`, `content`, `status`, `scheduled_at`, `is_scheduled`, `created_at`, `updated_at`) VALUES ('Prediction Time!', NULL, 'scheduled', '2025-03-19 10:00:00', '1', '2025-03-12 10:50:58', '2025-03-12 10:50:58')

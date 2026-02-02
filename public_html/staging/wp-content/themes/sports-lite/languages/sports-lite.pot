@@ -1,0 +1,385 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Sports Lite\n"
+"POT-Creation-Date: 2021-06-05 17:22+0530\n"
+"PO-Revision-Date: 2021-06-05 17:22+0530\n"
+"Last-Translator: \n"
+"Language-Team: Grace Themes <support@gracethemes.com>\n"
+"Language: en_US\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.8.2\n"
+"X-Poedit-Basepath: ..\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-KeywordsList: _;__;_e;gettext;gettext_noop;esc_attr;esc_attr__;"
+"esc_attr_e;esc_html;esc_html__;esc_html_e\n"
+"X-Poedit-SearchPath-0: .\n"
+
+#: 404.php:14
+msgid "404 Not Found"
+msgstr ""
+
+#: 404.php:17
+msgid ""
+"Looks like you have taken a wrong turn....Dont worry... it happens to the "
+"best of us."
+msgstr ""
+
+#: comments.php:30
+#, php-format
+msgid "One thought on &ldquo;%s&rdquo;"
+msgstr ""
+
+#: comments.php:69
+msgid "Comments are closed."
+msgstr ""
+
+#: content-page.php:18 content-search.php:28 content-single.php:25
+#: content.php:41 image.php:56 template-full-width.php:23
+msgid "Pages:"
+msgstr ""
+
+#: content-page.php:23 content-search.php:39 content-single.php:36
+#: image.php:30 image.php:62
+msgid "Edit"
+msgstr ""
+
+#: content-single.php:15 content.php:22
+msgid ", "
+msgstr ""
+
+#: content.php:32
+msgid "Read more &rarr;"
+msgstr ""
+
+#: content.php:38
+msgid "Read More <span class=\"meta-nav\">&rarr;</span>"
+msgstr ""
+
+#: customize-pro/class-customize.php:76
+msgid "Upgrade to Pro"
+msgstr ""
+
+#: customize-pro/class-customize.php:77
+msgid "Upgrade Now"
+msgstr ""
+
+#: footer.php:33
+msgid "Theme by Grace Themes"
+msgstr ""
+
+#: functions.php:33
+msgid "Primary Menu"
+msgstr ""
+
+#: functions.php:34
+msgid "Footer Menu"
+msgstr ""
+
+#: functions.php:50
+msgid "Blog Sidebar"
+msgstr ""
+
+#: functions.php:51
+msgid "Appears on blog page sidebar"
+msgstr ""
+
+#: functions.php:60
+msgid "Footer Widget 1"
+msgstr ""
+
+#: functions.php:61 functions.php:71 functions.php:81
+msgid "Appears on footer"
+msgstr ""
+
+#: functions.php:70
+msgid "Footer Widget 2"
+msgstr ""
+
+#: functions.php:80
+msgid "Footer Widget 3"
+msgstr ""
+
+#: functions.php:141
+msgid "Open the main menu"
+msgstr ""
+
+#: functions.php:142
+msgid "Close the main menu"
+msgstr ""
+
+#: functions.php:143
+msgid "expand submenu"
+msgstr ""
+
+#: functions.php:144
+msgid "collapse submenu"
+msgstr ""
+
+#: header.php:29
+msgid "Skip to content"
+msgstr ""
+
+#: header.php:120
+msgid "Menu"
+msgstr ""
+
+#: header.php:231
+msgid "Read More"
+msgstr ""
+
+#: image.php:20
+#, php-format
+msgid ""
+"Published <span class=\"entry-date\"><time class=\"entry-date\" datetime="
+"\"%1$s\">%2$s</time></span> at <a href=\"%3$s\">%4$s &times; %5$s</a> in <a "
+"href=\"%6$s\" rel=\"gallery\">%7$s</a>"
+msgstr ""
+
+#: image.php:35
+msgid "<span class=\"meta-nav\">&larr;</span> Previous"
+msgstr ""
+
+#: image.php:36
+msgid "Next <span class=\"meta-nav\">&rarr;</span>"
+msgstr ""
+
+#: inc/about-themes.php:11 inc/about-themes.php:20
+msgid "About Theme Info"
+msgstr ""
+
+#: inc/about-themes.php:22
+msgid ""
+"Sports Lite is a dynamic and colorful, creative and responsive, lightweight "
+"and flexible, sleek and smooth, powerful and engaging sports academy "
+"WordPress theme for sports professionals. It is a perfect platform to create "
+"a elegant website for sports club, sports blogs, sports magazines and all "
+"similar sports related websites. "
+msgstr ""
+
+#: inc/about-themes.php:23
+msgid "Theme Features"
+msgstr ""
+
+#: inc/about-themes.php:27
+msgid "Theme Customizer"
+msgstr ""
+
+#: inc/about-themes.php:28
+msgid ""
+"The built-in customizer panel quickly change aspects of the design and "
+"display changes live before saving them."
+msgstr ""
+
+#: inc/about-themes.php:32
+msgid "Responsive Ready"
+msgstr ""
+
+#: inc/about-themes.php:33
+msgid ""
+"The themes layout will automatically adjust and fit on any screen resolution "
+"and looks great on any device. Fully optimized for iPhone and iPad."
+msgstr ""
+
+#: inc/about-themes.php:37
+msgid "Cross Browser Compatible"
+msgstr ""
+
+#: inc/about-themes.php:38
+msgid ""
+"Our themes are tested in all mordern web browsers and compatible with the "
+"latest version including Chrome,Firefox, Safari, Opera, IE11 and above."
+msgstr ""
+
+#: inc/about-themes.php:42
+msgid "E-commerce"
+msgstr ""
+
+#: inc/about-themes.php:43
+msgid ""
+"Fully compatible with WooCommerce plugin. Just install the plugin and turn "
+"your site into a full featured online shop and start selling products."
+msgstr ""
+
+#: inc/about-themes.php:49
+msgid "Documentation"
+msgstr ""
+
+#: inc/customizer.php:35
+msgid "Theme Options Panel"
+msgstr ""
+
+#: inc/customizer.php:40
+msgid "Site Layout Options"
+msgstr ""
+
+#: inc/customizer.php:51
+msgid "Check to Show Box Layout"
+msgstr ""
+
+#: inc/customizer.php:52
+msgid "If you want to show box layout please check the Box Layout Option."
+msgstr ""
+
+#: inc/customizer.php:63
+msgid "Menu Hover Color"
+msgstr ""
+
+#: inc/customizer.php:76
+msgid "Color Options"
+msgstr ""
+
+#: inc/customizer.php:77
+msgid "More color scheme available in PRO Version"
+msgstr ""
+
+#: inc/customizer.php:85
+msgid "Header Contact Section"
+msgstr ""
+
+#: inc/customizer.php:97
+msgid "Enter email text here"
+msgstr ""
+
+#: inc/customizer.php:109
+msgid "enter email id here."
+msgstr ""
+
+#: inc/customizer.php:121
+msgid "Enter Call Us text here"
+msgstr ""
+
+#: inc/customizer.php:134
+msgid "Enter phone number here"
+msgstr ""
+
+#: inc/customizer.php:146
+msgid "Enter work time text here"
+msgstr ""
+
+#: inc/customizer.php:159
+msgid "Enter work timing here"
+msgstr ""
+
+#: inc/customizer.php:174 inc/customizer.php:310
+msgid "Check To show This Section"
+msgstr ""
+
+#: inc/customizer.php:181
+msgid "Frontpage Slider Sections"
+msgstr ""
+
+#: inc/customizer.php:183
+msgid "Default image size for slider is 1400 x 824px"
+msgstr ""
+
+#: inc/customizer.php:195
+msgid "Select page for slide 1:"
+msgstr ""
+
+#: inc/customizer.php:207
+msgid "Select page for slide 2:"
+msgstr ""
+
+#: inc/customizer.php:219
+msgid "Select page for slide 3:"
+msgstr ""
+
+#: inc/customizer.php:230
+msgid "slider Read more button name here"
+msgstr ""
+
+#: inc/customizer.php:244 inc/customizer.php:365 inc/customizer.php:397
+msgid "Check To Show This Section"
+msgstr ""
+
+#: inc/customizer.php:251
+msgid "Header Social Sections"
+msgstr ""
+
+#: inc/customizer.php:252
+msgid "Add social icons link here to display icons in header "
+msgstr ""
+
+#: inc/customizer.php:263
+msgid "Add facebook link here"
+msgstr ""
+
+#: inc/customizer.php:274
+msgid "Add twitter link here"
+msgstr ""
+
+#: inc/customizer.php:285
+msgid "Add linkedin link here"
+msgstr ""
+
+#: inc/customizer.php:296
+msgid "Add instagram link here"
+msgstr ""
+
+#: inc/customizer.php:316
+msgid "Three Box Section"
+msgstr ""
+
+#: inc/customizer.php:317
+msgid "Select pages from the dropdown for three box sections"
+msgstr ""
+
+#: inc/customizer.php:371
+msgid "About Club Section"
+msgstr ""
+
+#: inc/customizer.php:372
+msgid "Select Pages from the dropdown for about page section"
+msgstr ""
+
+#: inc/customizer.php:404
+msgid "Sidebar Options"
+msgstr ""
+
+#: inc/customizer.php:418
+msgid "Check to hide sidebar from single post"
+msgstr ""
+
+#: inc/customizer.php:431
+msgid "Check to hide sidebar from latest post page"
+msgstr ""
+
+#: no-results.php:12
+msgid "Nothing Found"
+msgstr ""
+
+#: no-results.php:17
+msgid "Ready to publish your first post? Get started here."
+msgstr ""
+
+#: no-results.php:21
+msgid ""
+"Sorry, but nothing matched your search terms. Please try again with some "
+"different keywords."
+msgstr ""
+
+#: no-results.php:26
+msgid ""
+"It seems we can&rsquo;t find what you&rsquo;re looking for. Perhaps "
+"searching can help."
+msgstr ""
+
+#: search.php:17
+#, php-format
+msgid "Search Results for: %s"
+msgstr ""
+
+#: sidebar.php:11
+msgid "Category"
+msgstr ""
+
+#: sidebar.php:18
+msgid "Archives"
+msgstr ""
+
+#: sidebar.php:25
+msgid "Meta"
+msgstr ""
