@@ -60,3 +60,9 @@ id = "C-rm1xYWQKb86PlS8C1aD"
 uri = "file://SPORTSRUSH_2_DOMAIN_MODEL.md"
 type = "text"
 title = "SPORTSRUSH_2_DOMAIN_MODEL.md"
+
+[[outputs]]
+id = "DClWFq1Qtu1hFIdpARyov"
+uri = "file://SPORTSRUSH_2_IMPLEMENTATION_SEQUENCE.md"
+type = "text"
+title = "SPORTSRUSH_2_IMPLEMENTATION_SEQUENCE.md"
