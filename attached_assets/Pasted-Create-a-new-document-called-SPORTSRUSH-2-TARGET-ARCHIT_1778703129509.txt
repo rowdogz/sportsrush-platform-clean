@@ -1,0 +1,110 @@
+Create a new document called SPORTSRUSH_2_TARGET_ARCHITECTURE.md.
+
+Design the ideal long-term architecture for SportsRush 2.0 using the canonical rules as the source of truth.
+
+Do NOT mirror the WordPress implementation unless there is a strong reason.
+
+Assume:
+- Cloudflare-first infrastructure
+- bespoke API platform
+- modern web frontend
+- iOS and Android apps
+- scalable live rankings
+- private leagues
+- payments
+- push notifications
+- future gamification and real-time features
+
+The architecture should optimise for:
+- correctness of scoring
+- maintainability
+- scalability
+- security
+- developer velocity
+- mobile/web shared logic
+- observability
+- low operational overhead
+
+Please define:
+
+1. Recommended frontend architecture
+- framework
+- state management
+- routing
+- SSR/CSR strategy
+- component structure
+- shared design system
+- admin portal separation
+
+2. Recommended mobile architecture
+- framework
+- shared code strategy
+- authentication
+- push notifications
+- offline handling
+- live updates
+
+3. Recommended backend/API architecture
+- API framework
+- service boundaries
+- auth model
+- rate limiting
+- background jobs
+- scheduled tasks
+- live events/websocket strategy
+
+4. Recommended database architecture
+- database choice
+- schema organisation
+- migration strategy
+- auditing/versioning
+- caching approach
+- analytics/event tracking
+
+5. Recommended scoring/rankings architecture
+- single canonical scoring engine
+- recalculation strategy
+- event-driven updates
+- historical recalculation
+- ranking snapshots
+- tie handling
+
+6. Recommended fixture/results ingestion architecture
+- external APIs
+- scraper fallback strategy
+- alias management
+- ingestion validation
+- admin correction workflows
+
+7. Recommended payments/private league architecture
+- Stripe integration
+- idempotency handling
+- entitlements model
+- subscription/future monetisation support
+
+8. Recommended security architecture
+- auth/session model
+- CSRF strategy
+- secrets management
+- admin permissions
+- audit logging
+- abuse prevention
+
+9. Recommended deployment architecture
+- environments
+- CI/CD
+- rollback strategy
+- infrastructure separation
+- monitoring/logging
+
+10. Migration strategy
+- coexistence with current WordPress site
+- gradual feature migration
+- user migration
+- database migration
+- cutover approach
+- rollback safety
+
+Important:
+This is NOT a coding task.
+This is a technical architecture and platform design task.
