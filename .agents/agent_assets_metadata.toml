@@ -54,3 +54,9 @@ id = "mQDkKH16gdhtgLBBgjhMo"
 uri = "file://SPORTSRUSH_2_TARGET_ARCHITECTURE.md"
 type = "text"
 title = "SPORTSRUSH_2_TARGET_ARCHITECTURE.md"
+
+[[outputs]]
+id = "C-rm1xYWQKb86PlS8C1aD"
+uri = "file://SPORTSRUSH_2_DOMAIN_MODEL.md"
+type = "text"
+title = "SPORTSRUSH_2_DOMAIN_MODEL.md"
