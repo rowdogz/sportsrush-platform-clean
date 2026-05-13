@@ -1,0 +1,79 @@
+You are acting as a senior software architect and engineer.
+
+Before making any changes, I want you to fully analyse and understand this SportsRush codebase and document how the platform currently works.
+
+Do NOT refactor or rebuild anything yet.
+
+Your task is to inspect the entire repository and produce a complete technical assessment of the current platform.
+
+Please create the following markdown documents:
+
+1. CURRENT_SYSTEM_OVERVIEW.md
+- High-level explanation of the platform
+- Main technologies used
+- How the frontend works
+- How the backend works
+- Hosting/deployment assumptions
+- How users interact with the system
+
+2. DATABASE_AND_DATA_FLOW.md
+- Database structure
+- Key tables
+- Relationships
+- How fixtures, predictions, users, rankings and leagues work
+- Data flow between systems
+- Any cron jobs, scrapers or scheduled tasks
+
+3. SCORING_AND_RANKINGS_ENGINE.md
+- Explain exactly how scoring currently works
+- Points logic
+- Rankings logic
+- Tie-breakers
+- Competition filtering
+- Monthly winners
+- Any edge cases or technical concerns
+
+4. FIXTURE_AND_RESULTS_PIPELINE.md
+- Explain how fixtures are imported
+- Explain how results are updated
+- BBC/API/other scraper dependencies
+- Team alias handling
+- Round handling
+- Error handling
+- Known weaknesses
+
+5. PRIVATE_LEAGUES_AND_PAYMENTS.md
+- How private leagues currently work
+- Stripe/payment integrations
+- League/user relationships
+- Admin management
+- Branding/logo functionality
+- Security concerns
+
+6. TECHNICAL_DEBT_AND_LIMITATIONS.md
+- Current architectural problems
+- WordPress/plugin limitations
+- Scalability concerns
+- Security concerns
+- Mobile limitations
+- Technical debt
+- Areas most difficult to maintain
+
+7. SPORTSRUSH_2_RECOMMENDATIONS.md
+- Recommended architecture for a modern rebuild
+- Suggested frontend stack
+- Suggested backend stack
+- Mobile architecture recommendations
+- Suggested database
+- Suggested auth system
+- Suggested real-time/live score approach
+- Suggested migration strategy away from WordPress
+
+Important:
+- Be thorough.
+- Infer architecture from the codebase.
+- Explain assumptions clearly.
+- Highlight hidden coupling and risks.
+- Do not modify production logic yet.
+- Focus on understanding first.
+- Treat this as preparation for a full rebuild to a modern Cloudflare-based architecture with web and mobile apps.
