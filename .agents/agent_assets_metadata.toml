@@ -1,0 +1,44 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "wRCgAWaVHi3tPI6Fv-O1t"
+uri = "file://CURRENT_SYSTEM_OVERVIEW.md"
+type = "text"
+title = "1. Current System Overview"
+
+[[outputs]]
+id = "_7bUX05Uz1oEP56QDAOfH"
+uri = "file://DATABASE_AND_DATA_FLOW.md"
+type = "text"
+title = "2. Database and Data Flow"
+
+[[outputs]]
+id = "gKcm6rVWdyu1gaBpvXe5r"
+uri = "file://SCORING_AND_RANKINGS_ENGINE.md"
+type = "text"
+title = "3. Scoring and Rankings Engine"
+
+[[outputs]]
+id = "3YEabxnpG3BfirGh0DnqQ"
+uri = "file://FIXTURE_AND_RESULTS_PIPELINE.md"
+type = "text"
+title = "4. Fixture and Results Pipeline"
+
+[[outputs]]
+id = "fNQlp9aDsUXID1nhOoqki"
+uri = "file://PRIVATE_LEAGUES_AND_PAYMENTS.md"
+type = "text"
+title = "5. Private Leagues and Payments"
+
+[[outputs]]
+id = "IjZVHBn-ft_cgMn3BME2t"
+uri = "file://TECHNICAL_DEBT_AND_LIMITATIONS.md"
+type = "text"
+title = "6. Technical Debt and Limitations"
+
+[[outputs]]
+id = "6Xel1jh6ab9iDagh1qC0q"
+uri = "file://SPORTSRUSH_2_RECOMMENDATIONS.md"
+type = "text"
+title = "7. SportsRush 2.0 Recommendations"
