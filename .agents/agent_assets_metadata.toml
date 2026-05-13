@@ -42,3 +42,9 @@ id = "6Xel1jh6ab9iDagh1qC0q"
 uri = "file://SPORTSRUSH_2_RECOMMENDATIONS.md"
 type = "text"
 title = "7. SportsRush 2.0 Recommendations"
+
+[[outputs]]
+id = "T8l7BwVcNlXasfmpXtlJZ"
+uri = "file://SPORTSRUSH_CANONICAL_RULES.md"
+type = "text"
+title = "SPORTSRUSH_CANONICAL_RULES.md"
