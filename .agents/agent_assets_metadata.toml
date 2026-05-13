@@ -66,3 +66,9 @@ id = "DClWFq1Qtu1hFIdpARyov"
 uri = "file://SPORTSRUSH_2_IMPLEMENTATION_SEQUENCE.md"
 type = "text"
 title = "SPORTSRUSH_2_IMPLEMENTATION_SEQUENCE.md"
+
+[[outputs]]
+id = "dhfmKvj95R2lWhZChOfna"
+uri = "file://SPORTSRUSH_2_REPOSITORY_STRUCTURE.md"
+type = "text"
+title = "SPORTSRUSH_2_REPOSITORY_STRUCTURE.md"
