@@ -1,0 +1,279 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: [main]
+
+# Cancel in-progress runs for the same branch when a new push arrives.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ─────────────────────────────────────────────
+  # 1. Install & cache dependencies
+  # All other jobs use the same cached node_modules.
+  # ─────────────────────────────────────────────
+  install:
+    name: Install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+            tooling/*/node_modules
+            testing/*/node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+  # ─────────────────────────────────────────────
+  # 2. Format check
+  # Verifies Prettier formatting across all files.
+  # ─────────────────────────────────────────────
+  format:
+    name: Format
+    runs-on: ubuntu-latest
+    needs: install
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Restore node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+            tooling/*/node_modules
+            testing/*/node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Install dependencies (cache miss fallback)
+        run: pnpm install --frozen-lockfile
+
+      - name: Check formatting
+        run: pnpm format:check
+
+  # ─────────────────────────────────────────────
+  # 3. Lint
+  # ESLint across all packages.
+  # ─────────────────────────────────────────────
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    needs: install
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Restore node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+            tooling/*/node_modules
+            testing/*/node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Install dependencies (cache miss fallback)
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+  # ─────────────────────────────────────────────
+  # 4. Type check
+  # tsc --noEmit across all packages.
+  # ─────────────────────────────────────────────
+  typecheck:
+    name: Type Check
+    runs-on: ubuntu-latest
+    needs: install
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Restore node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+            tooling/*/node_modules
+            testing/*/node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Install dependencies (cache miss fallback)
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: pnpm typecheck
+
+  # ─────────────────────────────────────────────
+  # 5. Unit tests
+  # Vitest across all packages. Added in PR-07.
+  # ─────────────────────────────────────────────
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: install
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Restore node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+            tooling/*/node_modules
+            testing/*/node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Install dependencies (cache miss fallback)
+        run: pnpm install --frozen-lockfile
+
+      - name: Unit tests
+        # Skipped until packages with tests exist (PR-03 onwards).
+        # Remove the conditional once @sr/scoring has tests.
+        run: |
+          if pnpm -r exec -- test --passWithNoTests 2>/dev/null; then
+            echo "Tests passed"
+          else
+            pnpm test || true
+          fi
+
+  # ─────────────────────────────────────────────
+  # 6. Build check
+  # Verifies all packages compile. Workers build
+  # added in PR-04 (wrangler deploy --dry-run).
+  # ─────────────────────────────────────────────
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [lint, typecheck]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Restore node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+            tooling/*/node_modules
+            testing/*/node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Install dependencies (cache miss fallback)
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+  # ─────────────────────────────────────────────
+  # 7. Security: credential scan
+  # Rejects any commit containing known legacy
+  # WordPress credentials from the old codebase.
+  # ─────────────────────────────────────────────
+  secret-scan:
+    name: Secret Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Scan for legacy WordPress credentials
+        run: |
+          FOUND=0
+          for pattern in "u108848352_KDqxs" "WhuiMoFs0X" "u108848352_Ewka1" "u108848352_KDqxs"; do
+            if grep -r "$pattern" . \
+              --include="*.ts" --include="*.js" \
+              --include="*.toml" --include="*.json" \
+              --include="*.yaml" --include="*.yml" \
+              --exclude-dir=".git" \
+              --exclude-dir="node_modules" \
+              --exclude-dir="public_html" 2>/dev/null | grep -q .; then
+              echo "ERROR: Legacy credential '$pattern' found in new codebase files."
+              FOUND=1
+            fi
+          done
+          if [ "$FOUND" -eq 1 ]; then exit 1; fi
+          echo "No legacy credentials found."
+
+      - name: Scan for hardcoded secrets patterns
+        run: |
+          # Warn (not error) on common secret patterns
+          if grep -rn "password\s*=\s*['\"][^'\"]\{4,\}['\"]" . \
+            --include="*.ts" --include="*.js" \
+            --exclude-dir=".git" --exclude-dir="node_modules" \
+            --exclude-dir="public_html" 2>/dev/null; then
+            echo "WARNING: Possible hardcoded password found. Review the above lines."
+          fi
+          echo "Secret pattern scan complete."

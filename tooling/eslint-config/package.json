@@ -1,0 +1,17 @@
+{
+  "name": "@sr/eslint-config",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Shared ESLint configuration for all SportsRush packages",
+  "main": "index.js",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "eslint-plugin-import": "^2.30.0"
+  },
+  "peerDependencies": {
+    "eslint": "^8.57.0",
+    "typescript": "^5.0.0"
+  }
+}

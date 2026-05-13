@@ -1,0 +1,32 @@
+# Legacy WordPress codebase — never formatted by Prettier
+public_html/
+
+# Build outputs
+node_modules/
+dist/
+.next/
+.wrangler/
+.turbo/
+out/
+coverage/
+
+# pnpm / Replit caches
+.cache/
+.pnpm-store/
+
+# Replit internals
+.agents/
+.local/
+attached_assets/
+
+# Expo generated
+android/
+ios/
+.expo/
+
+# Git
+.git/
+
+# Misc
+*.min.js
+pnpm-lock.yaml
