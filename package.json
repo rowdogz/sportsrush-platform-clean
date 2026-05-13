@@ -1,8 +1,8 @@
 {
-  "name": "sportsrush",
+  "name": "sportsrush-platform",
   "private": true,
   "version": "0.0.1",
-  "description": "SportsRush 2.0 monorepo",
+  "description": "SportsRush platform monorepo",
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
