@@ -25,11 +25,7 @@ import type {
   CreateTeamAliasInput,
   CreateTeamInput,
 } from "./schemas";
-import {
-  normalizeAlias,
-  normalizeSlug,
-  normalizeSource,
-} from "./normalization";
+import { normalizeAlias, normalizeSlug, normalizeSource } from "./normalization";
 
 const TRANSITIONS: Record<FixtureStatus, readonly FixtureStatus[]> = {
   scheduled: ["postponed", "cancelled", "completed", "abandoned", "void"],
@@ -41,9 +37,12 @@ const TRANSITIONS: Record<FixtureStatus, readonly FixtureStatus[]> = {
 };
 
 export class AdminDomainError extends AppError {
-  constructor(message: string, readonly correlationId: string) {
-    super(message);
-    this.name = "AdminDomainError";
+  override readonly name = "AdminDomainError";
+  readonly correlationId: string;
+
+  constructor(message: string, correlationId: string) {
+    super(422, "ADMIN_DOMAIN_ERROR", message, { correlationId });
+    this.correlationId = correlationId;
   }
 }
 
@@ -53,6 +52,12 @@ export type ServiceContext = {
   readonly correlationId: string;
   readonly actorUserId: string;
   readonly actorDisplayName?: string;
+};
+
+export type TransitionOptions = {
+  readonly preserveScores?: boolean;
+  readonly partialHomeScore?: number;
+  readonly partialAwayScore?: number;
 };
 
 function logCorrelation(correlationId: string, message: string): void {
@@ -66,6 +71,10 @@ function assert(condition: unknown, message: string, correlationId: string): ass
   }
 }
 
+export function getAllowedFixtureTransitions(status: FixtureStatus): readonly FixtureStatus[] {
+  return TRANSITIONS[status];
+}
+
 export async function createCompetitionService(
   context: ServiceContext,
   input: CreateCompetitionInput,
@@ -73,18 +82,12 @@ export async function createCompetitionService(
   return createCompetition(
     context.db,
     randomUUID(),
-    {
-      ...input,
-      slug: normalizeSlug(input.slug),
-    },
+    { ...input, slug: normalizeSlug(input.slug) },
     context.now,
   );
 }
 
-export async function createSeasonService(
-  context: ServiceContext,
-  input: CreateSeasonInput,
-) {
+export async function createSeasonService(context: ServiceContext, input: CreateSeasonInput) {
   return createSeason(context.db, randomUUID(), input, context.now);
 }
 
@@ -96,28 +99,17 @@ export async function activateSeasonService(
   return markActiveSeason(context.db, seasonId, competitionId, context.now);
 }
 
-export async function createTeamService(
-  context: ServiceContext,
-  input: CreateTeamInput,
-) {
+export async function createTeamService(context: ServiceContext, input: CreateTeamInput) {
   return createTeam(
     context.db,
     randomUUID(),
-    {
-      ...input,
-      slug: normalizeSlug(input.slug),
-    },
+    { ...input, slug: normalizeSlug(input.slug) },
     context.now,
   );
 }
 
-export async function createAliasService(
-  context: ServiceContext,
-  input: CreateTeamAliasInput,
-) {
-  const normalizedAlias = normalizeAlias(
-    input.normalizedAlias ?? input.alias,
-  );
+export async function createAliasService(context: ServiceContext, input: CreateTeamAliasInput) {
+  const normalizedAlias = normalizeAlias(input.normalizedAlias ?? input.alias);
   const normalizedSource = normalizeSource(input.source);
 
   const existing = await listAliasesBySource(
@@ -157,10 +149,7 @@ export async function lookupAliasService(
   );
 }
 
-export async function createFixtureService(
-  context: ServiceContext,
-  input: CreateFixtureInput,
-) {
+export async function createFixtureService(context: ServiceContext, input: CreateFixtureInput) {
   return createFixture(context.db, randomUUID(), input, context.now);
 }
 
@@ -168,9 +157,7 @@ export async function transitionFixtureService(
   context: ServiceContext,
   fixtureId: string,
   nextStatus: FixtureStatus,
-  options?: {
-    readonly preserveScores?: boolean;
-  },
+  options: TransitionOptions = {},
 ): Promise<FixtureRow> {
   const fixture = await findFixtureById(context.db, fixtureId);
 
@@ -184,18 +171,41 @@ export async function transitionFixtureService(
     context.correlationId,
   );
 
+  assert(
+    nextStatus !== "completed",
+    "Use enterFixtureResultService to complete fixtures",
+    context.correlationId,
+  );
+
+  const hasPartialScores =
+    options.partialHomeScore !== undefined || options.partialAwayScore !== undefined;
+
+  assert(
+    !hasPartialScores || nextStatus === "abandoned",
+    "Partial scores are only allowed for abandoned fixtures",
+    context.correlationId,
+  );
+
   const clearScores =
     nextStatus === "void" || nextStatus === "cancelled"
       ? true
-      : !options?.preserveScores;
+      : hasPartialScores
+        ? false
+        : !options.preserveScores;
 
-  const updated = await setFixtureStatus(
-    context.db,
-    fixture.id,
-    nextStatus,
-    context.now,
-    clearScores,
-  );
+  let updated = await setFixtureStatus(context.db, fixture.id, nextStatus, context.now, clearScores);
+
+  if (hasPartialScores) {
+    updated = await updateFixture(
+      context.db,
+      fixture.id,
+      {
+        homeScore: options.partialHomeScore,
+        awayScore: options.partialAwayScore,
+      },
+      context.now,
+    );
+  }
 
   assert(updated !== null, "Failed to update fixture", context.correlationId);
 
@@ -213,19 +223,20 @@ export async function enterFixtureResultService(
 
   assert(fixture !== null, "Fixture not found", context.correlationId);
 
-  assert(
-    fixture.status !== "completed",
-    "Completed fixtures require correction flow",
-    context.correlationId,
-  );
-
-  if (
-    fixture.home_score === homeScore &&
-    fixture.away_score === awayScore &&
-    fixture.status === "completed"
-  ) {
+  if (fixture.status === "completed") {
+    assert(
+      fixture.home_score === homeScore && fixture.away_score === awayScore,
+      "Completed fixtures require correction flow",
+      context.correlationId,
+    );
     return fixture;
   }
+
+  assert(
+    fixture.status === "scheduled" || fixture.status === "abandoned",
+    `Cannot enter result for ${fixture.status} fixture`,
+    context.correlationId,
+  );
 
   const updated = await enterFixtureResult(
     context.db,
@@ -253,18 +264,10 @@ export async function correctFixtureResultService(
 
   assert(fixture !== null, "Fixture not found", context.correlationId);
 
-  assert(
-    fixture.status === "completed",
-    "Only completed fixtures can be corrected",
-    context.correlationId,
-  );
-
+  assert(fixture.status === "completed", "Only completed fixtures can be corrected", context.correlationId);
   assert(reason.trim().length > 0, "Correction reason required", context.correlationId);
 
-  if (
-    fixture.home_score === correctedHomeScore &&
-    fixture.away_score === correctedAwayScore
-  ) {
+  if (fixture.home_score === correctedHomeScore && fixture.away_score === correctedAwayScore) {
     return fixture;
   }
 
