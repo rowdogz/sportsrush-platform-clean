@@ -40,15 +40,24 @@ const ActivateSeasonSchema = z.object({
 function parseBody<T>(schema: z.ZodType<T>, raw: unknown): T {
   const parsed = schema.safeParse(raw);
   if (!parsed.success) {
-    throw new ValidationError("Invalid request body", parsed.error.flatten().fieldErrors);
+    throw new ValidationError(
+      "Invalid request body",
+      parsed.error.flatten().fieldErrors,
+    );
   }
   return parsed.data;
 }
 
-function parseQuery<T>(schema: z.ZodType<T>, raw: Record<string, string | undefined>): T {
+function parseQuery<T>(
+  schema: z.ZodType<T>,
+  raw: Record<string, string | undefined>,
+): T {
   const parsed = schema.safeParse(raw);
   if (!parsed.success) {
-    throw new ValidationError("Invalid query parameters", parsed.error.flatten().fieldErrors);
+    throw new ValidationError(
+      "Invalid query parameters",
+      parsed.error.flatten().fieldErrors,
+    );
   }
   return parsed.data;
 }
@@ -62,7 +71,9 @@ function paginationMeta(page: number, limit: number, total: number) {
   };
 }
 
-async function makeServiceContext(c: Parameters<typeof ok>[0]): Promise<ServiceContext> {
+async function makeServiceContext(
+  c: Parameters<typeof ok>[0],
+): Promise<ServiceContext> {
   const user = c.var.user;
   if (user === undefined) throw new AuthenticationError();
   return {
@@ -84,7 +95,11 @@ adminRoutes.get("/competitions", async (c) => {
   });
   const context = await makeServiceContext(c);
   const result = await listCompetitionsService(context, pagination);
-  return paginated(c, result.rows, paginationMeta(pagination.page, pagination.limit, result.total));
+  return paginated(
+    c,
+    result.rows,
+    paginationMeta(pagination.page, pagination.limit, result.total),
+  );
 });
 
 adminRoutes.post("/competitions", async (c) => {
@@ -97,7 +112,10 @@ adminRoutes.post("/competitions", async (c) => {
 adminRoutes.patch("/competitions/:id", async (c) => {
   const input = parseBody(UpdateCompetitionSchema, await c.req.json());
   const context = await makeServiceContext(c);
-  return ok(c, await updateCompetitionService(context, c.req.param("id"), input));
+  return ok(
+    c,
+    await updateCompetitionService(context, c.req.param("id"), input),
+  );
 });
 
 adminRoutes.post("/competitions/:id/archive", async (c) => {
@@ -120,7 +138,14 @@ adminRoutes.patch("/seasons/:id", async (c) => {
 adminRoutes.post("/seasons/:id/activate", async (c) => {
   const input = parseBody(ActivateSeasonSchema, await c.req.json());
   const context = await makeServiceContext(c);
-  return ok(c, await activateSeasonService(context, c.req.param("id"), input.competitionId));
+  return ok(
+    c,
+    await activateSeasonService(
+      context,
+      c.req.param("id"),
+      input.competitionId,
+    ),
+  );
 });
 
 adminRoutes.get("/teams", async (c) => {
@@ -130,7 +155,11 @@ adminRoutes.get("/teams", async (c) => {
   });
   const context = await makeServiceContext(c);
   const result = await listTeamsService(context, pagination);
-  return paginated(c, result.rows, paginationMeta(pagination.page, pagination.limit, result.total));
+  return paginated(
+    c,
+    result.rows,
+    paginationMeta(pagination.page, pagination.limit, result.total),
+  );
 });
 
 adminRoutes.post("/teams", async (c) => {

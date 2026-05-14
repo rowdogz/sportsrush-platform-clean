@@ -36,7 +36,9 @@ async function createSqlDb(): Promise<SqlJsDatabase> {
   return db;
 }
 
-function normalizeParams(params: readonly unknown[] = []): initSqlJs.BindParams {
+function normalizeParams(
+  params: readonly unknown[] = [],
+): initSqlJs.BindParams {
   return params.map((value) => value ?? null) as initSqlJs.BindParams;
 }
 
@@ -58,7 +60,10 @@ function makeD1Result<T extends Record<string, unknown>>(
   } as D1Result<T>;
 }
 
-function makePreparedStatement(sqlDb: SqlJsDatabase, sql: string): D1PreparedStatement {
+function makePreparedStatement(
+  sqlDb: SqlJsDatabase,
+  sql: string,
+): D1PreparedStatement {
   let boundParams: readonly unknown[] = [];
 
   const statement = {
@@ -104,7 +109,9 @@ function makeD1Database(sqlDb: SqlJsDatabase): D1Database {
     prepare(sql: string) {
       return makePreparedStatement(sqlDb, sql);
     },
-    async batch<T extends Record<string, unknown>>(statements: D1PreparedStatement[]) {
+    async batch<T extends Record<string, unknown>>(
+      statements: D1PreparedStatement[],
+    ) {
       const results: D1Result<T>[] = [];
       for (const statement of statements) {
         results.push(await statement.run<T>());
@@ -153,7 +160,9 @@ async function createTestHarness() {
   return { app, env, request, adminToken, userToken, sqlDb };
 }
 
-async function createCompetition(request: Awaited<ReturnType<typeof createTestHarness>>["request"]) {
+async function createCompetition(
+  request: Awaited<ReturnType<typeof createTestHarness>>["request"],
+) {
   return request("/v1/admin/competitions", {
     method: "POST",
     body: JSON.stringify({
@@ -201,7 +210,11 @@ async function createTeam(
 describe("admin route slice 1 auth", () => {
   it("requires admin auth for admin routes", async () => {
     const { request } = await createTestHarness();
-    const response = await request("/v1/admin/competitions", { method: "GET" }, null);
+    const response = await request(
+      "/v1/admin/competitions",
+      { method: "GET" },
+      null,
+    );
     expect(response.status).toBe(401);
     const body = await response.json();
     expect(body.error.correlationId).toBeDefined();
@@ -209,7 +222,11 @@ describe("admin route slice 1 auth", () => {
 
   it("forbids non-admin users", async () => {
     const { request, userToken } = await createTestHarness();
-    const response = await request("/v1/admin/competitions", { method: "GET" }, userToken);
+    const response = await request(
+      "/v1/admin/competitions",
+      { method: "GET" },
+      userToken,
+    );
     expect(response.status).toBe(403);
   });
 });
@@ -224,23 +241,31 @@ describe("admin route slice 1 competitions", () => {
     expect(created.data.name).toBe("Super League");
     expect(created.data.slug).toBe("super-league");
 
-    const listResponse = await request("/v1/admin/competitions?page=1&limit=10");
+    const listResponse = await request(
+      "/v1/admin/competitions?page=1&limit=10",
+    );
     expect(listResponse.status).toBe(200);
     const list = await listResponse.json();
     expect(list.data).toHaveLength(1);
     expect(list.meta).toEqual({ page: 1, limit: 10, total: 1, hasMore: false });
 
-    const updateResponse = await request(`/v1/admin/competitions/${created.data.id}`, {
-      method: "PATCH",
-      body: JSON.stringify({ name: "Betfred Super League" }),
-    });
+    const updateResponse = await request(
+      `/v1/admin/competitions/${created.data.id}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ name: "Betfred Super League" }),
+      },
+    );
     expect(updateResponse.status).toBe(200);
     const updated = await updateResponse.json();
     expect(updated.data.name).toBe("Betfred Super League");
 
-    const archiveResponse = await request(`/v1/admin/competitions/${created.data.id}/archive`, {
-      method: "POST",
-    });
+    const archiveResponse = await request(
+      `/v1/admin/competitions/${created.data.id}/archive`,
+      {
+        method: "POST",
+      },
+    );
     expect(archiveResponse.status).toBe(200);
     const archived = await archiveResponse.json();
     expect(archived.data.is_active).toBe(0);
@@ -264,26 +289,40 @@ describe("admin route slice 1 seasons", () => {
     const competitionResponse = await createCompetition(request);
     const competition = await competitionResponse.json();
 
-    const seasonResponse = await createSeason(request, competition.data.id, "2026");
+    const seasonResponse = await createSeason(
+      request,
+      competition.data.id,
+      "2026",
+    );
     expect(seasonResponse.status).toBe(201);
     const season = await seasonResponse.json();
     expect(season.data.name).toBe("2026 Season");
 
-    const updateResponse = await request(`/v1/admin/seasons/${season.data.id}`, {
-      method: "PATCH",
-      body: JSON.stringify({ name: "2026 Regular Season" }),
-    });
+    const updateResponse = await request(
+      `/v1/admin/seasons/${season.data.id}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ name: "2026 Regular Season" }),
+      },
+    );
     expect(updateResponse.status).toBe(200);
     const updated = await updateResponse.json();
     expect(updated.data.name).toBe("2026 Regular Season");
 
-    const season2027Response = await createSeason(request, competition.data.id, "2027");
+    const season2027Response = await createSeason(
+      request,
+      competition.data.id,
+      "2027",
+    );
     const season2027 = await season2027Response.json();
 
-    const activateResponse = await request(`/v1/admin/seasons/${season2027.data.id}/activate`, {
-      method: "POST",
-      body: JSON.stringify({ competitionId: competition.data.id }),
-    });
+    const activateResponse = await request(
+      `/v1/admin/seasons/${season2027.data.id}/activate`,
+      {
+        method: "POST",
+        body: JSON.stringify({ competitionId: competition.data.id }),
+      },
+    );
     expect(activateResponse.status).toBe(200);
     const activated = await activateResponse.json();
     expect(activated.data.is_active).toBe(1);
@@ -324,9 +363,12 @@ describe("admin route slice 1 teams", () => {
     const updated = await updateResponse.json();
     expect(updated.data.display_name).toBe("Wigan Warriors RLFC");
 
-    const archiveResponse = await request(`/v1/admin/teams/${created.data.id}/archive`, {
-      method: "POST",
-    });
+    const archiveResponse = await request(
+      `/v1/admin/teams/${created.data.id}/archive`,
+      {
+        method: "POST",
+      },
+    );
     expect(archiveResponse.status).toBe(200);
     const archived = await archiveResponse.json();
     expect(archived.data.is_active).toBe(0);

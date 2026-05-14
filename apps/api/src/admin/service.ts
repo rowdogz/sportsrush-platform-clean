@@ -55,7 +55,11 @@ import type {
   UpdateTeamAliasInput,
   UpdateTeamInput,
 } from "./schemas";
-import { normalizeAlias, normalizeSlug, normalizeSource } from "./normalization";
+import {
+  normalizeAlias,
+  normalizeSlug,
+  normalizeSource,
+} from "./normalization";
 
 const TRANSITIONS: Record<FixtureStatus, readonly FixtureStatus[]> = {
   scheduled: ["postponed", "cancelled", "completed", "abandoned", "void"],
@@ -94,18 +98,27 @@ function logCorrelation(correlationId: string, message: string): void {
   console.error(`[${correlationId}] ${message}`);
 }
 
-function assert(condition: unknown, message: string, correlationId: string): asserts condition {
+function assert(
+  condition: unknown,
+  message: string,
+  correlationId: string,
+): asserts condition {
   if (!condition) {
     logCorrelation(correlationId, message);
     throw new AdminDomainError(message, correlationId);
   }
 }
 
-export function getAllowedFixtureTransitions(status: FixtureStatus): readonly FixtureStatus[] {
+export function getAllowedFixtureTransitions(
+  status: FixtureStatus,
+): readonly FixtureStatus[] {
   return TRANSITIONS[status] ?? [];
 }
 
-export async function createCompetitionService(context: ServiceContext, input: CreateCompetitionInput) {
+export async function createCompetitionService(
+  context: ServiceContext,
+  input: CreateCompetitionInput,
+) {
   return createCompetition(
     context.db,
     randomUUID(),
@@ -122,24 +135,40 @@ export async function updateCompetitionService(
   return updateCompetition(
     context.db,
     id,
-    { ...input, slug: input.slug === undefined ? undefined : normalizeSlug(input.slug) },
+    {
+      ...input,
+      slug: input.slug === undefined ? undefined : normalizeSlug(input.slug),
+    },
     context.now,
   );
 }
 
-export async function archiveCompetitionService(context: ServiceContext, id: string) {
+export async function archiveCompetitionService(
+  context: ServiceContext,
+  id: string,
+) {
   return updateCompetition(context.db, id, { isActive: false }, context.now);
 }
 
-export async function listCompetitionsService(context: ServiceContext, pagination: Pagination) {
+export async function listCompetitionsService(
+  context: ServiceContext,
+  pagination: Pagination,
+) {
   return listCompetitions(context.db, pagination);
 }
 
-export async function createSeasonService(context: ServiceContext, input: CreateSeasonInput) {
+export async function createSeasonService(
+  context: ServiceContext,
+  input: CreateSeasonInput,
+) {
   return createSeason(context.db, randomUUID(), input, context.now);
 }
 
-export async function updateSeasonService(context: ServiceContext, id: string, input: UpdateSeasonInput) {
+export async function updateSeasonService(
+  context: ServiceContext,
+  id: string,
+  input: UpdateSeasonInput,
+) {
   return updateSeason(context.db, id, input, context.now);
 }
 
@@ -151,7 +180,10 @@ export async function activateSeasonService(
   return markActiveSeason(context.db, seasonId, competitionId, context.now);
 }
 
-export async function createTeamService(context: ServiceContext, input: CreateTeamInput) {
+export async function createTeamService(
+  context: ServiceContext,
+  input: CreateTeamInput,
+) {
   return createTeam(
     context.db,
     randomUUID(),
@@ -160,11 +192,18 @@ export async function createTeamService(context: ServiceContext, input: CreateTe
   );
 }
 
-export async function updateTeamService(context: ServiceContext, id: string, input: UpdateTeamInput) {
+export async function updateTeamService(
+  context: ServiceContext,
+  id: string,
+  input: UpdateTeamInput,
+) {
   return updateTeam(
     context.db,
     id,
-    { ...input, slug: input.slug === undefined ? undefined : normalizeSlug(input.slug) },
+    {
+      ...input,
+      slug: input.slug === undefined ? undefined : normalizeSlug(input.slug),
+    },
     context.now,
   );
 }
@@ -173,25 +212,45 @@ export async function archiveTeamService(context: ServiceContext, id: string) {
   return updateTeam(context.db, id, { isActive: false }, context.now);
 }
 
-export async function listTeamsService(context: ServiceContext, pagination: Pagination) {
-  const rows = await context.db.queryAll("SELECT * FROM teams ORDER BY name LIMIT ? OFFSET ?", [
-    pagination.limit,
-    (pagination.page - 1) * pagination.limit,
-  ]);
-  const total = await context.db.queryOne<{ count: number }>("SELECT COUNT(*) AS count FROM teams");
+export async function listTeamsService(
+  context: ServiceContext,
+  pagination: Pagination,
+) {
+  const rows = await context.db.queryAll(
+    "SELECT * FROM teams ORDER BY name LIMIT ? OFFSET ?",
+    [pagination.limit, (pagination.page - 1) * pagination.limit],
+  );
+  const total = await context.db.queryOne<{ count: number }>(
+    "SELECT COUNT(*) AS count FROM teams",
+  );
   return { rows, total: total?.count ?? 0 };
 }
 
-export async function createAliasService(context: ServiceContext, input: CreateTeamAliasInput) {
+export async function createAliasService(
+  context: ServiceContext,
+  input: CreateTeamAliasInput,
+) {
   const normalizedAlias = normalizeAlias(input.normalizedAlias ?? input.alias);
   const normalizedSource = normalizeSource(input.source);
-  const existing = await listAliasesBySource(context.db, input.sportId, normalizedSource, normalizedAlias);
+  const existing = await listAliasesBySource(
+    context.db,
+    input.sportId,
+    normalizedSource,
+    normalizedAlias,
+  );
   assert(
     existing.length === 0,
     `Alias already exists for source=${normalizedSource} alias=${normalizedAlias}`,
     context.correlationId,
   );
-  return createTeamAlias(context.db, randomUUID(), input, normalizedAlias, normalizedSource, context.now);
+  return createTeamAlias(
+    context.db,
+    randomUUID(),
+    input,
+    normalizedAlias,
+    normalizedSource,
+    context.now,
+  );
 }
 
 export async function updateAliasService(
@@ -199,11 +258,20 @@ export async function updateAliasService(
   id: string,
   input: UpdateTeamAliasInput,
 ) {
-  const normalizedAlias = input.alias === undefined && input.normalizedAlias === undefined
-    ? undefined
-    : normalizeAlias(input.normalizedAlias ?? input.alias ?? "");
-  const normalizedSource = input.source === undefined ? undefined : normalizeSource(input.source);
-  return updateTeamAlias(context.db, id, input, normalizedAlias, normalizedSource, context.now);
+  const normalizedAlias =
+    input.alias === undefined && input.normalizedAlias === undefined
+      ? undefined
+      : normalizeAlias(input.normalizedAlias ?? input.alias ?? "");
+  const normalizedSource =
+    input.source === undefined ? undefined : normalizeSource(input.source);
+  return updateTeamAlias(
+    context.db,
+    id,
+    input,
+    normalizedAlias,
+    normalizedSource,
+    context.now,
+  );
 }
 
 export async function deleteAliasService(context: ServiceContext, id: string) {
@@ -216,7 +284,12 @@ export async function lookupAliasService(
   source: string,
   alias: string,
 ) {
-  return findAliasBySource(context.db, sportId, normalizeSource(source), normalizeAlias(alias));
+  return findAliasBySource(
+    context.db,
+    sportId,
+    normalizeSource(source),
+    normalizeAlias(alias),
+  );
 }
 
 export async function listAliasesService(
@@ -233,27 +306,47 @@ export async function listAliasesService(
   );
 }
 
-export async function createRoundService(context: ServiceContext, input: CreateRoundInput) {
+export async function createRoundService(
+  context: ServiceContext,
+  input: CreateRoundInput,
+) {
   return createRound(context.db, randomUUID(), input, context.now);
 }
 
-export async function updateRoundService(context: ServiceContext, id: string, input: UpdateRoundInput) {
+export async function updateRoundService(
+  context: ServiceContext,
+  id: string,
+  input: UpdateRoundInput,
+) {
   return updateRound(context.db, id, input, context.now);
 }
 
-export async function listRoundsService(context: ServiceContext, seasonId: string) {
-  return context.db.queryAll("SELECT * FROM rounds WHERE season_id = ? ORDER BY display_order", [seasonId]);
+export async function listRoundsService(
+  context: ServiceContext,
+  seasonId: string,
+) {
+  return context.db.queryAll(
+    "SELECT * FROM rounds WHERE season_id = ? ORDER BY display_order",
+    [seasonId],
+  );
 }
 
 export async function getFixtureService(context: ServiceContext, id: string) {
   return findFixtureById(context.db, id);
 }
 
-export async function createFixtureService(context: ServiceContext, input: CreateFixtureInput) {
+export async function createFixtureService(
+  context: ServiceContext,
+  input: CreateFixtureInput,
+) {
   return createFixture(context.db, randomUUID(), input, context.now);
 }
 
-export async function updateFixtureService(context: ServiceContext, id: string, input: UpdateFixtureInput) {
+export async function updateFixtureService(
+  context: ServiceContext,
+  id: string,
+  input: UpdateFixtureInput,
+) {
   return updateFixture(context.db, id, input, context.now);
 }
 
@@ -279,21 +372,40 @@ export async function transitionFixtureService(
     `Invalid transition ${fixture.status} -> ${nextStatus}`,
     context.correlationId,
   );
-  assert(nextStatus !== "completed", "Use enterFixtureResultService to complete fixtures", context.correlationId);
-  const hasPartialScores = options.partialHomeScore !== undefined || options.partialAwayScore !== undefined;
+  assert(
+    nextStatus !== "completed",
+    "Use enterFixtureResultService to complete fixtures",
+    context.correlationId,
+  );
+  const hasPartialScores =
+    options.partialHomeScore !== undefined ||
+    options.partialAwayScore !== undefined;
   assert(
     !hasPartialScores || nextStatus === "abandoned",
     "Partial scores are only allowed for abandoned fixtures",
     context.correlationId,
   );
   const clearScores =
-    nextStatus === "void" || nextStatus === "cancelled" ? true : hasPartialScores ? false : !options.preserveScores;
-  let updated = await setFixtureStatus(context.db, fixture.id, nextStatus, context.now, clearScores);
+    nextStatus === "void" || nextStatus === "cancelled"
+      ? true
+      : hasPartialScores
+        ? false
+        : !options.preserveScores;
+  let updated = await setFixtureStatus(
+    context.db,
+    fixture.id,
+    nextStatus,
+    context.now,
+    clearScores,
+  );
   if (hasPartialScores) {
     updated = await updateFixture(
       context.db,
       fixture.id,
-      { homeScore: options.partialHomeScore, awayScore: options.partialAwayScore },
+      {
+        homeScore: options.partialHomeScore,
+        awayScore: options.partialAwayScore,
+      },
       context.now,
     );
   }
@@ -345,9 +457,21 @@ export async function correctFixtureResultService(
 ): Promise<FixtureRow> {
   const fixture = await findFixtureById(context.db, fixtureId);
   assert(fixture !== null, "Fixture not found", context.correlationId);
-  assert(fixture.status === "completed", "Only completed fixtures can be corrected", context.correlationId);
-  assert(reason.trim().length > 0, "Correction reason required", context.correlationId);
-  if (fixture.home_score === correctedHomeScore && fixture.away_score === correctedAwayScore) return fixture;
+  assert(
+    fixture.status === "completed",
+    "Only completed fixtures can be corrected",
+    context.correlationId,
+  );
+  assert(
+    reason.trim().length > 0,
+    "Correction reason required",
+    context.correlationId,
+  );
+  if (
+    fixture.home_score === correctedHomeScore &&
+    fixture.away_score === correctedAwayScore
+  )
+    return fixture;
   const duplicate = await context.db.queryOne<{ id: string }>(
     `SELECT id FROM result_corrections
      WHERE fixture_id = ? AND corrected_home_score = ? AND corrected_away_score = ? AND reason = ?
@@ -356,7 +480,11 @@ export async function correctFixtureResultService(
   );
   if (duplicate !== null) {
     const existingFixture = await findFixtureById(context.db, fixture.id);
-    assert(existingFixture !== null, "Fixture not found", context.correlationId);
+    assert(
+      existingFixture !== null,
+      "Fixture not found",
+      context.correlationId,
+    );
     return existingFixture;
   }
   await insertResultCorrection(
@@ -373,7 +501,11 @@ export async function correctFixtureResultService(
   const updated = await updateFixture(
     context.db,
     fixture.id,
-    { homeScore: correctedHomeScore, awayScore: correctedAwayScore, status: "completed" },
+    {
+      homeScore: correctedHomeScore,
+      awayScore: correctedAwayScore,
+      status: "completed",
+    },
     context.now,
   );
   assert(updated !== null, "Correction update failed", context.correlationId);
