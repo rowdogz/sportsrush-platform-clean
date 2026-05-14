@@ -1,5 +1,13 @@
 import { randomUUID } from "node:crypto";
 import { AppError } from "../lib/errors";
+
+type FixtureStatus =
+  | "scheduled"
+  | "postponed"
+  | "completed"
+  | "abandoned"
+  | "cancelled"
+  | "void";
 import type { DbClient } from "../lib/db";
 import {
   createCompetition,
@@ -16,7 +24,6 @@ import {
   enterFixtureResult,
   updateFixture,
   type FixtureRow,
-  type FixtureStatus,
 } from "./repository";
 import type {
   CreateCompetitionInput,
@@ -25,7 +32,11 @@ import type {
   CreateTeamAliasInput,
   CreateTeamInput,
 } from "./schemas";
-import { normalizeAlias, normalizeSlug, normalizeSource } from "./normalization";
+import {
+  normalizeAlias,
+  normalizeSlug,
+  normalizeSource,
+} from "./normalization";
 
 const TRANSITIONS: Record<FixtureStatus, readonly FixtureStatus[]> = {
   scheduled: ["postponed", "cancelled", "completed", "abandoned", "void"],
@@ -64,15 +75,21 @@ function logCorrelation(correlationId: string, message: string): void {
   console.error(`[${correlationId}] ${message}`);
 }
 
-function assert(condition: unknown, message: string, correlationId: string): asserts condition {
+function assert(
+  condition: unknown,
+  message: string,
+  correlationId: string,
+): asserts condition {
   if (!condition) {
     logCorrelation(correlationId, message);
     throw new AdminDomainError(message, correlationId);
   }
 }
 
-export function getAllowedFixtureTransitions(status: FixtureStatus): readonly FixtureStatus[] {
-  return TRANSITIONS[status];
+export function getAllowedFixtureTransitions(
+  status: FixtureStatus,
+): readonly FixtureStatus[] {
+  return TRANSITIONS[status] ?? [];
 }
 
 export async function createCompetitionService(
@@ -87,7 +104,10 @@ export async function createCompetitionService(
   );
 }
 
-export async function createSeasonService(context: ServiceContext, input: CreateSeasonInput) {
+export async function createSeasonService(
+  context: ServiceContext,
+  input: CreateSeasonInput,
+) {
   return createSeason(context.db, randomUUID(), input, context.now);
 }
 
@@ -99,7 +119,10 @@ export async function activateSeasonService(
   return markActiveSeason(context.db, seasonId, competitionId, context.now);
 }
 
-export async function createTeamService(context: ServiceContext, input: CreateTeamInput) {
+export async function createTeamService(
+  context: ServiceContext,
+  input: CreateTeamInput,
+) {
   return createTeam(
     context.db,
     randomUUID(),
@@ -108,7 +131,10 @@ export async function createTeamService(context: ServiceContext, input: CreateTe
   );
 }
 
-export async function createAliasService(context: ServiceContext, input: CreateTeamAliasInput) {
+export async function createAliasService(
+  context: ServiceContext,
+  input: CreateTeamAliasInput,
+) {
   const normalizedAlias = normalizeAlias(input.normalizedAlias ?? input.alias);
   const normalizedSource = normalizeSource(input.source);
 
@@ -149,7 +175,10 @@ export async function lookupAliasService(
   );
 }
 
-export async function createFixtureService(context: ServiceContext, input: CreateFixtureInput) {
+export async function createFixtureService(
+  context: ServiceContext,
+  input: CreateFixtureInput,
+) {
   return createFixture(context.db, randomUUID(), input, context.now);
 }
 
@@ -178,7 +207,8 @@ export async function transitionFixtureService(
   );
 
   const hasPartialScores =
-    options.partialHomeScore !== undefined || options.partialAwayScore !== undefined;
+    options.partialHomeScore !== undefined ||
+    options.partialAwayScore !== undefined;
 
   assert(
     !hasPartialScores || nextStatus === "abandoned",
@@ -193,7 +223,13 @@ export async function transitionFixtureService(
         ? false
         : !options.preserveScores;
 
-  let updated = await setFixtureStatus(context.db, fixture.id, nextStatus, context.now, clearScores);
+  let updated = await setFixtureStatus(
+    context.db,
+    fixture.id,
+    nextStatus,
+    context.now,
+    clearScores,
+  );
 
   if (hasPartialScores) {
     updated = await updateFixture(
@@ -264,10 +300,21 @@ export async function correctFixtureResultService(
 
   assert(fixture !== null, "Fixture not found", context.correlationId);
 
-  assert(fixture.status === "completed", "Only completed fixtures can be corrected", context.correlationId);
-  assert(reason.trim().length > 0, "Correction reason required", context.correlationId);
+  assert(
+    fixture.status === "completed",
+    "Only completed fixtures can be corrected",
+    context.correlationId,
+  );
+  assert(
+    reason.trim().length > 0,
+    "Correction reason required",
+    context.correlationId,
+  );
 
-  if (fixture.home_score === correctedHomeScore && fixture.away_score === correctedAwayScore) {
+  if (
+    fixture.home_score === correctedHomeScore &&
+    fixture.away_score === correctedAwayScore
+  ) {
     return fixture;
   }
 
@@ -283,7 +330,11 @@ export async function correctFixtureResultService(
 
   if (duplicate !== null) {
     const existingFixture = await findFixtureById(context.db, fixture.id);
-    assert(existingFixture !== null, "Fixture not found", context.correlationId);
+    assert(
+      existingFixture !== null,
+      "Fixture not found",
+      context.correlationId,
+    );
     return existingFixture;
   }
 

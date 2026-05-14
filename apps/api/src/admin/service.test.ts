@@ -14,7 +14,13 @@ import {
   setFixtureStatus,
   updateFixture,
 } from "./repository";
-import type { FixtureStatus } from "./repository";
+type FixtureStatus =
+  | "scheduled"
+  | "postponed"
+  | "completed"
+  | "abandoned"
+  | "cancelled"
+  | "void";
 import {
   activateSeasonService,
   AdminDomainError,
@@ -45,7 +51,9 @@ async function createSqlDb(): Promise<SqlJsDatabase> {
   return db;
 }
 
-function normaliseSqlParams(params: readonly unknown[] = []): initSqlJs.BindParams {
+function normaliseSqlParams(
+  params: readonly unknown[] = [],
+): initSqlJs.BindParams {
   return params.map((value) => value ?? null) as initSqlJs.BindParams;
 }
 
@@ -228,7 +236,10 @@ describe("admin service fixture transitions", () => {
       "cancelled",
       "void",
     ]);
-    expect(getAllowedFixtureTransitions("abandoned")).toEqual(["completed", "void"]);
+    expect(getAllowedFixtureTransitions("abandoned")).toEqual([
+      "completed",
+      "void",
+    ]);
     expect(getAllowedFixtureTransitions("completed")).toEqual([]);
     expect(getAllowedFixtureTransitions("cancelled")).toEqual([]);
     expect(getAllowedFixtureTransitions("void")).toEqual([]);
@@ -243,16 +254,24 @@ describe("admin service fixture transitions", () => {
     ["postponed", "cancelled"],
     ["postponed", "void"],
     ["abandoned", "void"],
-  ] as Array<[FixtureStatus, FixtureStatus]>)
-    ("allows transition %s -> %s", async (from, to) => {
+  ] as Array<[FixtureStatus, FixtureStatus]>)(
+    "allows transition %s -> %s",
+    async (from, to) => {
       const { context } = await seedFixture(from);
       const updated = await transitionFixtureService(context, "fixture-1", to);
       expect(updated.status).toBe(to);
-    });
+    },
+  );
 
   it("allows scheduled -> completed through result entry only", async () => {
     const { context } = await seedFixture("scheduled");
-    const updated = await enterFixtureResultService(context, "fixture-1", 20, 18, "manual");
+    const updated = await enterFixtureResultService(
+      context,
+      "fixture-1",
+      20,
+      18,
+      "manual",
+    );
     expect(updated.status).toBe("completed");
     expect(updated.home_score).toBe(20);
     expect(updated.away_score).toBe(18);
@@ -260,7 +279,13 @@ describe("admin service fixture transitions", () => {
 
   it("allows abandoned -> completed through result entry only", async () => {
     const { context } = await seedFixture("abandoned");
-    const updated = await enterFixtureResultService(context, "fixture-1", 20, 18, "manual");
+    const updated = await enterFixtureResultService(
+      context,
+      "fixture-1",
+      20,
+      18,
+      "manual",
+    );
     expect(updated.status).toBe("completed");
   });
 
@@ -273,11 +298,15 @@ describe("admin service fixture transitions", () => {
     ["completed", "postponed"],
     ["cancelled", "scheduled"],
     ["void", "scheduled"],
-  ] as Array<[FixtureStatus, FixtureStatus]>)
-    ("rejects invalid transition %s -> %s", async (from, to) => {
+  ] as Array<[FixtureStatus, FixtureStatus]>)(
+    "rejects invalid transition %s -> %s",
+    async (from, to) => {
       const { context } = await seedFixture(from);
-      await expectDomainFailure(transitionFixtureService(context, "fixture-1", to));
-    });
+      await expectDomainFailure(
+        transitionFixtureService(context, "fixture-1", to),
+      );
+    },
+  );
 
   it("prevents scheduled/postponed from jumping through invalid states", async () => {
     const scheduled = await seedFixture("scheduled");
@@ -308,18 +337,32 @@ describe("admin service fixture transitions", () => {
     expect(cancelledFixture.away_score).toBeNull();
 
     const voided = await seedFixture("scheduled");
-    await updateFixture(voided.db, "fixture-1", { homeScore: 12, awayScore: 10 }, NEXT);
-    const voidFixture = await transitionFixtureService(voided.context, "fixture-1", "void");
+    await updateFixture(
+      voided.db,
+      "fixture-1",
+      { homeScore: 12, awayScore: 10 },
+      NEXT,
+    );
+    const voidFixture = await transitionFixtureService(
+      voided.context,
+      "fixture-1",
+      "void",
+    );
     expect(voidFixture.home_score).toBeNull();
     expect(voidFixture.away_score).toBeNull();
   });
 
   it("allows abandoned fixtures to retain explicit partial scores", async () => {
     const { context } = await seedFixture("scheduled");
-    const updated = await transitionFixtureService(context, "fixture-1", "abandoned", {
-      partialHomeScore: 12,
-      partialAwayScore: 6,
-    });
+    const updated = await transitionFixtureService(
+      context,
+      "fixture-1",
+      "abandoned",
+      {
+        partialHomeScore: 12,
+        partialAwayScore: 6,
+      },
+    );
     expect(updated.status).toBe("abandoned");
     expect(updated.home_score).toBe(12);
     expect(updated.away_score).toBe(6);
@@ -339,12 +382,19 @@ describe("admin service fixture transitions", () => {
 describe("admin service result entry and corrections", () => {
   it("prevents completed fixtures from being directly overwritten", async () => {
     const { context } = await seedFixture("completed");
-    await expectDomainFailure(enterFixtureResultService(context, "fixture-1", 22, 18));
+    await expectDomainFailure(
+      enterFixtureResultService(context, "fixture-1", 22, 18),
+    );
   });
 
   it("treats identical completed result submission as idempotent", async () => {
     const { context } = await seedFixture("completed");
-    const updated = await enterFixtureResultService(context, "fixture-1", 20, 18);
+    const updated = await enterFixtureResultService(
+      context,
+      "fixture-1",
+      20,
+      18,
+    );
     expect(updated.status).toBe("completed");
     expect(updated.home_score).toBe(20);
     expect(updated.away_score).toBe(18);
@@ -352,7 +402,9 @@ describe("admin service result entry and corrections", () => {
 
   it("requires correction flow for different completed result submission", async () => {
     const { context } = await seedFixture("completed");
-    await expectDomainFailure(enterFixtureResultService(context, "fixture-1", 22, 18));
+    await expectDomainFailure(
+      enterFixtureResultService(context, "fixture-1", 22, 18),
+    );
   });
 
   it("creates immutable result correction history", async () => {
@@ -387,8 +439,20 @@ describe("admin service result entry and corrections", () => {
   it("ignores duplicate identical corrections idempotently", async () => {
     const { db, context } = await seedFixture("completed");
 
-    await correctFixtureResultService(context, "fixture-1", 22, 18, "Official correction");
-    await correctFixtureResultService(context, "fixture-1", 22, 18, "Official correction");
+    await correctFixtureResultService(
+      context,
+      "fixture-1",
+      22,
+      18,
+      "Official correction",
+    );
+    await correctFixtureResultService(
+      context,
+      "fixture-1",
+      22,
+      18,
+      "Official correction",
+    );
 
     const count = await db.queryOne<{ count: number }>(
       "SELECT COUNT(*) AS count FROM result_corrections WHERE fixture_id = ?",
@@ -423,7 +487,11 @@ describe("admin service normalization and season orchestration", () => {
       NOW,
     );
 
-    await activateSeasonService(context, "season-2027", "competition-super-league");
+    await activateSeasonService(
+      context,
+      "season-2027",
+      "competition-super-league",
+    );
 
     const previous = await db.queryOne<{ is_active: number }>(
       "SELECT is_active FROM seasons WHERE id = ?",
@@ -447,10 +515,20 @@ describe("repository/service separation", () => {
     const repositoryMutated = await findFixtureById(db, "fixture-1");
     expect(repositoryMutated?.status).toBe("scheduled");
 
-    await enterFixtureResult(db, "fixture-1", 20, 18, "manual", "admin-user-1", NEXT);
+    await enterFixtureResult(
+      db,
+      "fixture-1",
+      20,
+      18,
+      "manual",
+      "admin-user-1",
+      NEXT,
+    );
     const completedAgain = await findFixtureById(db, "fixture-1");
     expect(completedAgain?.status).toBe("completed");
 
-    await expectDomainFailure(transitionFixtureService(context, "fixture-1", "scheduled"));
+    await expectDomainFailure(
+      transitionFixtureService(context, "fixture-1", "scheduled"),
+    );
   });
 });
