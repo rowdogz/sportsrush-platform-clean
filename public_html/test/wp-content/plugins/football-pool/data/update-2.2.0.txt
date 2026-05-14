@@ -1,1 +1,0 @@
-ALTER TABLE  `{$prefix}scorehistory` ADD `ranking_id` INT(11) UNSIGNED NULL, ADD INDEX ( `ranking_id` );

@@ -1,0 +1,7 @@
+{
+  "extends": "@sr/typescript-config/workers.json",
+  "include": ["src", "vitest.config.ts"],
+  "compilerOptions": {
+    "noEmit": true
+  }
+}

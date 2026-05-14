@@ -1,0 +1,33 @@
+{
+  "name": "@sr/api",
+  "version": "0.0.1",
+  "private": true,
+  "description": "SportsRush API — Cloudflare Workers + Hono",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --ext .ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "cf-typegen": "wrangler types"
+  },
+  "dependencies": {
+    "@sr/auth": "workspace:*",
+    "@sr/events": "workspace:*",
+    "@sr/types": "workspace:*",
+    "@sr/validation": "workspace:*",
+    "hono": "^4.12.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241205.0",
+    "@sr/eslint-config": "workspace:*",
+    "@sr/typescript-config": "workspace:*",
+    "@types/sql.js": "^1.4.11",
+    "sql.js": "^1.14.1",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8",
+    "wrangler": "^4.0.0"
+  },
+  "license": "UNLICENSED"
+}

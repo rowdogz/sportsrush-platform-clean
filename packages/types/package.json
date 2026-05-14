@@ -1,0 +1,18 @@
+{
+  "name": "@sr/types",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Canonical TypeScript domain types for the SportsRush platform",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --ext .ts"
+  },
+  "devDependencies": {
+    "@sr/eslint-config": "workspace:*",
+    "@sr/typescript-config": "workspace:*",
+    "typescript": "^5.6.3"
+  },
+  "license": "UNLICENSED"
+}

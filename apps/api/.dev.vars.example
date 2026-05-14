@@ -1,0 +1,22 @@
+# .dev.vars — Cloudflare Workers local development secrets
+#
+# Copy this file to .dev.vars (gitignored) and fill in real values.
+# .dev.vars is loaded automatically by `wrangler dev`.
+# NEVER commit .dev.vars — it contains secrets.
+#
+# Generate JWT_SECRET:
+#   openssl rand -base64 32
+#
+# Requirements:
+#   JWT_SECRET — minimum 32 bytes (256 bits) of cryptographic randomness.
+#                Must be the same value across all API instances in an environment.
+#                Rotating this secret invalidates all existing access tokens immediately.
+#
+# [vars] entries (ENVIRONMENT, API_VERSION) do not go here —
+# they are already set in wrangler.toml and do not need to be secret.
+
+JWT_SECRET="REPLACE_WITH_OUTPUT_OF__openssl_rand_-base64_32"
+
+# WEB_ORIGIN is optional in development (CORS defaults to '*').
+# Set it to restrict CORS to a specific origin during local testing.
+# WEB_ORIGIN="http://localhost:3000"

@@ -27,6 +27,9 @@ ios/
 # Git
 .git/
 
+# Generated tooling config
+.config/
+
 # Misc
 *.min.js
 pnpm-lock.yaml

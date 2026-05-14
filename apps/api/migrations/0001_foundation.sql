@@ -1,0 +1,44 @@
+-- Migration 0001: Foundation
+-- SportsRush 2.0 — establishes the SQLite baseline for all subsequent migrations.
+--
+-- IMPORTANT: Do NOT modify applied migrations.
+--            Add a new numbered migration file for every schema change.
+--
+-- Migration naming convention:
+--   NNNN_description.sql     e.g. 0002_create_users.sql
+--   NNNN must be zero-padded to 4 digits.
+--   Descriptions use snake_case and describe what the migration does.
+--
+-- Tracking:
+--   Wrangler automatically maintains a `d1_migrations` table in D1.
+--   Each applied migration is recorded with its name and applied timestamp.
+--   Never modify the d1_migrations table directly.
+--
+-- Apply locally:
+--   wrangler d1 migrations apply sportsrush-dev --local
+--
+-- Apply to remote (run from CI or by a human with Cloudflare access):
+--   wrangler d1 migrations apply sportsrush-staging  --remote --env staging
+--   wrangler d1 migrations apply sportsrush-production --remote --env production
+--
+-- Check status:
+--   wrangler d1 migrations list sportsrush-dev --local
+--   wrangler d1 migrations list sportsrush-staging --remote --env staging
+
+-- Enable foreign key constraint enforcement.
+--
+-- ┌─────────────────────────────────────────────────────────────────────┐
+-- │  IMPORTANT: SQLite PRAGMA settings are SESSION-SCOPED.              │
+-- │  This PRAGMA applies only to the migration session and is NOT       │
+-- │  persisted in the database file.                                    │
+-- │                                                                     │
+-- │  Runtime enforcement is handled by createDbClient() in              │
+-- │  apps/api/src/lib/db.ts, which re-applies PRAGMA foreign_keys = ON │
+-- │  via prepare().run() on every request before any queries execute.   │
+-- │                                                                     │
+-- │  This migration statement serves two purposes:                      │
+-- │    1. Documents the project-wide FK enforcement policy.             │
+-- │    2. Enables FK checking during subsequent CREATE TABLE statements │
+-- │       in this same migration file (if any are added later).         │
+-- └─────────────────────────────────────────────────────────────────────┘
+PRAGMA foreign_keys = ON;

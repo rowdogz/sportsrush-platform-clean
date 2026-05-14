@@ -1,0 +1,8 @@
+{
+  "name": "@sr/prettier-config",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Shared Prettier configuration for all SportsRush packages",
+  "main": "index.json",
+  "license": "UNLICENSED"
+}

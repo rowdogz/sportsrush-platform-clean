@@ -1,0 +1,77 @@
+name = "sportsrush-api"
+main = "src/index.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+# ── Local development secrets ─────────────────────────────────────────────────
+# Create apps/api/.dev.vars (gitignored) with:
+#   JWT_SECRET="<output of: openssl rand -base64 32>"
+# See apps/api/.dev.vars.example for the full template.
+
+[vars]
+ENVIRONMENT = "development"
+API_VERSION = "0.0.1"
+
+# ── D1 Database ───────────────────────────────────────────────────────────────
+# SETUP REQUIRED before running `wrangler dev` or deploying.
+# See apps/api/CLOUDFLARE_SETUP.md for step-by-step instructions.
+#
+# After creating the dev database with:
+#   wrangler d1 create sportsrush-dev
+# replace the database_id placeholder below with the returned UUID.
+#
+# For local-only development (no Cloudflare account required):
+#   wrangler dev --local          — runs the Worker locally
+#   wrangler d1 migrations apply sportsrush-dev --local
+#                                  — applies migrations to a local SQLite file
+# The database_id is NOT used for --local operations.
+
+[[d1_databases]]
+binding = "DB"
+database_name = "sportsrush-dev"
+database_id = "00000000-0000-4000-8000-000000000001"
+migrations_dir = "migrations"
+
+# ── KV Namespace — added in a future PR ──────────────────────────────────────
+# [[kv_namespaces]]
+# binding = "KV"
+# id = "REPLACE_WITH_REAL_ID"
+
+# ── Cloudflare Queues — added in PR-07 ───────────────────────────────────────
+# [[queues.producers]]
+# binding = "DOMAIN_EVENTS"
+# queue = "sportsrush-domain-events"
+
+# ── Staging environment ───────────────────────────────────────────────────────
+# Deploy with: wrangler deploy --env staging
+# Apply migrations with: wrangler d1 migrations apply sportsrush-staging --remote --env staging
+[env.staging]
+name = "sportsrush-api-staging"
+
+[env.staging.vars]
+ENVIRONMENT = "staging"
+API_VERSION = "0.0.1"
+
+# Replace database_id after: wrangler d1 create sportsrush-staging
+[[env.staging.d1_databases]]
+binding = "DB"
+database_name = "sportsrush-staging"
+database_id = "00000000-0000-4000-8000-000000000002"
+migrations_dir = "migrations"
+
+# ── Production environment ────────────────────────────────────────────────────
+# Deploy with: wrangler deploy --env production
+# Apply migrations with: wrangler d1 migrations apply sportsrush-production --remote --env production
+[env.production]
+name = "sportsrush-api-production"
+
+[env.production.vars]
+ENVIRONMENT = "production"
+API_VERSION = "0.0.1"
+
+# Replace database_id after: wrangler d1 create sportsrush-production
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "sportsrush-production"
+database_id = "00000000-0000-4000-8000-000000000003"
+migrations_dir = "migrations"
