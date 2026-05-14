@@ -7,7 +7,8 @@ This document tracks the D1 schema owned by `apps/api/migrations`.
 | Migration                                      | Purpose                                                               |
 | ---------------------------------------------- | --------------------------------------------------------------------- |
 | `0001_foundation.sql`                          | Baseline migration and foreign-key enforcement policy.                |
-| `0008_competitions_teams_fixtures_results.sql` | Competitions, teams, fixtures and result-correction schema for PR-08. |
+| `0002_auth_schema.sql`                         | Authentication and user/session schema.                               |
+| `0003_competitions_teams_fixtures_results.sql` | Competitions, teams, fixtures and result-correction schema for PR-08. |
 
 > Applied migrations must not be edited. Add a new numbered migration for every schema change.
 

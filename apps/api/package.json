@@ -17,7 +17,8 @@
     "@sr/events": "workspace:*",
     "@sr/types": "workspace:*",
     "@sr/validation": "workspace:*",
-    "hono": "^4.12.0"
+    "hono": "^4.12.0",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20241205.0",
