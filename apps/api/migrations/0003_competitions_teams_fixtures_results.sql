@@ -1,4 +1,4 @@
--- Migration 0008: Competitions, teams, fixtures and results schema
+-- Migration 0003: Competitions, teams, fixtures and results schema
 -- SportsRush platform — PR-08 schema only.
 --
 -- Scope:
