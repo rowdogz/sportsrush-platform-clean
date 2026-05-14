@@ -121,12 +121,14 @@ Append-only audit trail for result edits.
 
 Important SportsRush rule:
 - Result changes must always be auditable.
+- Result correction history must not be deleted automatically with fixtures.
 
 Key rules:
 - Stores both previous and corrected values.
 - Correction reason is mandatory.
 - Supports user attribution.
 - Never overwrites historical correction entries.
+- Fixture deletion is restricted once corrections exist.
 
 ## Timestamp policy
 
