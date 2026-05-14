@@ -6,23 +6,49 @@ import { requireDb } from "../lib/db";
 import { created, ok, paginated } from "../lib/response";
 import { AuthenticationError, ValidationError } from "../lib/errors";
 import {
+  AliasLookupQuerySchema,
+  CorrectResultSchema,
   CreateCompetitionSchema,
+  CreateFixtureSchema,
+  CreateRoundSchema,
   CreateSeasonSchema,
+  CreateTeamAliasSchema,
   CreateTeamSchema,
+  EnterResultSchema,
+  FixtureListQuerySchema,
+  FixtureStatusUpdateSchema,
   UpdateCompetitionSchema,
+  UpdateFixtureSchema,
+  UpdateRoundSchema,
   UpdateSeasonSchema,
+  UpdateTeamAliasSchema,
   UpdateTeamSchema,
 } from "../admin/schemas";
 import {
   archiveCompetitionService,
   archiveTeamService,
   activateSeasonService,
+  correctFixtureResultService,
+  createAliasService,
   createCompetitionService,
+  createFixtureService,
+  createRoundService,
   createSeasonService,
   createTeamService,
+  deleteAliasService,
+  enterFixtureResultService,
+  getFixtureService,
+  listAliasesService,
   listCompetitionsService,
+  listFixturesService,
+  listRoundsService,
   listTeamsService,
+  lookupAliasService,
+  transitionFixtureService,
+  updateAliasService,
   updateCompetitionService,
+  updateFixtureService,
+  updateRoundService,
   updateSeasonService,
   updateTeamService,
   type ServiceContext,
@@ -35,6 +61,16 @@ const PaginationQuerySchema = z.object({
 
 const ActivateSeasonSchema = z.object({
   competitionId: z.string().min(1),
+});
+
+const RoundListQuerySchema = z.object({
+  seasonId: z.string().min(1),
+});
+
+const FixtureTransitionSchema = FixtureStatusUpdateSchema.extend({
+  preserveScores: z.boolean().optional(),
+  partialHomeScore: z.number().int().nonnegative().optional(),
+  partialAwayScore: z.number().int().nonnegative().optional(),
 });
 
 function parseBody<T>(schema: z.ZodType<T>, raw: unknown): T {
@@ -177,4 +213,143 @@ adminRoutes.patch("/teams/:id", async (c) => {
 adminRoutes.post("/teams/:id/archive", async (c) => {
   const context = await makeServiceContext(c);
   return ok(c, await archiveTeamService(context, c.req.param("id")));
+});
+
+adminRoutes.get("/team-aliases", async (c) => {
+  const query = parseQuery(AliasLookupQuerySchema, {
+    sportId: c.req.query("sportId"),
+    source: c.req.query("source"),
+    alias: c.req.query("alias"),
+  });
+  const context = await makeServiceContext(c);
+  if (query.source !== undefined && query.alias !== undefined) {
+    return ok(
+      c,
+      await lookupAliasService(context, query.sportId, query.source, query.alias),
+    );
+  }
+  return ok(
+    c,
+    await listAliasesService(context, query.sportId, query.source, query.alias),
+  );
+});
+
+adminRoutes.post("/team-aliases", async (c) => {
+  const input = parseBody(CreateTeamAliasSchema, await c.req.json());
+  const context = await makeServiceContext(c);
+  return created(c, await createAliasService(context, input));
+});
+
+adminRoutes.patch("/team-aliases/:id", async (c) => {
+  const input = parseBody(UpdateTeamAliasSchema, await c.req.json());
+  const context = await makeServiceContext(c);
+  return ok(c, await updateAliasService(context, c.req.param("id"), input));
+});
+
+adminRoutes.delete("/team-aliases/:id", async (c) => {
+  const context = await makeServiceContext(c);
+  await deleteAliasService(context, c.req.param("id"));
+  return ok(c, { deleted: true });
+});
+
+adminRoutes.get("/rounds", async (c) => {
+  const query = parseQuery(RoundListQuerySchema, {
+    seasonId: c.req.query("seasonId"),
+  });
+  const context = await makeServiceContext(c);
+  return ok(c, await listRoundsService(context, query.seasonId));
+});
+
+adminRoutes.post("/rounds", async (c) => {
+  const input = parseBody(CreateRoundSchema, await c.req.json());
+  const context = await makeServiceContext(c);
+  return created(c, await createRoundService(context, input));
+});
+
+adminRoutes.patch("/rounds/:id", async (c) => {
+  const input = parseBody(UpdateRoundSchema, await c.req.json());
+  const context = await makeServiceContext(c);
+  return ok(c, await updateRoundService(context, c.req.param("id"), input));
+});
+
+adminRoutes.get("/fixtures", async (c) => {
+  const pagination = parseQuery(PaginationQuerySchema, {
+    page: c.req.query("page"),
+    limit: c.req.query("limit"),
+  });
+  const filters = parseQuery(FixtureListQuerySchema, {
+    competitionId: c.req.query("competitionId"),
+    seasonId: c.req.query("seasonId"),
+    round: c.req.query("round"),
+    status: c.req.query("status"),
+    dateFrom: c.req.query("dateFrom"),
+    dateTo: c.req.query("dateTo"),
+  });
+  const context = await makeServiceContext(c);
+  const result = await listFixturesService(context, filters, pagination);
+  return paginated(
+    c,
+    result.rows,
+    paginationMeta(pagination.page, pagination.limit, result.total),
+  );
+});
+
+adminRoutes.post("/fixtures", async (c) => {
+  const input = parseBody(CreateFixtureSchema, await c.req.json());
+  const context = await makeServiceContext(c);
+  return created(c, await createFixtureService(context, input));
+});
+
+adminRoutes.get("/fixtures/:id", async (c) => {
+  const context = await makeServiceContext(c);
+  return ok(c, await getFixtureService(context, c.req.param("id")));
+});
+
+adminRoutes.patch("/fixtures/:id", async (c) => {
+  const input = parseBody(UpdateFixtureSchema, await c.req.json());
+  const context = await makeServiceContext(c);
+  return ok(c, await updateFixtureService(context, c.req.param("id"), input));
+});
+
+adminRoutes.post("/fixtures/:id/transition", async (c) => {
+  const input = parseBody(FixtureTransitionSchema, await c.req.json());
+  const context = await makeServiceContext(c);
+  return ok(
+    c,
+    await transitionFixtureService(context, c.req.param("id"), input.status, {
+      preserveScores: input.preserveScores,
+      partialHomeScore: input.partialHomeScore,
+      partialAwayScore: input.partialAwayScore,
+    }),
+  );
+});
+
+adminRoutes.post("/fixtures/:id/result", async (c) => {
+  const input = parseBody(EnterResultSchema, await c.req.json());
+  const context = await makeServiceContext(c);
+  return ok(
+    c,
+    await enterFixtureResultService(
+      context,
+      c.req.param("id"),
+      input.homeScore,
+      input.awayScore,
+      input.resultSource,
+    ),
+  );
+});
+
+adminRoutes.post("/fixtures/:id/correct-result", async (c) => {
+  const input = parseBody(CorrectResultSchema, await c.req.json());
+  const context = await makeServiceContext(c);
+  return ok(
+    c,
+    await correctFixtureResultService(
+      context,
+      c.req.param("id"),
+      input.homeScore,
+      input.awayScore,
+      input.reason,
+    ),
+  );
 });
