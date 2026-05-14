@@ -4,10 +4,11 @@ This document tracks the D1 schema owned by `apps/api/migrations`.
 
 ## Migration order
 
-| Migration                                      | Purpose                                                               |
-| ---------------------------------------------- | --------------------------------------------------------------------- |
-| `0001_foundation.sql`                          | Baseline migration and foreign-key enforcement policy.                |
-| `0008_competitions_teams_fixtures_results.sql` | Competitions, teams, fixtures and result-correction schema for PR-08. |
+| Migration | Purpose |
+|---|---|
+| `0001_foundation.sql` | Baseline migration and foreign-key enforcement policy. |
+| `0002_auth_schema.sql` | Authentication and user/session schema. |
+| `0003_competitions_teams_fixtures_results.sql` | Competitions, teams, fixtures and result-correction schema for PR-08. |
 
 > Applied migrations must not be edited. Add a new numbered migration for every schema change.
 
@@ -18,7 +19,6 @@ This document tracks the D1 schema owned by `apps/api/migrations`.
 Top-level sport catalogue.
 
 Key fields:
-
 - `id` UUID `TEXT` primary key.
 - `slug` unique stable key.
 - `name`.
@@ -29,7 +29,6 @@ Key fields:
 Competition/tournament within a sport.
 
 Key rules:
-
 - Belongs to `sports`.
 - `UNIQUE (sport_id, slug)` prevents duplicate competition slugs within a sport.
 - Optional `country_code`.
@@ -40,7 +39,6 @@ Key rules:
 Competition season container.
 
 Key rules:
-
 - Belongs to `competitions`.
 - Unique slug within competition.
 - Supports active season tracking.
@@ -51,7 +49,6 @@ Key rules:
 Canonical team records.
 
 Key rules:
-
 - Belongs to a sport.
 - `slug` unique within sport.
 - Separate `display_name` and `short_name` support UI flexibility.
@@ -62,11 +59,9 @@ Key rules:
 Alias mapping layer for scraper/import resilience.
 
 Important SportsRush rule:
-
 - Team aliases must be strict enough to prevent silent fixture mismatches.
 
 Key rules:
-
 - `normalized_alias` is globally unique per sport.
 - Aliases are linked directly to canonical teams.
 - `source` tracks where the alias originated.
@@ -78,7 +73,6 @@ Key rules:
 Season participation table.
 
 Purpose:
-
 - Tracks which teams belong to which competition season.
 - Allows future support for promotion/relegation and changing league structures.
 
@@ -87,11 +81,9 @@ Purpose:
 Canonical round metadata.
 
 Important SportsRush rule:
-
 - `round` and `round_name` are first-class concepts because predictions pages depend heavily on them.
 
 Key rules:
-
 - Unique round number/code within season.
 - Stable `display_order`.
 - Optional scheduling windows.
@@ -101,14 +93,12 @@ Key rules:
 Core fixture/match table.
 
 Important SportsRush rules implemented:
-
 - Duplicate fixture prevention.
 - First-class round metadata.
 - Auditable result lifecycle.
 - Multiple fixture states.
 
 Supported statuses:
-
 - `scheduled`
 - `postponed`
 - `abandoned`
@@ -117,7 +107,6 @@ Supported statuses:
 - `completed`
 
 Key rules:
-
 - Home/away teams cannot be the same.
 - Completed fixtures must contain scores.
 - Duplicate fixtures prevented by:
@@ -132,12 +121,10 @@ Key rules:
 Append-only audit trail for result edits.
 
 Important SportsRush rule:
-
 - Result changes must always be auditable.
 - Result correction history must not be deleted automatically with fixtures.
 
 Key rules:
-
 - Stores both previous and corrected values.
 - Correction reason is mandatory.
 - Supports user attribution.
