@@ -216,7 +216,7 @@ describe("admin route slice 1 auth", () => {
       null,
     );
     expect(response.status).toBe(401);
-    const body = await response.json();
+    const body = (await response.json()) as any;
     expect(body.error.correlationId).toBeDefined();
   });
 
@@ -237,7 +237,7 @@ describe("admin route slice 1 competitions", () => {
 
     const createResponse = await createCompetition(request);
     expect(createResponse.status).toBe(201);
-    const created = await createResponse.json();
+    const created = (await createResponse.json()) as any;
     expect(created.data.name).toBe("Super League");
     expect(created.data.slug).toBe("super-league");
 
@@ -245,7 +245,7 @@ describe("admin route slice 1 competitions", () => {
       "/v1/admin/competitions?page=1&limit=10",
     );
     expect(listResponse.status).toBe(200);
-    const list = await listResponse.json();
+    const list = (await listResponse.json()) as any;
     expect(list.data).toHaveLength(1);
     expect(list.meta).toEqual({ page: 1, limit: 10, total: 1, hasMore: false });
 
@@ -257,7 +257,7 @@ describe("admin route slice 1 competitions", () => {
       },
     );
     expect(updateResponse.status).toBe(200);
-    const updated = await updateResponse.json();
+    const updated = (await updateResponse.json()) as any;
     expect(updated.data.name).toBe("Betfred Super League");
 
     const archiveResponse = await request(
@@ -267,7 +267,7 @@ describe("admin route slice 1 competitions", () => {
       },
     );
     expect(archiveResponse.status).toBe(200);
-    const archived = await archiveResponse.json();
+    const archived = (await archiveResponse.json()) as any;
     expect(archived.data.is_active).toBe(0);
   });
 
@@ -278,7 +278,7 @@ describe("admin route slice 1 competitions", () => {
       body: JSON.stringify({ name: "Missing sport and slug" }),
     });
     expect(response.status).toBe(400);
-    const body = await response.json();
+    const body = (await response.json()) as any;
     expect(body.error.code).toBe("VALIDATION_ERROR");
   });
 });
@@ -287,7 +287,7 @@ describe("admin route slice 1 seasons", () => {
   it("creates, updates, and activates a season", async () => {
     const { request } = await createTestHarness();
     const competitionResponse = await createCompetition(request);
-    const competition = await competitionResponse.json();
+    const competition = (await competitionResponse.json()) as any;
 
     const seasonResponse = await createSeason(
       request,
@@ -295,7 +295,7 @@ describe("admin route slice 1 seasons", () => {
       "2026",
     );
     expect(seasonResponse.status).toBe(201);
-    const season = await seasonResponse.json();
+    const season = (await seasonResponse.json()) as any;
     expect(season.data.name).toBe("2026 Season");
 
     const updateResponse = await request(
@@ -306,7 +306,7 @@ describe("admin route slice 1 seasons", () => {
       },
     );
     expect(updateResponse.status).toBe(200);
-    const updated = await updateResponse.json();
+    const updated = (await updateResponse.json()) as any;
     expect(updated.data.name).toBe("2026 Regular Season");
 
     const season2027Response = await createSeason(
@@ -314,7 +314,7 @@ describe("admin route slice 1 seasons", () => {
       competition.data.id,
       "2027",
     );
-    const season2027 = await season2027Response.json();
+    const season2027 = (await season2027Response.json()) as any;
 
     const activateResponse = await request(
       `/v1/admin/seasons/${season2027.data.id}/activate`,
@@ -324,7 +324,7 @@ describe("admin route slice 1 seasons", () => {
       },
     );
     expect(activateResponse.status).toBe(200);
-    const activated = await activateResponse.json();
+    const activated = (await activateResponse.json()) as any;
     expect(activated.data.is_active).toBe(1);
   });
 
@@ -344,14 +344,14 @@ describe("admin route slice 1 teams", () => {
 
     const createResponse = await createTeam(request);
     expect(createResponse.status).toBe(201);
-    const created = await createResponse.json();
+    const created = (await createResponse.json()) as any;
     expect(created.data.name).toBe("Wigan Warriors");
 
     await createTeam(request, "st-helens", "St Helens");
 
     const listResponse = await request("/v1/admin/teams?page=1&limit=1");
     expect(listResponse.status).toBe(200);
-    const list = await listResponse.json();
+    const list = (await listResponse.json()) as any;
     expect(list.data).toHaveLength(1);
     expect(list.meta).toEqual({ page: 1, limit: 1, total: 2, hasMore: true });
 
@@ -360,7 +360,7 @@ describe("admin route slice 1 teams", () => {
       body: JSON.stringify({ displayName: "Wigan Warriors RLFC" }),
     });
     expect(updateResponse.status).toBe(200);
-    const updated = await updateResponse.json();
+    const updated = (await updateResponse.json()) as any;
     expect(updated.data.display_name).toBe("Wigan Warriors RLFC");
 
     const archiveResponse = await request(
@@ -370,7 +370,7 @@ describe("admin route slice 1 teams", () => {
       },
     );
     expect(archiveResponse.status).toBe(200);
-    const archived = await archiveResponse.json();
+    const archived = (await archiveResponse.json()) as any;
     expect(archived.data.is_active).toBe(0);
   });
 
