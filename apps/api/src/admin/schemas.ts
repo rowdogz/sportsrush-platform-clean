@@ -24,9 +24,11 @@ export const CreateCompetitionSchema = z.object({
   legacyId: OptionalLegacyIdSchema,
 });
 
-export const UpdateCompetitionSchema = CreateCompetitionSchema.partial().extend({
-  isActive: z.boolean().optional(),
-});
+export const UpdateCompetitionSchema = CreateCompetitionSchema.partial().extend(
+  {
+    isActive: z.boolean().optional(),
+  },
+);
 
 export const CreateSeasonSchema = z.object({
   competitionId: UuidSchema,

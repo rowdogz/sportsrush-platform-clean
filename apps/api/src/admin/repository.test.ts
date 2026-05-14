@@ -41,7 +41,9 @@ async function createSqlDb(): Promise<SqlJsDatabase> {
   return db;
 }
 
-function normaliseSqlParams(params: readonly unknown[] = []): initSqlJs.BindParams {
+function normaliseSqlParams(
+  params: readonly unknown[] = [],
+): initSqlJs.BindParams {
   return params.map((value) => value ?? null) as initSqlJs.BindParams;
 }
 
@@ -79,7 +81,19 @@ function makeDbClient(sqlDb: SqlJsDatabase): DbClient {
       params: unknown[] = [],
     ): Promise<D1Result<T>> {
       sqlDb.run(sql, normaliseSqlParams(params));
-      return { success: true, results: [], meta: {} } as D1Result<T>;
+      return {
+        success: true,
+        results: [],
+        meta: {
+          duration: 0,
+          size_after: 0,
+          rows_read: 0,
+          rows_written: 0,
+          last_row_id: 0,
+          changed_db: false,
+          changes: 0,
+        },
+      } as D1Result<T>;
     },
     async batch<T extends Record<string, unknown> = Record<string, unknown>>() {
       return [] as D1Result<T>[];
@@ -254,10 +268,20 @@ describe("admin repository layer", () => {
       NOW,
     );
 
-    const found = await findAliasBySource(db, "sport-rugby-league", "BBC", "wigan");
+    const found = await findAliasBySource(
+      db,
+      "sport-rugby-league",
+      "BBC",
+      "wigan",
+    );
     expect(found?.team_id).toBe("team-wigan");
 
-    const rows = await listAliasesBySource(db, "sport-rugby-league", "bbc", "wigan");
+    const rows = await listAliasesBySource(
+      db,
+      "sport-rugby-league",
+      "bbc",
+      "wigan",
+    );
     expect(rows).toHaveLength(1);
   });
 
@@ -385,7 +409,9 @@ describe("admin repository layer", () => {
     };
 
     await createFixture(db, "fixture-1", fixture, NOW);
-    await expect(createFixture(db, "fixture-2", fixture, NOW)).rejects.toThrow();
+    await expect(
+      createFixture(db, "fixture-2", fixture, NOW),
+    ).rejects.toThrow();
   });
 
   it("persists result corrections with previous values", async () => {
@@ -478,9 +504,10 @@ describe("admin repository layer", () => {
     const row = await db.queryOne<{
       previous_home_score: number;
       corrected_home_score: number;
-    }>("SELECT previous_home_score, corrected_home_score FROM result_corrections WHERE id = ?", [
-      "correction-1",
-    ]);
+    }>(
+      "SELECT previous_home_score, corrected_home_score FROM result_corrections WHERE id = ?",
+      ["correction-1"],
+    );
 
     expect(row?.previous_home_score).toBe(20);
     expect(row?.corrected_home_score).toBe(22);

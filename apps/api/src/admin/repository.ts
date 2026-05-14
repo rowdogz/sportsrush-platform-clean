@@ -149,11 +149,16 @@ function buildUpdate(
   id: string,
   values: Record<string, unknown>,
 ): { readonly sql: string; readonly params: readonly unknown[] } | null {
-  const entries = Object.entries(values).filter(([, value]) => value !== undefined);
+  const entries = Object.entries(values).filter(
+    ([, value]) => value !== undefined,
+  );
   if (entries.length === 0) return null;
   const sets = entries.map(([key]) => `${key} = ?`).join(", ");
   const params = entries.map(([, value]) => value);
-  return { sql: `UPDATE ${table} SET ${sets} WHERE id = ?`, params: [...params, id] };
+  return {
+    sql: `UPDATE ${table} SET ${sets} WHERE id = ?`,
+    params: [...params, id],
+  };
 }
 
 export async function createCompetition(
@@ -185,7 +190,10 @@ export async function findCompetitionById(
   db: DbClient,
   id: string,
 ): Promise<CompetitionRow | null> {
-  return db.queryOne<CompetitionRow>("SELECT * FROM competitions WHERE id = ?", [id]);
+  return db.queryOne<CompetitionRow>(
+    "SELECT * FROM competitions WHERE id = ?",
+    [id],
+  );
 }
 
 export async function updateCompetition(
@@ -216,7 +224,9 @@ export async function listCompetitions(
     "SELECT * FROM competitions ORDER BY name LIMIT ? OFFSET ?",
     [pagination.limit, offset(pagination)],
   );
-  const total = await db.queryOne<{ count: number }>("SELECT COUNT(*) AS count FROM competitions");
+  const total = await db.queryOne<{ count: number }>(
+    "SELECT COUNT(*) AS count FROM competitions",
+  );
   return { rows, total: total?.count ?? 0 };
 }
 
@@ -246,7 +256,10 @@ export async function createSeason(
   return findSeasonById(db, id) as Promise<SeasonRow>;
 }
 
-export async function findSeasonById(db: DbClient, id: string): Promise<SeasonRow | null> {
+export async function findSeasonById(
+  db: DbClient,
+  id: string,
+): Promise<SeasonRow | null> {
   return db.queryOne<SeasonRow>("SELECT * FROM seasons WHERE id = ?", [id]);
 }
 
@@ -276,11 +289,14 @@ export async function markActiveSeason(
   competitionId: string,
   now: string,
 ): Promise<SeasonRow | null> {
-  await db.execute("UPDATE seasons SET is_active = 0, updated_at = ? WHERE competition_id = ?", [
-    now,
-    competitionId,
-  ]);
-  await db.execute("UPDATE seasons SET is_active = 1, updated_at = ? WHERE id = ?", [now, seasonId]);
+  await db.execute(
+    "UPDATE seasons SET is_active = 0, updated_at = ? WHERE competition_id = ?",
+    [now, competitionId],
+  );
+  await db.execute(
+    "UPDATE seasons SET is_active = 1, updated_at = ? WHERE id = ?",
+    [now, seasonId],
+  );
   return findSeasonById(db, seasonId);
 }
 
@@ -310,7 +326,10 @@ export async function createTeam(
   return findTeamById(db, id) as Promise<TeamRow>;
 }
 
-export async function findTeamById(db: DbClient, id: string): Promise<TeamRow | null> {
+export async function findTeamById(
+  db: DbClient,
+  id: string,
+): Promise<TeamRow | null> {
   return db.queryOne<TeamRow>("SELECT * FROM teams WHERE id = ?", [id]);
 }
 
@@ -364,8 +383,13 @@ export async function createTeamAlias(
   return findTeamAliasById(db, id) as Promise<TeamAliasRow>;
 }
 
-export async function findTeamAliasById(db: DbClient, id: string): Promise<TeamAliasRow | null> {
-  return db.queryOne<TeamAliasRow>("SELECT * FROM team_aliases WHERE id = ?", [id]);
+export async function findTeamAliasById(
+  db: DbClient,
+  id: string,
+): Promise<TeamAliasRow | null> {
+  return db.queryOne<TeamAliasRow>("SELECT * FROM team_aliases WHERE id = ?", [
+    id,
+  ]);
 }
 
 export async function findAliasBySource(
@@ -461,7 +485,10 @@ export async function createRound(
   return findRoundById(db, id) as Promise<RoundRow>;
 }
 
-export async function findRoundById(db: DbClient, id: string): Promise<RoundRow | null> {
+export async function findRoundById(
+  db: DbClient,
+  id: string,
+): Promise<RoundRow | null> {
   return db.queryOne<RoundRow>("SELECT * FROM rounds WHERE id = ?", [id]);
 }
 
@@ -526,7 +553,10 @@ export async function createFixture(
   return findFixtureById(db, id) as Promise<FixtureRow>;
 }
 
-export async function findFixtureById(db: DbClient, id: string): Promise<FixtureRow | null> {
+export async function findFixtureById(
+  db: DbClient,
+  id: string,
+): Promise<FixtureRow | null> {
   return db.queryOne<FixtureRow>("SELECT * FROM fixtures WHERE id = ?", [id]);
 }
 
@@ -622,7 +652,10 @@ export async function setFixtureStatus(
       [status, now, id],
     );
   } else {
-    await db.execute("UPDATE fixtures SET status = ?, updated_at = ? WHERE id = ?", [status, now, id]);
+    await db.execute(
+      "UPDATE fixtures SET status = ?, updated_at = ? WHERE id = ?",
+      [status, now, id],
+    );
   }
   return findFixtureById(db, id);
 }
@@ -677,7 +710,10 @@ export async function insertResultCorrection(
       now,
     ],
   );
-  const row = await db.queryOne<ResultCorrectionRow>("SELECT * FROM result_corrections WHERE id = ?", [id]);
+  const row = await db.queryOne<ResultCorrectionRow>(
+    "SELECT * FROM result_corrections WHERE id = ?",
+    [id],
+  );
   if (row === null) throw new Error("Result correction insert failed");
   return row;
 }
