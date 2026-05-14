@@ -5,7 +5,7 @@ import { resolve } from "node:path";
 
 const migrationPath = resolve(
   __dirname,
-  "../../migrations/0008_competitions_teams_fixtures_results.sql",
+  "../../migrations/0003_competitions_teams_fixtures_results.sql",
 );
 
 async function createMigratedDb() {
@@ -63,14 +63,14 @@ describe("PR-08 competitions/fixtures schema migration", () => {
   it("creates all core tables", async () => {
     const db = await createMigratedDb();
 
-    const tables = db
-      .exec(
-        `SELECT name
-         FROM sqlite_master
-         WHERE type = 'table'
-         ORDER BY name`,
-      )[0]
-      .values.flat();
+    const tablesResult = db.exec(
+      `SELECT name
+       FROM sqlite_master
+       WHERE type = 'table'
+       ORDER BY name`,
+    );
+    expect(tablesResult[0]).toBeDefined();
+    const tables = tablesResult[0]!.values.flat();
 
     expect(tables).toContain("sports");
     expect(tables).toContain("competitions");
@@ -86,14 +86,14 @@ describe("PR-08 competitions/fixtures schema migration", () => {
   it("creates expected indexes", async () => {
     const db = await createMigratedDb();
 
-    const indexes = db
-      .exec(
-        `SELECT name
-         FROM sqlite_master
-         WHERE type = 'index'
-         ORDER BY name`,
-      )[0]
-      .values.flat();
+    const indexesResult = db.exec(
+      `SELECT name
+       FROM sqlite_master
+       WHERE type = 'index'
+       ORDER BY name`,
+    );
+    expect(indexesResult[0]).toBeDefined();
+    const indexes = indexesResult[0]!.values.flat();
 
     expect(indexes).toContain("idx_fixtures_round");
     expect(indexes).toContain("idx_team_aliases_lookup");
@@ -323,11 +323,13 @@ describe("PR-08 competitions/fixtures schema migration", () => {
     const db = await createMigratedDb();
     seedFixtureDependencies(db);
 
-    const rows = db.exec(
+    const rowsResult = db.exec(
       `SELECT legacy_id
        FROM competitions
        WHERE id = 'comp-super-league'`,
-    )[0].values;
+    );
+    expect(rowsResult[0]).toBeDefined();
+    const rows = rowsResult[0]!.values;
 
     expect(rows[0]?.[0]).toBe("wp_comp_100");
   });
