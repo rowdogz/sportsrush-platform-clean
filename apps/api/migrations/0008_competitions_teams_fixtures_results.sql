@@ -224,7 +224,7 @@ CREATE INDEX idx_fixtures_legacy_match_id ON fixtures(legacy_match_id);
 
 CREATE TABLE result_corrections (
   id TEXT PRIMARY KEY,
-  fixture_id TEXT NOT NULL REFERENCES fixtures(id) ON DELETE CASCADE,
+  fixture_id TEXT NOT NULL REFERENCES fixtures(id) ON DELETE RESTRICT,
 
   previous_status TEXT NOT NULL,
   previous_home_score INTEGER,
