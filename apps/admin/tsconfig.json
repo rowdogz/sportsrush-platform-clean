@@ -1,0 +1,10 @@
+{
+  "extends": "@sr/typescript-config/base.json",
+  "include": ["src", "vite.config.ts", "vitest.config.ts", "test"],
+  "compilerOptions": {
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["vite/client", "vitest/globals"]
+  }
+}
