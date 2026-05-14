@@ -27,26 +27,26 @@ function seedFixtureDependencies(db: initSqlJs.Database) {
 
   db.run(
     `INSERT INTO competitions
-       (id, sport_id, slug, name, created_at, updated_at)
+       (id, sport_id, slug, name, created_at, updated_at, legacy_id)
      VALUES
-       ('comp-super-league', 'sport-rugby-league', 'super-league', 'Super League', ?, ?)`,
+       ('comp-super-league', 'sport-rugby-league', 'super-league', 'Super League', ?, ?, 'wp_comp_100')`,
     [now, now],
   );
 
   db.run(
     `INSERT INTO seasons
-       (id, competition_id, slug, name, created_at, updated_at)
+       (id, competition_id, slug, name, created_at, updated_at, legacy_id)
      VALUES
-       ('season-2026', 'comp-super-league', '2026', '2026 Season', ?, ?)`,
+       ('season-2026', 'comp-super-league', '2026', '2026 Season', ?, ?, 'wp_season_2026')`,
     [now, now],
   );
 
   db.run(
     `INSERT INTO teams
-       (id, sport_id, slug, name, created_at, updated_at)
+       (id, sport_id, slug, name, created_at, updated_at, legacy_id)
      VALUES
-       ('team-wigan', 'sport-rugby-league', 'wigan', 'Wigan Warriors', ?, ?),
-       ('team-saints', 'sport-rugby-league', 'saints', 'St Helens', ?, ?)`,
+       ('team-wigan', 'sport-rugby-league', 'wigan', 'Wigan Warriors', ?, ?, 'wp_team_1'),
+       ('team-saints', 'sport-rugby-league', 'saints', 'St Helens', ?, ?, 'wp_team_2')`,
     [now, now, now, now],
   );
 
@@ -83,7 +83,25 @@ describe("PR-08 competitions/fixtures schema migration", () => {
     expect(tables).toContain("result_corrections");
   });
 
-  it("prevents duplicate team aliases per sport", async () => {
+  it("creates expected indexes", async () => {
+    const db = await createMigratedDb();
+
+    const indexes = db
+      .exec(
+        `SELECT name
+         FROM sqlite_master
+         WHERE type = 'index'
+         ORDER BY name`,
+      )[0]
+      .values.flat();
+
+    expect(indexes).toContain("idx_fixtures_round");
+    expect(indexes).toContain("idx_team_aliases_lookup");
+    expect(indexes).toContain("idx_result_corrections_fixture_id");
+    expect(indexes).toContain("idx_fixtures_competition_season");
+  });
+
+  it("supports alias sources while enforcing normalized uniqueness per sport", async () => {
     const db = await createMigratedDb();
     seedFixtureDependencies(db);
 
@@ -91,18 +109,125 @@ describe("PR-08 competitions/fixtures schema migration", () => {
 
     db.run(
       `INSERT INTO team_aliases
-         (id, team_id, sport_id, alias, normalized_alias, created_at, updated_at)
+         (id, team_id, sport_id, alias, normalized_alias, source, created_at, updated_at)
        VALUES
-         ('alias-1', 'team-wigan', 'sport-rugby-league', 'Wigan', 'wigan', ?, ?)`,
+         ('alias-1', 'team-wigan', 'sport-rugby-league', 'Wigan', 'wigan', 'bbc', ?, ?)`,
       [now, now],
     );
 
     expect(() => {
       db.run(
         `INSERT INTO team_aliases
-           (id, team_id, sport_id, alias, normalized_alias, created_at, updated_at)
+           (id, team_id, sport_id, alias, normalized_alias, source, created_at, updated_at)
          VALUES
-           ('alias-2', 'team-saints', 'sport-rugby-league', 'Wigan Warriors', 'wigan', ?, ?)`,
+           ('alias-2', 'team-saints', 'sport-rugby-league', 'Wigan Warriors', 'wigan', 'sportradar', ?, ?)`,
+        [now, now],
+      );
+    }).toThrow();
+  });
+
+  it("accepts all supported fixture statuses", async () => {
+    const db = await createMigratedDb();
+    seedFixtureDependencies(db);
+
+    const statuses = [
+      "scheduled",
+      "postponed",
+      "abandoned",
+      "void",
+      "cancelled",
+      "completed",
+    ];
+
+    const now = "2026-05-14T12:00:00.000Z";
+
+    statuses.forEach((status, index) => {
+      db.run(
+        `INSERT INTO fixtures
+         (
+           id,
+           sport_id,
+           competition_id,
+           season_id,
+           round,
+           round_name,
+           home_team_id,
+           away_team_id,
+           scheduled_at,
+           status,
+           home_score,
+           away_score,
+           created_at,
+           updated_at
+         )
+         VALUES
+         (
+           ?,
+           'sport-rugby-league',
+           'comp-super-league',
+           'season-2026',
+           '1',
+           'Round 1',
+           'team-wigan',
+           'team-saints',
+           ?,
+           ?,
+           ?,
+           ?,
+           ?,
+           ?
+         )`,
+        [
+          `fixture-${status}`,
+          `2026-02-${String(index + 1).padStart(2, "0")}T20:00:00.000Z`,
+          status,
+          status === "completed" ? 20 : null,
+          status === "completed" ? 10 : null,
+          now,
+          now,
+        ],
+      );
+    });
+  });
+
+  it("rejects invalid fixture statuses", async () => {
+    const db = await createMigratedDb();
+    seedFixtureDependencies(db);
+
+    const now = "2026-05-14T12:00:00.000Z";
+
+    expect(() => {
+      db.run(
+        `INSERT INTO fixtures
+         (
+           id,
+           sport_id,
+           competition_id,
+           season_id,
+           round,
+           round_name,
+           home_team_id,
+           away_team_id,
+           scheduled_at,
+           status,
+           created_at,
+           updated_at
+         )
+         VALUES
+         (
+           'fixture-invalid-status',
+           'sport-rugby-league',
+           'comp-super-league',
+           'season-2026',
+           '1',
+           'Round 1',
+           'team-wigan',
+           'team-saints',
+           '2026-02-01T20:00:00.000Z',
+           'live',
+           ?,
+           ?
+         )`,
         [now, now],
       );
     }).toThrow();
@@ -131,7 +256,9 @@ describe("PR-08 competitions/fixtures schema migration", () => {
          scheduled_at,
          status,
          created_at,
-         updated_at
+         updated_at,
+         legacy_match_id,
+         legacy_fixture_id
        )
        VALUES
        (
@@ -148,7 +275,9 @@ describe("PR-08 competitions/fixtures schema migration", () => {
          ?,
          'scheduled',
          ?,
-         ?
+         ?,
+         999,
+         'legacy-fixture-999'
        )`,
       [kickoff, now, now],
     );
@@ -188,6 +317,19 @@ describe("PR-08 competitions/fixtures schema migration", () => {
         [kickoff, now, now],
       );
     }).toThrow();
+  });
+
+  it("stores legacy IDs for migration", async () => {
+    const db = await createMigratedDb();
+    seedFixtureDependencies(db);
+
+    const rows = db.exec(
+      `SELECT legacy_id
+       FROM competitions
+       WHERE id = 'comp-super-league'`,
+    )[0].values;
+
+    expect(rows[0]?.[0]).toBe("wp_comp_100");
   });
 
   it("requires completed fixtures to contain scores", async () => {
@@ -233,7 +375,7 @@ describe("PR-08 competitions/fixtures schema migration", () => {
     }).toThrow();
   });
 
-  it("allows auditable result corrections", async () => {
+  it("prevents deleting fixtures that have correction history", async () => {
     const db = await createMigratedDb();
     seedFixtureDependencies(db);
 
@@ -259,7 +401,7 @@ describe("PR-08 competitions/fixtures schema migration", () => {
        )
        VALUES
        (
-         'fixture-completed',
+         'fixture-protected',
          'sport-rugby-league',
          'comp-super-league',
          'season-2026',
@@ -294,7 +436,7 @@ describe("PR-08 competitions/fixtures schema migration", () => {
        VALUES
        (
          'correction-1',
-         'fixture-completed',
+         'fixture-protected',
          'completed',
          20,
          18,
@@ -307,12 +449,57 @@ describe("PR-08 competitions/fixtures schema migration", () => {
       [now],
     );
 
-    const rows = db.exec(
-      `SELECT corrected_home_score
-       FROM result_corrections
-       WHERE id = 'correction-1'`,
-    )[0].values;
+    expect(() => {
+      db.run(`DELETE FROM fixtures WHERE id = 'fixture-protected'`);
+    }).toThrow();
+  });
 
-    expect(rows[0]?.[0]).toBe(22);
+  it("protects FK delete behaviour for competitions and teams", async () => {
+    const db = await createMigratedDb();
+    seedFixtureDependencies(db);
+
+    const now = "2026-05-14T12:00:00.000Z";
+
+    db.run(
+      `INSERT INTO fixtures
+       (
+         id,
+         sport_id,
+         competition_id,
+         season_id,
+         round,
+         round_name,
+         home_team_id,
+         away_team_id,
+         scheduled_at,
+         status,
+         created_at,
+         updated_at
+       )
+       VALUES
+       (
+         'fixture-fk',
+         'sport-rugby-league',
+         'comp-super-league',
+         'season-2026',
+         '1',
+         'Round 1',
+         'team-wigan',
+         'team-saints',
+         '2026-02-01T20:00:00.000Z',
+         'scheduled',
+         ?,
+         ?
+       )`,
+      [now, now],
+    );
+
+    expect(() => {
+      db.run(`DELETE FROM competitions WHERE id = 'comp-super-league'`);
+    }).toThrow();
+
+    expect(() => {
+      db.run(`DELETE FROM teams WHERE id = 'team-wigan'`);
+    }).toThrow();
   });
 });
