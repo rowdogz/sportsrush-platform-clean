@@ -59,6 +59,19 @@ const PaginationQuerySchema = z.object({
   limit: z.coerce.number().int().positive().max(100).default(25),
 });
 
+type Pagination = {
+  readonly page: number;
+  readonly limit: number;
+};
+
+function parsePagination(raw: Record<string, string | undefined>): Pagination {
+  const parsed = parseQuery(PaginationQuerySchema, raw);
+  return {
+    page: parsed.page ?? 1,
+    limit: parsed.limit ?? 25,
+  };
+}
+
 const ActivateSeasonSchema = z.object({
   competitionId: z.string().min(1),
 });
@@ -125,7 +138,7 @@ export const adminRoutes = new Hono<HonoEnv>();
 adminRoutes.use("*", requireRole("admin"));
 
 adminRoutes.get("/competitions", async (c) => {
-  const pagination = parseQuery(PaginationQuerySchema, {
+  const pagination = parsePagination({
     page: c.req.query("page"),
     limit: c.req.query("limit"),
   });
@@ -185,7 +198,7 @@ adminRoutes.post("/seasons/:id/activate", async (c) => {
 });
 
 adminRoutes.get("/teams", async (c) => {
-  const pagination = parseQuery(PaginationQuerySchema, {
+  const pagination = parsePagination({
     page: c.req.query("page"),
     limit: c.req.query("limit"),
   });
@@ -225,7 +238,12 @@ adminRoutes.get("/team-aliases", async (c) => {
   if (query.source !== undefined && query.alias !== undefined) {
     return ok(
       c,
-      await lookupAliasService(context, query.sportId, query.source, query.alias),
+      await lookupAliasService(
+        context,
+        query.sportId,
+        query.source,
+        query.alias,
+      ),
     );
   }
   return ok(
@@ -237,7 +255,14 @@ adminRoutes.get("/team-aliases", async (c) => {
 adminRoutes.post("/team-aliases", async (c) => {
   const input = parseBody(CreateTeamAliasSchema, await c.req.json());
   const context = await makeServiceContext(c);
-  return created(c, await createAliasService(context, input));
+  return created(
+    c,
+    await createAliasService(context, {
+      ...input,
+      source: input.source ?? "manual",
+      priority: input.priority ?? 100,
+    }),
+  );
 });
 
 adminRoutes.patch("/team-aliases/:id", async (c) => {
@@ -273,7 +298,7 @@ adminRoutes.patch("/rounds/:id", async (c) => {
 });
 
 adminRoutes.get("/fixtures", async (c) => {
-  const pagination = parseQuery(PaginationQuerySchema, {
+  const pagination = parsePagination({
     page: c.req.query("page"),
     limit: c.req.query("limit"),
   });
@@ -297,7 +322,13 @@ adminRoutes.get("/fixtures", async (c) => {
 adminRoutes.post("/fixtures", async (c) => {
   const input = parseBody(CreateFixtureSchema, await c.req.json());
   const context = await makeServiceContext(c);
-  return created(c, await createFixtureService(context, input));
+  return created(
+    c,
+    await createFixtureService(context, {
+      ...input,
+      status: input.status ?? "scheduled",
+    }),
+  );
 });
 
 adminRoutes.get("/fixtures/:id", async (c) => {
@@ -314,13 +345,26 @@ adminRoutes.patch("/fixtures/:id", async (c) => {
 adminRoutes.post("/fixtures/:id/transition", async (c) => {
   const input = parseBody(FixtureTransitionSchema, await c.req.json());
   const context = await makeServiceContext(c);
+  const options = {
+    ...(input.preserveScores !== undefined
+      ? { preserveScores: input.preserveScores }
+      : {}),
+    ...(input.partialHomeScore !== undefined
+      ? { partialHomeScore: input.partialHomeScore }
+      : {}),
+    ...(input.partialAwayScore !== undefined
+      ? { partialAwayScore: input.partialAwayScore }
+      : {}),
+  };
+
   return ok(
     c,
-    await transitionFixtureService(context, c.req.param("id"), input.status, {
-      preserveScores: input.preserveScores,
-      partialHomeScore: input.partialHomeScore,
-      partialAwayScore: input.partialAwayScore,
-    }),
+    await transitionFixtureService(
+      context,
+      c.req.param("id"),
+      input.status,
+      options,
+    ),
   );
 });
 

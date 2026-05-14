@@ -36,7 +36,9 @@ async function createSqlDb(): Promise<SqlJsDatabase> {
   return db;
 }
 
-function normalizeParams(params: readonly unknown[] = []): initSqlJs.BindParams {
+function normalizeParams(
+  params: readonly unknown[] = [],
+): initSqlJs.BindParams {
   return params.map((value) => value ?? null) as initSqlJs.BindParams;
 }
 
@@ -58,7 +60,10 @@ function makeD1Result<T extends Record<string, unknown>>(
   } as D1Result<T>;
 }
 
-function makePreparedStatement(sqlDb: SqlJsDatabase, sql: string): D1PreparedStatement {
+function makePreparedStatement(
+  sqlDb: SqlJsDatabase,
+  sql: string,
+): D1PreparedStatement {
   let boundParams: readonly unknown[] = [];
 
   const statement = {
@@ -104,7 +109,9 @@ function makeD1Database(sqlDb: SqlJsDatabase): D1Database {
     prepare(sql: string) {
       return makePreparedStatement(sqlDb, sql);
     },
-    async batch<T extends Record<string, unknown>>(statements: D1PreparedStatement[]) {
+    async batch<T extends Record<string, unknown>>(
+      statements: D1PreparedStatement[],
+    ) {
       const results: D1Result<T>[] = [];
       for (const statement of statements) {
         results.push(await statement.run<T>());
@@ -153,7 +160,9 @@ async function createTestHarness() {
   return { request, userToken, sqlDb };
 }
 
-async function createCompetition(request: Awaited<ReturnType<typeof createTestHarness>>["request"]) {
+async function createCompetition(
+  request: Awaited<ReturnType<typeof createTestHarness>>["request"],
+) {
   const response = await request("/v1/admin/competitions", {
     method: "POST",
     body: JSON.stringify({
@@ -162,8 +171,8 @@ async function createCompetition(request: Awaited<ReturnType<typeof createTestHa
       name: "Super League",
     }),
   });
-  const body = await response.json();
-  return body.data as { id: string };
+  const body = (await response.json()) as any;
+  return (body as any).data as { id: string };
 }
 
 async function createSeason(
@@ -179,8 +188,8 @@ async function createSeason(
       isActive: true,
     }),
   });
-  const body = await response.json();
-  return body.data as { id: string };
+  const body = (await response.json()) as any;
+  return (body as any).data as { id: string };
 }
 
 async function createTeam(
@@ -196,14 +205,20 @@ async function createTeam(
       name,
     }),
   });
-  const body = await response.json();
-  return body.data as { id: string };
+  const body = (await response.json()) as any;
+  return (body as any).data as { id: string };
 }
 
-async function seedCore(request: Awaited<ReturnType<typeof createTestHarness>>["request"]) {
+async function seedCore(
+  request: Awaited<ReturnType<typeof createTestHarness>>["request"],
+) {
   const competition = await createCompetition(request);
   const season = await createSeason(request, competition.id);
-  const homeTeam = await createTeam(request, "wigan-warriors", "Wigan Warriors");
+  const homeTeam = await createTeam(
+    request,
+    "wigan-warriors",
+    "Wigan Warriors",
+  );
   const awayTeam = await createTeam(request, "st-helens", "St Helens");
   return { competition, season, homeTeam, awayTeam };
 }
@@ -227,14 +242,24 @@ async function createFixture(
       status: "scheduled",
     }),
   });
-  const body = await response.json();
-  return { fixture: body.data as { id: string }, competition, season, homeTeam, awayTeam };
+  const body = (await response.json()) as any;
+  return {
+    fixture: (body as any).data as { id: string },
+    competition,
+    season,
+    homeTeam,
+    awayTeam,
+  };
 }
 
 describe("admin route slice 2 auth", () => {
   it("requires admin auth", async () => {
     const { request } = await createTestHarness();
-    const response = await request("/v1/admin/team-aliases?sportId=sport-rugby-league", {}, null);
+    const response = await request(
+      "/v1/admin/team-aliases?sportId=sport-rugby-league",
+      {},
+      null,
+    );
     expect(response.status).toBe(401);
   });
 
@@ -264,7 +289,7 @@ describe("admin route slice 2 aliases", () => {
       }),
     });
     expect(createResponse.status).toBe(201);
-    const created = await createResponse.json();
+    const created = (await createResponse.json()) as any;
     expect(created.data.normalized_alias).toBe("wigan warriors");
     expect(created.data.source).toBe("bbc sport");
 
@@ -272,30 +297,36 @@ describe("admin route slice 2 aliases", () => {
       "/v1/admin/team-aliases?sportId=sport-rugby-league&source=BBC%20Sport&alias=WIGAN%20Warriors",
     );
     expect(lookupResponse.status).toBe(200);
-    const lookup = await lookupResponse.json();
+    const lookup = (await lookupResponse.json()) as any;
     expect(lookup.data.id).toBe(created.data.id);
 
     const listResponse = await request(
       "/v1/admin/team-aliases?sportId=sport-rugby-league&source=BBC%20Sport",
     );
     expect(listResponse.status).toBe(200);
-    const list = await listResponse.json();
+    const list = (await listResponse.json()) as any;
     expect(list.data).toHaveLength(1);
 
-    const updateResponse = await request(`/v1/admin/team-aliases/${created.data.id}`, {
-      method: "PATCH",
-      body: JSON.stringify({ alias: "Wigan RL", source: "Sportradar" }),
-    });
+    const updateResponse = await request(
+      `/v1/admin/team-aliases/${created.data.id}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ alias: "Wigan RL", source: "Sportradar" }),
+      },
+    );
     expect(updateResponse.status).toBe(200);
-    const updated = await updateResponse.json();
+    const updated = (await updateResponse.json()) as any;
     expect(updated.data.normalized_alias).toBe("wigan rl");
     expect(updated.data.source).toBe("sportradar");
 
-    const deleteResponse = await request(`/v1/admin/team-aliases/${created.data.id}`, {
-      method: "DELETE",
-    });
+    const deleteResponse = await request(
+      `/v1/admin/team-aliases/${created.data.id}`,
+      {
+        method: "DELETE",
+      },
+    );
     expect(deleteResponse.status).toBe(200);
-    const deleted = await deleteResponse.json();
+    const deleted = (await deleteResponse.json()) as any;
     expect(deleted.data.deleted).toBe(true);
   });
 
@@ -321,7 +352,7 @@ describe("admin route slice 2 aliases", () => {
       body: JSON.stringify({ ...body, alias: " wigan   warriors " }),
     });
     expect(second.status).toBe(422);
-    const error = await second.json();
+    const error = (await second.json()) as any;
     expect(error.error.code).toBe("ADMIN_DOMAIN_ERROR");
   });
 
@@ -348,20 +379,25 @@ describe("admin route slice 2 rounds", () => {
       }),
     });
     expect(createResponse.status).toBe(201);
-    const created = await createResponse.json();
+    const created = (await createResponse.json()) as any;
     expect(created.data.round_name).toBe("Quarter Final");
 
-    const updateResponse = await request(`/v1/admin/rounds/${created.data.id}`, {
-      method: "PATCH",
-      body: JSON.stringify({ roundName: "Semi Final", displayOrder: 20 }),
-    });
+    const updateResponse = await request(
+      `/v1/admin/rounds/${created.data.id}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ roundName: "Semi Final", displayOrder: 20 }),
+      },
+    );
     expect(updateResponse.status).toBe(200);
-    const updated = await updateResponse.json();
+    const updated = (await updateResponse.json()) as any;
     expect(updated.data.round_name).toBe("Semi Final");
 
-    const listResponse = await request(`/v1/admin/rounds?seasonId=${season.id}`);
+    const listResponse = await request(
+      `/v1/admin/rounds?seasonId=${season.id}`,
+    );
     expect(listResponse.status).toBe(200);
-    const list = await listResponse.json();
+    const list = (await listResponse.json()) as any;
     expect(list.data).toHaveLength(1);
     expect(list.data[0].round).toBe("QF");
   });
@@ -374,7 +410,7 @@ describe("admin route slice 2 fixtures", () => {
 
     const getResponse = await request(`/v1/admin/fixtures/${fixture.id}`);
     expect(getResponse.status).toBe(200);
-    const got = await getResponse.json();
+    const got = (await getResponse.json()) as any;
     expect(got.data.id).toBe(fixture.id);
 
     const updateResponse = await request(`/v1/admin/fixtures/${fixture.id}`, {
@@ -382,14 +418,14 @@ describe("admin route slice 2 fixtures", () => {
       body: JSON.stringify({ venueName: "DW Stadium" }),
     });
     expect(updateResponse.status).toBe(200);
-    const updated = await updateResponse.json();
+    const updated = (await updateResponse.json()) as any;
     expect(updated.data.venue_name).toBe("DW Stadium");
 
     const listResponse = await request(
       `/v1/admin/fixtures?seasonId=${season.id}&round=1&status=scheduled&page=1&limit=10`,
     );
     expect(listResponse.status).toBe(200);
-    const list = await listResponse.json();
+    const list = (await listResponse.json()) as any;
     expect(list.data).toHaveLength(1);
     expect(list.meta).toEqual({ page: 1, limit: 10, total: 1, hasMore: false });
   });
@@ -398,12 +434,15 @@ describe("admin route slice 2 fixtures", () => {
     const { request } = await createTestHarness();
     const { fixture } = await createFixture(request);
 
-    const response = await request(`/v1/admin/fixtures/${fixture.id}/transition`, {
-      method: "POST",
-      body: JSON.stringify({ status: "postponed" }),
-    });
+    const response = await request(
+      `/v1/admin/fixtures/${fixture.id}/transition`,
+      {
+        method: "POST",
+        body: JSON.stringify({ status: "postponed" }),
+      },
+    );
     expect(response.status).toBe(200);
-    const body = await response.json();
+    const body = (await response.json()) as any;
     expect(body.data.status).toBe("postponed");
   });
 
@@ -413,10 +452,14 @@ describe("admin route slice 2 fixtures", () => {
 
     const response = await request(`/v1/admin/fixtures/${fixture.id}/result`, {
       method: "POST",
-      body: JSON.stringify({ homeScore: 22, awayScore: 18, resultSource: "manual" }),
+      body: JSON.stringify({
+        homeScore: 22,
+        awayScore: 18,
+        resultSource: "manual",
+      }),
     });
     expect(response.status).toBe(200);
-    const body = await response.json();
+    const body = (await response.json()) as any;
     expect(body.data.status).toBe("completed");
     expect(body.data.home_score).toBe(22);
     expect(body.data.away_score).toBe(18);
@@ -428,22 +471,33 @@ describe("admin route slice 2 fixtures", () => {
 
     await request(`/v1/admin/fixtures/${fixture.id}/result`, {
       method: "POST",
-      body: JSON.stringify({ homeScore: 22, awayScore: 18, resultSource: "manual" }),
+      body: JSON.stringify({
+        homeScore: 22,
+        awayScore: 18,
+        resultSource: "manual",
+      }),
     });
 
-    const response = await request(`/v1/admin/fixtures/${fixture.id}/correct-result`, {
-      method: "POST",
-      body: JSON.stringify({ homeScore: 24, awayScore: 18, reason: "Official correction" }),
-    });
+    const response = await request(
+      `/v1/admin/fixtures/${fixture.id}/correct-result`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          homeScore: 24,
+          awayScore: 18,
+          reason: "Official correction",
+        }),
+      },
+    );
     expect(response.status).toBe(200);
-    const body = await response.json();
+    const body = (await response.json()) as any;
     expect(body.data.home_score).toBe(24);
 
     const auditRows = sqlDb.exec(
       "SELECT previous_home_score, corrected_home_score FROM result_corrections WHERE fixture_id = '" +
         fixture.id +
         "'",
-    )[0].values;
+    )[0]!.values;
     expect(auditRows[0]).toEqual([22, 24]);
   });
 
