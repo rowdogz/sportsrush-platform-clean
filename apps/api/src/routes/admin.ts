@@ -42,6 +42,7 @@ import {
   listCompetitionsService,
   listFixturesService,
   listRoundsService,
+  listSeasonsService,
   listTeamsService,
   lookupAliasService,
   transitionFixtureService,
@@ -74,6 +75,11 @@ function parsePagination(raw: Record<string, string | undefined>): Pagination {
 
 const ActivateSeasonSchema = z.object({
   competitionId: z.string().min(1),
+});
+
+const SeasonListQuerySchema = z.object({
+  competitionId: z.string().min(1).optional(),
+  search: z.string().min(1).optional(),
 });
 
 const RoundListQuerySchema = z.object({
@@ -170,6 +176,24 @@ adminRoutes.patch("/competitions/:id", async (c) => {
 adminRoutes.post("/competitions/:id/archive", async (c) => {
   const context = await makeServiceContext(c);
   return ok(c, await archiveCompetitionService(context, c.req.param("id")));
+});
+
+adminRoutes.get("/seasons", async (c) => {
+  const pagination = parsePagination({
+    page: c.req.query("page"),
+    limit: c.req.query("limit"),
+  });
+  const filters = parseQuery(SeasonListQuerySchema, {
+    competitionId: c.req.query("competitionId"),
+    search: c.req.query("search"),
+  });
+  const context = await makeServiceContext(c);
+  const result = await listSeasonsService(context, pagination, filters);
+  return paginated(
+    c,
+    result.rows,
+    paginationMeta(pagination.page, pagination.limit, result.total),
+  );
 });
 
 adminRoutes.post("/seasons", async (c) => {
