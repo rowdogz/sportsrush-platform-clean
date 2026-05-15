@@ -91,6 +91,79 @@ describe("Admin app shell", () => {
     expect(await screen.findByText("No competitions found")).toBeTruthy();
   });
 
+  it("shows admin navigation to authenticated users", async () => {
+    window.localStorage.setItem("sr_admin_access_token", "stored-access-token");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse({
+          data: [],
+          meta: { page: 1, limit: 50, total: 0, hasMore: false },
+        }),
+      ),
+    );
+
+    render(<App />);
+
+    expect(await screen.findByLabelText("Admin navigation")).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "Competitions" }),
+    ).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("button", { name: "Teams" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Fixtures" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Aliases" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Rounds" })).toBeTruthy();
+  });
+
+  it("renders competitions by default for authenticated users", async () => {
+    window.localStorage.setItem("sr_admin_access_token", "stored-access-token");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse({
+          data: [],
+          meta: { page: 1, limit: 50, total: 0, hasMore: false },
+        }),
+      ),
+    );
+
+    render(<App />);
+
+    expect(
+      await screen.findByRole("heading", { name: "Competitions" }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "Create competition" }),
+    ).toBeTruthy();
+  });
+
+  it("shows placeholder screens from admin navigation", async () => {
+    window.localStorage.setItem("sr_admin_access_token", "stored-access-token");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse({
+          data: [],
+          meta: { page: 1, limit: 50, total: 0, hasMore: false },
+        }),
+      ),
+    );
+
+    render(<App />);
+
+    await screen.findByRole("heading", { name: "Competitions" });
+
+    for (const screenName of ["Teams", "Fixtures", "Aliases", "Rounds"]) {
+      fireEvent.click(screen.getByRole("button", { name: screenName }));
+      expect(screen.getByRole("heading", { name: screenName })).toBeTruthy();
+      expect(
+        screen.getByText(
+          `${screenName} admin tools will be added in a later PR.`,
+        ),
+      ).toBeTruthy();
+    }
+  });
+
   it("logs out and clears stored session tokens", async () => {
     window.localStorage.setItem("sr_admin_access_token", "stored-access-token");
     window.localStorage.setItem(

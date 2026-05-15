@@ -1,11 +1,31 @@
 import type { ReactNode } from "react";
 import { useAuthSession } from "../../contexts/AuthSessionProvider";
 
-type AdminLayoutProps = {
-  readonly children: ReactNode;
+export type AdminScreen =
+  | "competitions"
+  | "teams"
+  | "fixtures"
+  | "aliases"
+  | "rounds";
+
+export type AdminNavItem = {
+  readonly id: AdminScreen;
+  readonly label: string;
 };
 
-export function AdminLayout({ children }: AdminLayoutProps) {
+type AdminLayoutProps = {
+  readonly children: ReactNode;
+  readonly activeScreen: AdminScreen;
+  readonly navItems: readonly AdminNavItem[];
+  readonly onNavigate: (screen: AdminScreen) => void;
+};
+
+export function AdminLayout({
+  children,
+  activeScreen,
+  navItems,
+  onNavigate,
+}: AdminLayoutProps) {
   const { logout } = useAuthSession();
 
   return (
@@ -16,6 +36,23 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           Log out
         </button>
       </header>
+      <nav className="admin-nav" aria-label="Admin navigation">
+        {navItems.map((item) => (
+          <button
+            key={item.id}
+            className={
+              item.id === activeScreen
+                ? "nav-button nav-button-active"
+                : "nav-button"
+            }
+            type="button"
+            aria-current={item.id === activeScreen ? "page" : undefined}
+            onClick={() => onNavigate(item.id)}
+          >
+            {item.label}
+          </button>
+        ))}
+      </nav>
       <main className="admin-main">{children}</main>
     </div>
   );
