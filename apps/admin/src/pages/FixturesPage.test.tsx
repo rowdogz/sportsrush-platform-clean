@@ -286,6 +286,65 @@ describe("FixturesPage", () => {
     );
   });
 
+  it("does not overwrite completed fixture scores through normal edit", async () => {
+    const completedFixture = fixture({
+      status: "completed",
+      home_score: 22,
+      away_score: 18,
+      result_source: "manual",
+    });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(competitionListResponse())
+      .mockResolvedValueOnce(teamListResponse())
+      .mockResolvedValueOnce(fixtureListResponse([completedFixture]))
+      .mockResolvedValueOnce(
+        jsonResponse({
+          data: fixture({
+            status: "completed",
+            home_score: 22,
+            away_score: 18,
+            venue_name: "Updated Stadium",
+          }),
+        }),
+      )
+      .mockResolvedValueOnce(
+        fixtureListResponse([
+          fixture({
+            status: "completed",
+            home_score: 22,
+            away_score: 18,
+            venue_name: "Updated Stadium",
+          }),
+        ]),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<FixturesPage />);
+
+    await screen.findByText("22-18");
+    expect(screen.queryByLabelText("Home score for fixture-1")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+    expect(
+      screen.getByText(
+        "Completed fixture scores can only be changed with a result correction.",
+      ),
+    ).toBeTruthy();
+    fireEvent.change(screen.getByLabelText("Edit venue"), {
+      target: { value: "Updated Stadium" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(await screen.findByText("Fixture updated.")).toBeTruthy();
+    const patchOptions = fetchMock.mock.calls[3]?.[1] as RequestInit;
+    const patchBody = JSON.parse(String(patchOptions.body)) as Record<
+      string,
+      unknown
+    >;
+    expect(patchBody).not.toHaveProperty("homeScore");
+    expect(patchBody).not.toHaveProperty("awayScore");
+  });
+
   it("transitions fixture status", async () => {
     const fetchMock = vi
       .fn()
@@ -394,7 +453,11 @@ describe("FixturesPage", () => {
 
     render(<FixturesPage />);
 
-    await screen.findByRole("cell", { name: "22-18" });
+    await screen.findByText("22-18");
+    expect(
+      screen.queryByLabelText("Corrected home score for fixture-1"),
+    ).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Correct result" }));
     fireEvent.change(
       screen.getByLabelText("Corrected home score for fixture-1"),
       {
@@ -404,7 +467,7 @@ describe("FixturesPage", () => {
     fireEvent.change(screen.getByLabelText("Correction reason for fixture-1"), {
       target: { value: "Official correction" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Correct result" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save correction" }));
 
     expect(await screen.findByText("Fixture result corrected.")).toBeTruthy();
     expect(await screen.findByRole("cell", { name: "24-18" })).toBeTruthy();
