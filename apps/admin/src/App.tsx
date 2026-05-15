@@ -6,7 +6,7 @@ import type {
 } from "./components/layout/AdminLayout";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { CompetitionsPage } from "./pages/CompetitionsPage";
-import { PlaceholderPage } from "./pages/PlaceholderPage";
+import { FixturesPage } from "./pages/FixturesPage";
 import { RoundsPage } from "./pages/RoundsPage";
 import { TeamAliasesPage } from "./pages/TeamAliasesPage";
 import { TeamsPage } from "./pages/TeamsPage";
@@ -28,7 +28,7 @@ function renderScreen(screen: AdminScreen) {
     case "teams":
       return <TeamsPage />;
     case "fixtures":
-      return <PlaceholderPage title="Fixtures" />;
+      return <FixturesPage />;
     case "aliases":
       return <TeamAliasesPage />;
     case "rounds":

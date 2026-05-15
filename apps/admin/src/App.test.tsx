@@ -212,31 +212,45 @@ describe("Admin app shell", () => {
     expect(screen.getByRole("button", { name: "Create round" })).toBeTruthy();
   });
 
-  it("shows placeholder screens from admin navigation", async () => {
+  it("opens the Fixtures page from admin navigation", async () => {
     window.localStorage.setItem("sr_admin_access_token", "stored-access-token");
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue(
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
         jsonResponse({
           data: [],
           meta: { page: 1, limit: 50, total: 0, hasMore: false },
         }),
-      ),
-    );
+      )
+      .mockResolvedValueOnce(
+        jsonResponse({
+          data: [],
+          meta: { page: 1, limit: 50, total: 0, hasMore: false },
+        }),
+      )
+      .mockResolvedValueOnce(
+        jsonResponse({
+          data: [],
+          meta: { page: 1, limit: 50, total: 0, hasMore: false },
+        }),
+      )
+      .mockResolvedValueOnce(
+        jsonResponse({
+          data: [],
+          meta: { page: 1, limit: 50, total: 0, hasMore: false },
+        }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
 
     render(<App />);
 
     await screen.findByRole("heading", { name: "Competitions" });
 
-    for (const screenName of ["Fixtures"]) {
-      fireEvent.click(screen.getByRole("button", { name: screenName }));
-      expect(screen.getByRole("heading", { name: screenName })).toBeTruthy();
-      expect(
-        screen.getByText(
-          `${screenName} admin tools will be added in a later PR.`,
-        ),
-      ).toBeTruthy();
-    }
+    fireEvent.click(screen.getByRole("button", { name: "Fixtures" }));
+    expect(
+      await screen.findByRole("heading", { name: "Fixtures" }),
+    ).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Create fixture" })).toBeTruthy();
   });
 
   it("logs out and clears stored session tokens", async () => {
