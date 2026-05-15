@@ -6,11 +6,11 @@ type AdminLayoutProps = {
 
 export function AdminLayout({ children }: AdminLayoutProps) {
   return (
-    <div>
-      <header>
+    <div className="admin-shell">
+      <header className="admin-header">
         <h1>SportsRush Admin</h1>
       </header>
-      <main>{children}</main>
+      <main className="admin-main">{children}</main>
     </div>
   );
 }
