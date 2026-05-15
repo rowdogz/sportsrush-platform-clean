@@ -7,6 +7,7 @@ import type {
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { CompetitionsPage } from "./pages/CompetitionsPage";
 import { PlaceholderPage } from "./pages/PlaceholderPage";
+import { TeamsPage } from "./pages/TeamsPage";
 import { ToastProvider } from "./components/primitives/Toast";
 import { AuthSessionProvider } from "./contexts/AuthSessionProvider";
 
@@ -23,7 +24,7 @@ function renderScreen(screen: AdminScreen) {
     case "competitions":
       return <CompetitionsPage />;
     case "teams":
-      return <PlaceholderPage title="Teams" />;
+      return <TeamsPage />;
     case "fixtures":
       return <PlaceholderPage title="Fixtures" />;
     case "aliases":
