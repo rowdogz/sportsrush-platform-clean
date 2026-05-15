@@ -3,8 +3,19 @@ export type AdminCompetition = {
   readonly name: string;
   readonly slug: string;
   readonly sportId: string;
+  readonly shortName: string | null;
   readonly countryCode: string | null;
+  readonly legacyId: string | null;
   readonly isActive: boolean;
+};
+
+export type CompetitionWritePayload = {
+  readonly sportId: string;
+  readonly slug: string;
+  readonly name: string;
+  readonly shortName?: string | null;
+  readonly countryCode?: string | null;
+  readonly legacyId?: string | null;
 };
 
 export type CompetitionListMeta = {
