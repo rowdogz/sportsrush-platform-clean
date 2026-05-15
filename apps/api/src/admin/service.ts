@@ -26,6 +26,7 @@ import {
   findTeamById,
   insertResultCorrection,
   listAliasesBySource,
+  listAdminUsers,
   listCompetitions,
   listFixtures,
   listSeasons,
@@ -41,6 +42,7 @@ import {
   type FixtureRow,
   type Pagination,
   type SeasonListFilters,
+  type UserListFilters,
 } from "./repository";
 import type {
   CreateCompetitionInput,
@@ -157,6 +159,14 @@ export async function listCompetitionsService(
   pagination: Pagination,
 ) {
   return listCompetitions(context.db, pagination);
+}
+
+export async function listAdminUsersService(
+  context: ServiceContext,
+  pagination: Pagination,
+  filters: UserListFilters,
+) {
+  return listAdminUsers(context.db, pagination, filters);
 }
 
 export async function createSeasonService(
