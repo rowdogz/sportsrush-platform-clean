@@ -5,10 +5,11 @@ of truth — this document provides rationale and cross-cutting design decisions
 
 ## Applied migrations
 
-| #    | File                   | What it does                                  |
-| ---- | ---------------------- | --------------------------------------------- |
-| 0001 | `0001_foundation.sql`  | Baseline — enables `PRAGMA foreign_keys = ON` |
-| 0002 | `0002_auth_schema.sql` | Identity & Auth domain tables                 |
+| #    | File                          | What it does                                  |
+| ---- | ----------------------------- | --------------------------------------------- |
+| 0001 | `0001_foundation.sql`         | Baseline — enables `PRAGMA foreign_keys = ON` |
+| 0002 | `0002_auth_schema.sql`        | Identity & Auth domain tables                 |
+| 0004 | `0004_admin_audit_events.sql` | Admin/domain audit event trail                |
 
 ## Cross-cutting conventions
 
@@ -50,7 +51,7 @@ Stored as `INTEGER NOT NULL DEFAULT 0` (SQLite has no BOOLEAN type).
 
 ### Immutable tables
 
-`auth_audit_log` (and the future `audit_events` table) are **append-only**.
+`auth_audit_log` and `audit_events` are **append-only**.
 They have no `updated_at` column. Rows are never updated or deleted.
 
 ---
@@ -155,6 +156,19 @@ Append-only authentication and security events. No `updated_at`.
 | `ip_address` | TEXT            |                                            |
 | `user_agent` | TEXT            |                                            |
 | `metadata`   | TEXT            | JSON blob; schema is per-event-type        |
+
+### `audit_events`
+
+Append-only admin/domain mutation events. No `updated_at`.
+
+| Column            | Type            | Notes                                        |
+| ----------------- | --------------- | -------------------------------------------- |
+| `actor_user_id`   | TEXT → users.id | SET NULL on delete (preserves audit trail)   |
+| `action`          | TEXT            | Stable action key, e.g. `competition.update` |
+| `target_type`     | TEXT            | Entity type, e.g. `fixture` or `user`        |
+| `target_id`       | TEXT            | Entity id when available                     |
+| `before_metadata` | TEXT            | JSON-safe state before mutation              |
+| `after_metadata`  | TEXT            | JSON-safe state after mutation               |
 
 ---
 

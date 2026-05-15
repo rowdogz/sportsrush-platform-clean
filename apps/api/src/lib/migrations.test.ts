@@ -60,6 +60,7 @@ beforeAll(async () => {
   // Apply all migrations in order — same sequence as production wrangler apply.
   db.run(readMigration("0001_foundation.sql"));
   db.run(readMigration("0002_auth_schema.sql"));
+  db.run(readMigration("0004_admin_audit_events.sql"));
 });
 
 afterAll(() => {
@@ -106,6 +107,7 @@ describe("0002_auth_schema — tables", () => {
     "oauth_accounts",
     "password_reset_tokens",
     "auth_audit_log",
+    "audit_events",
   ];
 
   it.each(expectedTables)("creates table: %s", (table) => {
@@ -173,6 +175,19 @@ describe("0002_auth_schema — column presence", () => {
     expect(cols).toContain("event_type");
     expect(cols).toContain("metadata");
   });
+
+  it("audit_events has admin audit columns and is append-only", () => {
+    const cols = columnNames("audit_events");
+    expect(cols).toContain("id");
+    expect(cols).toContain("actor_user_id");
+    expect(cols).toContain("action");
+    expect(cols).toContain("target_type");
+    expect(cols).toContain("target_id");
+    expect(cols).toContain("before_metadata");
+    expect(cols).toContain("after_metadata");
+    expect(cols).toContain("created_at");
+    expect(cols).not.toContain("updated_at");
+  });
 });
 
 // ── indexes ───────────────────────────────────────────────────────────────────
@@ -190,6 +205,10 @@ describe("0002_auth_schema — indexes", () => {
     "idx_auth_audit_log_user_id",
     "idx_auth_audit_log_event_type",
     "idx_auth_audit_log_created_at",
+    "idx_audit_events_actor_user_id",
+    "idx_audit_events_action",
+    "idx_audit_events_target",
+    "idx_audit_events_created_at",
   ];
 
   it.each(expectedIndexes)("creates index: %s", (idx) => {
@@ -315,6 +334,24 @@ describe("0002_auth_schema — foreign key cascades", () => {
       `SELECT id, user_id FROM auth_audit_log WHERE id = 'fk-aal1'`,
     );
     expect(result[0]?.values[0]?.[0]).toBe("fk-aal1");
+    expect(result[0]?.values[0]?.[1]).toBeNull();
+  });
+
+  it("deleting a user sets audit_events.actor_user_id to NULL (SET NULL)", () => {
+    db.run(
+      `INSERT INTO users (id, email, email_normalized) VALUES ('fk-u5', 'fk5@test.com', 'fk5@test.com')`,
+    );
+    db.run(
+      `INSERT INTO audit_events (id, actor_user_id, action, target_type, target_id)
+       VALUES ('fk-ae1', 'fk-u5', 'competition.update', 'competition', 'competition-1')`,
+    );
+
+    db.run(`DELETE FROM users WHERE id = 'fk-u5'`);
+
+    const result = db.exec(
+      `SELECT id, actor_user_id FROM audit_events WHERE id = 'fk-ae1'`,
+    );
+    expect(result[0]?.values[0]?.[0]).toBe("fk-ae1");
     expect(result[0]?.values[0]?.[1]).toBeNull();
   });
 });

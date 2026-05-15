@@ -5,10 +5,14 @@ import { resolve } from "node:path";
 import { createAccessToken } from "@sr/auth";
 import { createApp } from "../app";
 
-const migrationPath = resolve(
-  __dirname,
-  "../../migrations/0003_competitions_teams_fixtures_results.sql",
-);
+const migrationPaths = [
+  resolve(__dirname, "../../migrations/0002_auth_schema.sql"),
+  resolve(
+    __dirname,
+    "../../migrations/0003_competitions_teams_fixtures_results.sql",
+  ),
+  resolve(__dirname, "../../migrations/0004_admin_audit_events.sql"),
+];
 const adminRoutePath = resolve(__dirname, "./admin.ts");
 
 const JWT_SECRET = "test-secret-that-is-at-least-32-bytes-long";
@@ -27,10 +31,18 @@ async function createSqlDb(): Promise<SqlJsDatabase> {
   const SQL = await initSqlJs();
   const db = new SQL.Database();
   db.run("PRAGMA foreign_keys = ON;");
-  db.run(readFileSync(migrationPath, "utf8"));
+  migrationPaths.forEach((migrationPath) => {
+    db.run(readFileSync(migrationPath, "utf8"));
+  });
   db.run(
     `INSERT INTO sports (id, slug, name, created_at, updated_at)
      VALUES ('sport-rugby-league', 'rugby-league', 'Rugby League', ?, ?)`,
+    [NOW, NOW],
+  );
+  db.run(
+    `INSERT INTO users
+       (id, email, email_normalized, role, is_active, is_legacy_migration, created_at, updated_at)
+     VALUES ('admin-user', 'actor-admin@example.test', 'actor-admin@example.test', 'admin', 1, 0, ?, ?)`,
     [NOW, NOW],
   );
   return db;
