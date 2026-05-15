@@ -137,6 +137,33 @@ describe("Admin app shell", () => {
     ).toBeTruthy();
   });
 
+  it("opens the Teams page from admin navigation", async () => {
+    window.localStorage.setItem("sr_admin_access_token", "stored-access-token");
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        jsonResponse({
+          data: [],
+          meta: { page: 1, limit: 50, total: 0, hasMore: false },
+        }),
+      )
+      .mockResolvedValueOnce(
+        jsonResponse({
+          data: [],
+          meta: { page: 1, limit: 50, total: 0, hasMore: false },
+        }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<App />);
+
+    await screen.findByRole("heading", { name: "Competitions" });
+
+    fireEvent.click(screen.getByRole("button", { name: "Teams" }));
+    expect(await screen.findByRole("heading", { name: "Teams" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Create team" })).toBeTruthy();
+  });
+
   it("shows placeholder screens from admin navigation", async () => {
     window.localStorage.setItem("sr_admin_access_token", "stored-access-token");
     vi.stubGlobal(
@@ -153,7 +180,7 @@ describe("Admin app shell", () => {
 
     await screen.findByRole("heading", { name: "Competitions" });
 
-    for (const screenName of ["Teams", "Fixtures", "Aliases", "Rounds"]) {
+    for (const screenName of ["Fixtures", "Aliases", "Rounds"]) {
       fireEvent.click(screen.getByRole("button", { name: screenName }));
       expect(screen.getByRole("heading", { name: screenName })).toBeTruthy();
       expect(

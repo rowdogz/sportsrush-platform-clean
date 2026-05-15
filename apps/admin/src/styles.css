@@ -192,11 +192,13 @@ a {
   color: #52627a;
 }
 
+.admin-form,
 .competition-form,
 .feedback-panel {
   margin-bottom: 1.5rem;
 }
 
+.admin-form,
 .competition-form {
   border: 1px solid #d9e2ef;
   border-radius: 0.75rem;
@@ -229,6 +231,7 @@ a {
   align-items: end;
 }
 
+.admin-form label,
 .competition-form label,
 .inline-edit-form label {
   display: grid;
@@ -237,6 +240,7 @@ a {
   font-weight: 700;
 }
 
+.admin-form input,
 .competition-form input,
 .inline-edit-form input {
   width: 100%;
@@ -275,6 +279,7 @@ a {
   color: #8a1f1f;
 }
 
+.admin-table-wrapper,
 .competitions-table-wrapper {
   overflow-x: auto;
   border: 1px solid #d9e2ef;
@@ -282,11 +287,14 @@ a {
   background: #ffffff;
 }
 
+.admin-table,
 .competitions-table {
   width: 100%;
   border-collapse: collapse;
 }
 
+.admin-table th,
+.admin-table td,
 .competitions-table th,
 .competitions-table td {
   padding: 0.9rem 1rem;
@@ -294,6 +302,7 @@ a {
   white-space: nowrap;
 }
 
+.admin-table th,
 .competitions-table th {
   background: #eef3f9;
   color: #3d4c63;
@@ -302,6 +311,7 @@ a {
   text-transform: uppercase;
 }
 
+.admin-table tr + tr td,
 .competitions-table tr + tr td {
   border-top: 1px solid #edf1f6;
 }
