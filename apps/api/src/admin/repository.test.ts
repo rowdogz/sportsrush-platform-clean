@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import type { DbClient } from "../lib/db";
 import {
+  createAuditEvent,
   createCompetition,
   createFixture,
   createRound,
@@ -15,6 +16,7 @@ import {
   findFixtureById,
   insertResultCorrection,
   listAliasesBySource,
+  listAuditEvents,
   listCompetitions,
   listFixtures,
   updateAdminUserRole,
@@ -32,6 +34,7 @@ const migrationPaths = [
     __dirname,
     "../../migrations/0003_competitions_teams_fixtures_results.sql",
   ),
+  resolve(__dirname, "../../migrations/0004_admin_audit_events.sql"),
 ];
 
 const NOW = "2026-05-14T12:00:00.000Z";
@@ -209,6 +212,35 @@ async function seedCompetitionSeasonTeams() {
 }
 
 describe("admin repository layer", () => {
+  it("creates and lists admin audit events", async () => {
+    const { db, sqlDb } = await createRepositoryDb();
+    seedUser(sqlDb);
+
+    const event = await createAuditEvent(
+      db,
+      "audit-1",
+      {
+        actorUserId: "user-1",
+        action: "user.role.update",
+        targetType: "user",
+        targetId: "user-1",
+        before: { role: "user" },
+        after: { role: "admin" },
+      },
+      NOW,
+    );
+
+    expect(event.action).toBe("user.role.update");
+    expect(event.actor_user_id).toBe("user-1");
+    expect(JSON.parse(event.before_metadata ?? "{}")).toEqual({
+      role: "user",
+    });
+
+    const events = await listAuditEvents(db);
+    expect(events).toHaveLength(1);
+    expect(events[0]?.id).toBe("audit-1");
+  });
+
   it("finds and updates admin user role and status", async () => {
     const { db, sqlDb } = await createRepositoryDb();
     seedUser(sqlDb);

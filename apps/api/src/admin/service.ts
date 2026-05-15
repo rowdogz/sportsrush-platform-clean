@@ -11,6 +11,7 @@ type FixtureStatus =
 import type { DbClient } from "../lib/db";
 import {
   createCompetition,
+  createAuditEvent,
   createFixture,
   createRound,
   createSeason,
@@ -108,6 +109,34 @@ export type TransitionOptions = {
   readonly partialAwayScore?: number;
 };
 
+async function writeAuditEvent(
+  context: ServiceContext,
+  action: string,
+  targetType: string,
+  targetId: string | null,
+  before: unknown,
+  after: unknown,
+) {
+  await createAuditEvent(
+    context.db,
+    randomUUID(),
+    {
+      actorUserId: context.actorUserId,
+      action,
+      targetType,
+      targetId,
+      before: toAuditMetadata(before),
+      after: toAuditMetadata(after),
+    },
+    context.now,
+  );
+}
+
+function toAuditMetadata(value: unknown): unknown {
+  if (value === null || value === undefined) return null;
+  return JSON.parse(JSON.stringify(value)) as unknown;
+}
+
 function logCorrelation(correlationId: string, message: string): void {
   console.error(`[${correlationId}] ${message}`);
 }
@@ -133,12 +162,21 @@ export async function createCompetitionService(
   context: ServiceContext,
   input: CreateCompetitionInput,
 ) {
-  return createCompetition(
+  const competition = await createCompetition(
     context.db,
     randomUUID(),
     { ...input, slug: normalizeSlug(input.slug) },
     context.now,
   );
+  await writeAuditEvent(
+    context,
+    "competition.create",
+    "competition",
+    competition.id,
+    null,
+    competition,
+  );
+  return competition;
 }
 
 export async function updateCompetitionService(
@@ -146,7 +184,8 @@ export async function updateCompetitionService(
   id: string,
   input: UpdateCompetitionInput,
 ) {
-  return updateCompetition(
+  const before = await findCompetitionById(context.db, id);
+  const competition = await updateCompetition(
     context.db,
     id,
     {
@@ -155,13 +194,37 @@ export async function updateCompetitionService(
     },
     context.now,
   );
+  await writeAuditEvent(
+    context,
+    "competition.update",
+    "competition",
+    id,
+    before,
+    competition,
+  );
+  return competition;
 }
 
 export async function archiveCompetitionService(
   context: ServiceContext,
   id: string,
 ) {
-  return updateCompetition(context.db, id, { isActive: false }, context.now);
+  const before = await findCompetitionById(context.db, id);
+  const competition = await updateCompetition(
+    context.db,
+    id,
+    { isActive: false },
+    context.now,
+  );
+  await writeAuditEvent(
+    context,
+    "competition.archive",
+    "competition",
+    id,
+    before,
+    competition,
+  );
+  return competition;
 }
 
 export async function listCompetitionsService(
@@ -224,42 +287,73 @@ export async function updateAdminUserRoleService(
   role: string,
 ) {
   assertAdminUserRole(role, context.correlationId);
-  await assertAdminUserExists(context, userId);
+  const before = await assertAdminUserExists(context, userId);
   assertNotRemovingOwnAdminAccess(context, userId, role);
-  return updateAdminUserRole(context.db, userId, role, context.now);
+  const user = await updateAdminUserRole(context.db, userId, role, context.now);
+  await writeAuditEvent(
+    context,
+    "user.role.update",
+    "user",
+    userId,
+    before,
+    user,
+  );
+  return user;
 }
 
 export async function updateAdminUserStatusService(
   context: ServiceContext,
   userId: string,
   isActive: boolean,
+  action = "user.status.update",
 ) {
-  await assertAdminUserExists(context, userId);
+  const before = await assertAdminUserExists(context, userId);
   if (!isActive) {
     assertNotDisablingSelf(context, userId);
   }
-  return updateAdminUserStatus(context.db, userId, isActive, context.now);
+  const user = await updateAdminUserStatus(
+    context.db,
+    userId,
+    isActive,
+    context.now,
+  );
+  await writeAuditEvent(context, action, "user", userId, before, user);
+  return user;
 }
 
 export async function suspendAdminUserService(
   context: ServiceContext,
   userId: string,
 ) {
-  return updateAdminUserStatusService(context, userId, false);
+  return updateAdminUserStatusService(context, userId, false, "user.suspend");
 }
 
 export async function reactivateAdminUserService(
   context: ServiceContext,
   userId: string,
 ) {
-  return updateAdminUserStatusService(context, userId, true);
+  return updateAdminUserStatusService(context, userId, true, "user.reactivate");
 }
 
 export async function createSeasonService(
   context: ServiceContext,
   input: CreateSeasonInput,
 ) {
-  return createSeason(context.db, randomUUID(), input, context.now);
+  const season = await createSeason(
+    context.db,
+    randomUUID(),
+    input,
+    context.now,
+  );
+  await writeAuditEvent(
+    context,
+    "season.create",
+    "season",
+    season.id,
+    null,
+    season,
+  );
+  return season;
 }
 
 export async function listSeasonsService(
@@ -275,7 +369,10 @@ export async function updateSeasonService(
   id: string,
   input: UpdateSeasonInput,
 ) {
-  return updateSeason(context.db, id, input, context.now);
+  const before = await findSeasonById(context.db, id);
+  const season = await updateSeason(context.db, id, input, context.now);
+  await writeAuditEvent(context, "season.update", "season", id, before, season);
+  return season;
 }
 
 export async function activateSeasonService(
@@ -283,19 +380,36 @@ export async function activateSeasonService(
   seasonId: string,
   competitionId: string,
 ) {
-  return markActiveSeason(context.db, seasonId, competitionId, context.now);
+  const before = await findSeasonById(context.db, seasonId);
+  const season = await markActiveSeason(
+    context.db,
+    seasonId,
+    competitionId,
+    context.now,
+  );
+  await writeAuditEvent(
+    context,
+    "season.activate",
+    "season",
+    seasonId,
+    before,
+    season,
+  );
+  return season;
 }
 
 export async function createTeamService(
   context: ServiceContext,
   input: CreateTeamInput,
 ) {
-  return createTeam(
+  const team = await createTeam(
     context.db,
     randomUUID(),
     { ...input, slug: normalizeSlug(input.slug) },
     context.now,
   );
+  await writeAuditEvent(context, "team.create", "team", team.id, null, team);
+  return team;
 }
 
 export async function updateTeamService(
@@ -303,7 +417,8 @@ export async function updateTeamService(
   id: string,
   input: UpdateTeamInput,
 ) {
-  return updateTeam(
+  const before = await findTeamById(context.db, id);
+  const team = await updateTeam(
     context.db,
     id,
     {
@@ -312,10 +427,20 @@ export async function updateTeamService(
     },
     context.now,
   );
+  await writeAuditEvent(context, "team.update", "team", id, before, team);
+  return team;
 }
 
 export async function archiveTeamService(context: ServiceContext, id: string) {
-  return updateTeam(context.db, id, { isActive: false }, context.now);
+  const before = await findTeamById(context.db, id);
+  const team = await updateTeam(
+    context.db,
+    id,
+    { isActive: false },
+    context.now,
+  );
+  await writeAuditEvent(context, "team.archive", "team", id, before, team);
+  return team;
 }
 
 export async function listTeamsService(
@@ -349,7 +474,7 @@ export async function createAliasService(
     `Alias already exists for source=${normalizedSource} alias=${normalizedAlias}`,
     context.correlationId,
   );
-  return createTeamAlias(
+  const alias = await createTeamAlias(
     context.db,
     randomUUID(),
     input,
@@ -357,6 +482,15 @@ export async function createAliasService(
     normalizedSource,
     context.now,
   );
+  await writeAuditEvent(
+    context,
+    "team_alias.create",
+    "team_alias",
+    alias.id,
+    null,
+    alias,
+  );
+  return alias;
 }
 
 export async function updateAliasService(
@@ -364,13 +498,14 @@ export async function updateAliasService(
   id: string,
   input: UpdateTeamAliasInput,
 ) {
+  const before = await findTeamAliasById(context.db, id);
   const normalizedAlias =
     input.alias === undefined && input.normalizedAlias === undefined
       ? undefined
       : normalizeAlias(input.normalizedAlias ?? input.alias ?? "");
   const normalizedSource =
     input.source === undefined ? undefined : normalizeSource(input.source);
-  return updateTeamAlias(
+  const alias = await updateTeamAlias(
     context.db,
     id,
     input,
@@ -378,10 +513,28 @@ export async function updateAliasService(
     normalizedSource,
     context.now,
   );
+  await writeAuditEvent(
+    context,
+    "team_alias.update",
+    "team_alias",
+    id,
+    before,
+    alias,
+  );
+  return alias;
 }
 
 export async function deleteAliasService(context: ServiceContext, id: string) {
+  const before = await findTeamAliasById(context.db, id);
   await deleteTeamAlias(context.db, id);
+  await writeAuditEvent(
+    context,
+    "team_alias.delete",
+    "team_alias",
+    id,
+    before,
+    null,
+  );
 }
 
 export async function lookupAliasService(
@@ -416,7 +569,16 @@ export async function createRoundService(
   context: ServiceContext,
   input: CreateRoundInput,
 ) {
-  return createRound(context.db, randomUUID(), input, context.now);
+  const round = await createRound(context.db, randomUUID(), input, context.now);
+  await writeAuditEvent(
+    context,
+    "round.create",
+    "round",
+    round.id,
+    null,
+    round,
+  );
+  return round;
 }
 
 export async function updateRoundService(
@@ -424,7 +586,10 @@ export async function updateRoundService(
   id: string,
   input: UpdateRoundInput,
 ) {
-  return updateRound(context.db, id, input, context.now);
+  const before = await findRoundById(context.db, id);
+  const round = await updateRound(context.db, id, input, context.now);
+  await writeAuditEvent(context, "round.update", "round", id, before, round);
+  return round;
 }
 
 export async function listRoundsService(
@@ -445,7 +610,21 @@ export async function createFixtureService(
   context: ServiceContext,
   input: CreateFixtureInput,
 ) {
-  return createFixture(context.db, randomUUID(), input, context.now);
+  const fixture = await createFixture(
+    context.db,
+    randomUUID(),
+    input,
+    context.now,
+  );
+  await writeAuditEvent(
+    context,
+    "fixture.create",
+    "fixture",
+    fixture.id,
+    null,
+    fixture,
+  );
+  return fixture;
 }
 
 export async function updateFixtureService(
@@ -453,7 +632,17 @@ export async function updateFixtureService(
   id: string,
   input: UpdateFixtureInput,
 ) {
-  return updateFixture(context.db, id, input, context.now);
+  const before = await findFixtureById(context.db, id);
+  const fixture = await updateFixture(context.db, id, input, context.now);
+  await writeAuditEvent(
+    context,
+    "fixture.update",
+    "fixture",
+    id,
+    before,
+    fixture,
+  );
+  return fixture;
 }
 
 export async function listFixturesService(
@@ -516,6 +705,14 @@ export async function transitionFixtureService(
     );
   }
   assert(updated !== null, "Failed to update fixture", context.correlationId);
+  await writeAuditEvent(
+    context,
+    "fixture.status.transition",
+    "fixture",
+    fixture.id,
+    fixture,
+    updated,
+  );
   return updated;
 }
 
@@ -551,6 +748,14 @@ export async function enterFixtureResultService(
     context.now,
   );
   assert(updated !== null, "Result update failed", context.correlationId);
+  await writeAuditEvent(
+    context,
+    "fixture.result.enter",
+    "fixture",
+    fixture.id,
+    fixture,
+    updated,
+  );
   return updated;
 }
 
@@ -615,5 +820,13 @@ export async function correctFixtureResultService(
     context.now,
   );
   assert(updated !== null, "Correction update failed", context.correlationId);
+  await writeAuditEvent(
+    context,
+    "fixture.result.correct",
+    "fixture",
+    fixture.id,
+    fixture,
+    updated,
+  );
   return updated;
 }

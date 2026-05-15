@@ -26,6 +26,28 @@ export type ListResult<T> = {
   readonly total: number;
 };
 
+export type AuditMetadata = unknown;
+
+export type AuditEventInput = {
+  readonly actorUserId: string;
+  readonly action: string;
+  readonly targetType: string;
+  readonly targetId: string | null;
+  readonly before: AuditMetadata;
+  readonly after: AuditMetadata;
+};
+
+export type AuditEventRow = {
+  readonly id: string;
+  readonly actor_user_id: string | null;
+  readonly action: string;
+  readonly target_type: string;
+  readonly target_id: string | null;
+  readonly before_metadata: string | null;
+  readonly after_metadata: string | null;
+  readonly created_at: string;
+};
+
 export type SeasonListFilters = {
   readonly competitionId?: string | undefined;
   readonly search?: string | undefined;
@@ -185,6 +207,51 @@ function buildUpdate(
     sql: `UPDATE ${table} SET ${sets} WHERE id = ?`,
     params: [...params, id],
   };
+}
+
+function serializeAuditMetadata(metadata: AuditMetadata): string | null {
+  return metadata === null || metadata === undefined
+    ? null
+    : JSON.stringify(metadata);
+}
+
+export async function createAuditEvent(
+  db: DbClient,
+  id: string,
+  input: AuditEventInput,
+  now: string,
+): Promise<AuditEventRow> {
+  await db.execute(
+    `INSERT INTO audit_events
+       (id, actor_user_id, action, target_type, target_id, before_metadata, after_metadata, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      id,
+      input.actorUserId,
+      input.action,
+      input.targetType,
+      input.targetId,
+      serializeAuditMetadata(input.before),
+      serializeAuditMetadata(input.after),
+      now,
+    ],
+  );
+  const row = await db.queryOne<AuditEventRow>(
+    "SELECT * FROM audit_events WHERE id = ?",
+    [id],
+  );
+  if (row === null) {
+    throw new Error("Audit event insert failed");
+  }
+  return row;
+}
+
+export async function listAuditEvents(
+  db: DbClient,
+): Promise<readonly AuditEventRow[]> {
+  return db.queryAll<AuditEventRow>(
+    "SELECT * FROM audit_events ORDER BY created_at ASC, id ASC",
+  );
 }
 
 export async function createCompetition(

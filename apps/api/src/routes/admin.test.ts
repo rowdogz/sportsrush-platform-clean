@@ -12,6 +12,7 @@ const migrationPaths = [
     __dirname,
     "../../migrations/0003_competitions_teams_fixtures_results.sql",
   ),
+  resolve(__dirname, "../../migrations/0004_admin_audit_events.sql"),
 ];
 const adminRoutePath = resolve(__dirname, "./admin.ts");
 
@@ -37,6 +38,17 @@ async function createSqlDb(): Promise<SqlJsDatabase> {
   db.run(
     `INSERT INTO sports (id, slug, name, created_at, updated_at)
      VALUES ('sport-rugby-league', 'rugby-league', 'Rugby League', ?, ?)`,
+    [NOW, NOW],
+  );
+  db.run(
+    `INSERT INTO users
+       (id, email, email_normalized, role, is_active, is_legacy_migration, created_at, updated_at)
+     VALUES ('admin-user', 'actor-admin@example.test', 'actor-admin@example.test', 'admin', 1, 0, ?, ?)`,
+    [NOW, NOW],
+  );
+  db.run(
+    `INSERT INTO user_profiles (user_id, display_name, timezone, created_at, updated_at)
+     VALUES ('admin-user', 'Admin User', 'UTC', ?, ?)`,
     [NOW, NOW],
   );
   return db;
@@ -230,13 +242,13 @@ function seedUser(
   },
 ) {
   sqlDb.run(
-    `INSERT INTO users
+    `INSERT OR REPLACE INTO users
        (id, email, email_normalized, role, is_active, is_legacy_migration, created_at, updated_at)
      VALUES (?, ?, ?, ?, ?, 0, ?, ?)`,
     [id, email, email.toLowerCase(), role, isActive, NOW, NOW],
   );
   sqlDb.run(
-    `INSERT INTO user_profiles (user_id, display_name, timezone, created_at, updated_at)
+    `INSERT OR REPLACE INTO user_profiles (user_id, display_name, timezone, created_at, updated_at)
      VALUES (?, ?, 'UTC', ?, ?)`,
     [id, displayName, NOW, NOW],
   );
@@ -286,9 +298,9 @@ describe("admin route slice 1 users", () => {
     const listResponse = await request("/v1/admin/users?page=1&limit=10");
     expect(listResponse.status).toBe(200);
     const list = (await listResponse.json()) as any;
-    expect(list.data).toHaveLength(2);
+    expect(list.data).toHaveLength(3);
     expect(list.data[0].display_name).toBeDefined();
-    expect(list.meta).toEqual({ page: 1, limit: 10, total: 2, hasMore: false });
+    expect(list.meta).toEqual({ page: 1, limit: 10, total: 3, hasMore: false });
 
     const filteredResponse = await request(
       "/v1/admin/users?search=admin&role=admin&isActive=false",

@@ -11,6 +11,7 @@ import {
   createTeam,
   enterFixtureResult,
   findFixtureById,
+  listAuditEvents,
   setFixtureStatus,
   updateFixture,
 } from "./repository";
@@ -24,14 +25,29 @@ type FixtureStatus =
 import {
   activateSeasonService,
   AdminDomainError,
+  archiveCompetitionService,
+  archiveTeamService,
   correctFixtureResultService,
+  createAliasService,
+  createCompetitionService,
+  createFixtureService,
+  createRoundService,
+  createSeasonService,
+  createTeamService,
+  deleteAliasService,
   enterFixtureResultService,
   getAllowedFixtureTransitions,
   reactivateAdminUserService,
   suspendAdminUserService,
   transitionFixtureService,
+  updateAliasService,
   updateAdminUserRoleService,
   updateAdminUserStatusService,
+  updateCompetitionService,
+  updateFixtureService,
+  updateRoundService,
+  updateSeasonService,
+  updateTeamService,
   type ServiceContext,
 } from "./service";
 import { normalizeAlias, normalizeSource } from "./normalization";
@@ -42,6 +58,7 @@ const migrationPaths = [
     __dirname,
     "../../migrations/0003_competitions_teams_fixtures_results.sql",
   ),
+  resolve(__dirname, "../../migrations/0004_admin_audit_events.sql"),
 ];
 
 const NOW = "2026-05-14T12:00:00.000Z";
@@ -150,6 +167,7 @@ async function createContext() {
      VALUES ('sport-rugby-league', 'rugby-league', 'Rugby League', ?, ?)`,
     [NOW, NOW],
   );
+  seedUser(sqlDb, { id: "admin-user-1", role: "admin" });
 
   await createCompetition(
     db,
@@ -216,13 +234,13 @@ function seedUser(
   },
 ) {
   sqlDb.run(
-    `INSERT INTO users
+    `INSERT OR REPLACE INTO users
        (id, email, email_normalized, role, is_active, is_legacy_migration, created_at, updated_at)
      VALUES (?, ?, ?, ?, ?, 0, ?, ?)`,
     [id, `${id}@example.test`, `${id}@example.test`, role, isActive, NOW, NOW],
   );
   sqlDb.run(
-    `INSERT INTO user_profiles (user_id, display_name, timezone, created_at, updated_at)
+    `INSERT OR REPLACE INTO user_profiles (user_id, display_name, timezone, created_at, updated_at)
      VALUES (?, ?, 'UTC', ?, ?)`,
     [id, id, NOW, NOW],
   );
@@ -257,6 +275,143 @@ async function expectDomainFailure(promise: Promise<unknown>) {
 }
 
 describe("admin service fixture transitions", () => {
+  it("writes audit events for admin mutation areas", async () => {
+    const { context, sqlDb } = await createContext();
+    seedUser(sqlDb, { id: "user-1" });
+
+    const competition = await createCompetitionService(context, {
+      sportId: "sport-rugby-league",
+      slug: "championship",
+      name: "Championship",
+    });
+    await updateCompetitionService(context, competition.id, {
+      name: "Betfred Championship",
+    });
+
+    const season = await createSeasonService(context, {
+      competitionId: competition.id,
+      slug: "2027",
+      name: "2027 Season",
+      isActive: false,
+    });
+    await updateSeasonService(context, season.id, { name: "2027" });
+    await activateSeasonService(context, season.id, competition.id);
+
+    const homeTeam = await createTeamService(context, {
+      sportId: "sport-rugby-league",
+      slug: "leeds-rhinos",
+      name: "Leeds Rhinos",
+    });
+    const awayTeam = await createTeamService(context, {
+      sportId: "sport-rugby-league",
+      slug: "hull-kr",
+      name: "Hull KR",
+    });
+    await updateTeamService(context, homeTeam.id, { shortName: "Leeds" });
+
+    const alias = await createAliasService(context, {
+      teamId: homeTeam.id,
+      sportId: "sport-rugby-league",
+      alias: "Leeds",
+      source: "manual",
+      priority: 10,
+    });
+    await updateAliasService(context, alias.id, { priority: 5 });
+    await deleteAliasService(context, alias.id);
+
+    const round = await createRoundService(context, {
+      seasonId: season.id,
+      round: "1",
+      roundName: "Round 1",
+      displayOrder: 1,
+    });
+    await updateRoundService(context, round.id, { roundName: "Opening Round" });
+
+    const fixture = await createFixtureService(context, {
+      sportId: "sport-rugby-league",
+      competitionId: competition.id,
+      seasonId: season.id,
+      roundId: round.id,
+      round: "1",
+      roundName: "Round 1",
+      homeTeamId: homeTeam.id,
+      awayTeamId: awayTeam.id,
+      scheduledAt: "2027-02-01T20:00:00.000Z",
+      status: "scheduled",
+    });
+    await updateFixtureService(context, fixture.id, {
+      venueName: "Headingley",
+    });
+    await transitionFixtureService(context, fixture.id, "postponed");
+
+    const resultFixture = await createFixtureService(context, {
+      sportId: "sport-rugby-league",
+      competitionId: competition.id,
+      seasonId: season.id,
+      roundId: round.id,
+      round: "1",
+      roundName: "Round 1",
+      homeTeamId: homeTeam.id,
+      awayTeamId: awayTeam.id,
+      scheduledAt: "2027-02-02T20:00:00.000Z",
+      status: "scheduled",
+    });
+    await enterFixtureResultService(context, resultFixture.id, 24, 18);
+    await correctFixtureResultService(
+      context,
+      resultFixture.id,
+      26,
+      18,
+      "Score correction",
+    );
+
+    await updateAdminUserRoleService(context, "user-1", "admin");
+    await suspendAdminUserService(context, "user-1");
+    await reactivateAdminUserService(context, "user-1");
+    await archiveTeamService(context, awayTeam.id);
+    await archiveCompetitionService(context, competition.id);
+
+    const actions = (await listAuditEvents(context.db)).map(
+      (event) => event.action,
+    );
+
+    expect(actions).toEqual(
+      expect.arrayContaining([
+        "competition.create",
+        "competition.update",
+        "competition.archive",
+        "season.create",
+        "season.update",
+        "season.activate",
+        "team.create",
+        "team.update",
+        "team.archive",
+        "team_alias.create",
+        "team_alias.update",
+        "team_alias.delete",
+        "round.create",
+        "round.update",
+        "fixture.create",
+        "fixture.update",
+        "fixture.status.transition",
+        "fixture.result.enter",
+        "fixture.result.correct",
+        "user.role.update",
+        "user.suspend",
+        "user.reactivate",
+      ]),
+    );
+
+    const roleAudit = (await listAuditEvents(context.db)).find(
+      (event) => event.action === "user.role.update",
+    );
+    expect(roleAudit?.actor_user_id).toBe("admin-user-1");
+    expect(roleAudit?.target_type).toBe("user");
+    expect(JSON.parse(roleAudit?.after_metadata ?? "{}")).toMatchObject({
+      role: "admin",
+    });
+  });
+
   it("updates user role and status through service rules", async () => {
     const { context, sqlDb } = await createContext();
     seedUser(sqlDb, { id: "user-1" });
