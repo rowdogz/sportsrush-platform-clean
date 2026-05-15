@@ -5,6 +5,7 @@ export type AdminScreen =
   | "competitions"
   | "seasons"
   | "teams"
+  | "users"
   | "fixtures"
   | "aliases"
   | "rounds";

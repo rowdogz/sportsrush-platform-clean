@@ -38,6 +38,7 @@ import {
   deleteAliasService,
   enterFixtureResultService,
   getFixtureService,
+  listAdminUsersService,
   listAliasesService,
   listCompetitionsService,
   listFixturesService,
@@ -80,6 +81,12 @@ const ActivateSeasonSchema = z.object({
 const SeasonListQuerySchema = z.object({
   competitionId: z.string().min(1).optional(),
   search: z.string().min(1).optional(),
+});
+
+const UserListQuerySchema = z.object({
+  search: z.string().min(1).optional(),
+  role: z.enum(["user", "admin", "superadmin"]).optional(),
+  isActive: z.enum(["true", "false"]).optional(),
 });
 
 const RoundListQuerySchema = z.object({
@@ -142,6 +149,30 @@ async function makeServiceContext(
 export const adminRoutes = new Hono<HonoEnv>();
 
 adminRoutes.use("*", requireRole("admin"));
+
+adminRoutes.get("/users", async (c) => {
+  const pagination = parsePagination({
+    page: c.req.query("page"),
+    limit: c.req.query("limit"),
+  });
+  const query = parseQuery(UserListQuerySchema, {
+    search: c.req.query("search"),
+    role: c.req.query("role"),
+    isActive: c.req.query("isActive"),
+  });
+  const context = await makeServiceContext(c);
+  const result = await listAdminUsersService(context, pagination, {
+    search: query.search,
+    role: query.role,
+    isActive:
+      query.isActive === undefined ? undefined : query.isActive === "true",
+  });
+  return paginated(
+    c,
+    result.rows,
+    paginationMeta(pagination.page, pagination.limit, result.total),
+  );
+});
 
 adminRoutes.get("/competitions", async (c) => {
   const pagination = parsePagination({

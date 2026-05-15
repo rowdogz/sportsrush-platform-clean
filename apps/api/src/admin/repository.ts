@@ -31,6 +31,12 @@ export type SeasonListFilters = {
   readonly search?: string | undefined;
 };
 
+export type UserListFilters = {
+  readonly search?: string | undefined;
+  readonly role?: string | undefined;
+  readonly isActive?: boolean | undefined;
+};
+
 export type CompetitionRow = {
   readonly id: string;
   readonly sport_id: string;
@@ -141,6 +147,19 @@ export type ResultCorrectionRow = {
   readonly created_at: string;
 };
 
+export type AdminUserRow = {
+  readonly id: string;
+  readonly email: string;
+  readonly display_name: string | null;
+  readonly role: string;
+  readonly is_active: number;
+  readonly email_verified_at: string | null;
+  readonly created_at: string;
+  readonly updated_at: string;
+  readonly profile_updated_at: string | null;
+  readonly legacy_wp_user_id: number | null;
+};
+
 function offset(pagination: Pagination): number {
   return (pagination.page - 1) * pagination.limit;
 }
@@ -231,6 +250,54 @@ export async function listCompetitions(
   );
   const total = await db.queryOne<{ count: number }>(
     "SELECT COUNT(*) AS count FROM competitions",
+  );
+  return { rows, total: total?.count ?? 0 };
+}
+
+export async function listAdminUsers(
+  db: DbClient,
+  pagination: Pagination,
+  filters: UserListFilters = {},
+): Promise<ListResult<AdminUserRow>> {
+  const where: string[] = [];
+  const params: unknown[] = [];
+
+  if (filters.search) {
+    where.push("(u.email LIKE ? OR p.display_name LIKE ?)");
+    params.push(`%${filters.search}%`, `%${filters.search}%`);
+  }
+
+  if (filters.role) {
+    where.push("u.role = ?");
+    params.push(filters.role);
+  }
+
+  if (filters.isActive !== undefined) {
+    where.push("u.is_active = ?");
+    params.push(filters.isActive ? 1 : 0);
+  }
+
+  const whereSql = where.length > 0 ? ` WHERE ${where.join(" AND ")}` : "";
+  const fromSql = `FROM users u LEFT JOIN user_profiles p ON p.user_id = u.id${whereSql}`;
+  const rows = await db.queryAll<AdminUserRow>(
+    `SELECT u.id,
+            u.email,
+            p.display_name,
+            u.role,
+            u.is_active,
+            u.email_verified_at,
+            u.created_at,
+            u.updated_at,
+            p.updated_at AS profile_updated_at,
+            u.legacy_wp_user_id
+       ${fromSql}
+      ORDER BY u.created_at DESC, u.email
+      LIMIT ? OFFSET ?`,
+    [...params, pagination.limit, offset(pagination)],
+  );
+  const total = await db.queryOne<{ count: number }>(
+    `SELECT COUNT(*) AS count ${fromSql}`,
+    params,
   );
   return { rows, total: total?.count ?? 0 };
 }

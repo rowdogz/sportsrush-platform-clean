@@ -5,10 +5,14 @@ import { resolve } from "node:path";
 import { createAccessToken } from "@sr/auth";
 import { createApp } from "../app";
 
-const migrationPath = resolve(
-  __dirname,
-  "../../migrations/0003_competitions_teams_fixtures_results.sql",
-);
+const migrationPaths = [
+  resolve(__dirname, "../../migrations/0001_foundation.sql"),
+  resolve(__dirname, "../../migrations/0002_auth_schema.sql"),
+  resolve(
+    __dirname,
+    "../../migrations/0003_competitions_teams_fixtures_results.sql",
+  ),
+];
 const adminRoutePath = resolve(__dirname, "./admin.ts");
 
 const JWT_SECRET = "test-secret-that-is-at-least-32-bytes-long";
@@ -27,7 +31,9 @@ async function createSqlDb(): Promise<SqlJsDatabase> {
   const SQL = await initSqlJs();
   const db = new SQL.Database();
   db.run("PRAGMA foreign_keys = ON;");
-  db.run(readFileSync(migrationPath, "utf8"));
+  migrationPaths.forEach((migrationPath) => {
+    db.run(readFileSync(migrationPath, "utf8"));
+  });
   db.run(
     `INSERT INTO sports (id, slug, name, created_at, updated_at)
      VALUES ('sport-rugby-league', 'rugby-league', 'Rugby League', ?, ?)`,
@@ -207,6 +213,35 @@ async function createTeam(
   });
 }
 
+function seedUser(
+  sqlDb: SqlJsDatabase,
+  {
+    id,
+    email,
+    displayName,
+    role = "user",
+    isActive = 1,
+  }: {
+    readonly id: string;
+    readonly email: string;
+    readonly displayName: string;
+    readonly role?: string;
+    readonly isActive?: number;
+  },
+) {
+  sqlDb.run(
+    `INSERT INTO users
+       (id, email, email_normalized, role, is_active, is_legacy_migration, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, 0, ?, ?)`,
+    [id, email, email.toLowerCase(), role, isActive, NOW, NOW],
+  );
+  sqlDb.run(
+    `INSERT INTO user_profiles (user_id, display_name, timezone, created_at, updated_at)
+     VALUES (?, ?, 'UTC', ?, ?)`,
+    [id, displayName, NOW, NOW],
+  );
+}
+
 describe("admin route slice 1 auth", () => {
   it("requires admin auth for admin routes", async () => {
     const { request } = await createTestHarness();
@@ -228,6 +263,41 @@ describe("admin route slice 1 auth", () => {
       userToken,
     );
     expect(response.status).toBe(403);
+  });
+});
+
+describe("admin route slice 1 users", () => {
+  it("lists and filters admin users", async () => {
+    const { request, sqlDb } = await createTestHarness();
+    seedUser(sqlDb, {
+      id: "user-1",
+      email: "alice@example.test",
+      displayName: "Alice Example",
+      role: "user",
+    });
+    seedUser(sqlDb, {
+      id: "user-2",
+      email: "admin@example.test",
+      displayName: "Admin Example",
+      role: "admin",
+      isActive: 0,
+    });
+
+    const listResponse = await request("/v1/admin/users?page=1&limit=10");
+    expect(listResponse.status).toBe(200);
+    const list = (await listResponse.json()) as any;
+    expect(list.data).toHaveLength(2);
+    expect(list.data[0].display_name).toBeDefined();
+    expect(list.meta).toEqual({ page: 1, limit: 10, total: 2, hasMore: false });
+
+    const filteredResponse = await request(
+      "/v1/admin/users?search=admin&role=admin&isActive=false",
+    );
+    expect(filteredResponse.status).toBe(200);
+    const filtered = (await filteredResponse.json()) as any;
+    expect(filtered.data).toHaveLength(1);
+    expect(filtered.data[0].email).toBe("admin@example.test");
+    expect(filtered.data[0].is_active).toBe(0);
   });
 });
 
