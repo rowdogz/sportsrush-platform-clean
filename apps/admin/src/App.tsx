@@ -7,6 +7,7 @@ import type {
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { CompetitionsPage } from "./pages/CompetitionsPage";
 import { PlaceholderPage } from "./pages/PlaceholderPage";
+import { RoundsPage } from "./pages/RoundsPage";
 import { TeamAliasesPage } from "./pages/TeamAliasesPage";
 import { TeamsPage } from "./pages/TeamsPage";
 import { ToastProvider } from "./components/primitives/Toast";
@@ -31,7 +32,7 @@ function renderScreen(screen: AdminScreen) {
     case "aliases":
       return <TeamAliasesPage />;
     case "rounds":
-      return <PlaceholderPage title="Rounds" />;
+      return <RoundsPage />;
   }
 }
 
