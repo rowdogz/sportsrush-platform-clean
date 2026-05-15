@@ -324,6 +324,22 @@ a {
   gap: 0.5rem;
 }
 
+.form-help {
+  color: #5e6a7d;
+  font-size: 0.85rem;
+}
+
+.score-summary,
+.result-entry-panel {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.score-summary span {
+  color: #5e6a7d;
+  font-size: 0.8rem;
+}
+
 .fixture-actions {
   display: grid;
   gap: 0.5rem;

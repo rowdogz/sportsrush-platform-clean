@@ -223,6 +223,22 @@ function toWritePayload(values: FormValues): FixtureWritePayload {
   });
 }
 
+function toEditPayload(
+  fixture: AdminFixture,
+  values: FormValues,
+): FixtureWritePayload {
+  const payload = { ...toWritePayload(values) };
+
+  if (fixture.status !== "completed") {
+    return payload;
+  }
+
+  delete payload.homeScore;
+  delete payload.awayScore;
+
+  return payload;
+}
+
 function toFormValues(fixture: AdminFixture): FormValues {
   return {
     sportId: fixture.sportId,
@@ -266,6 +282,14 @@ function getTeamName(teams: readonly AdminTeam[], id: string): string {
   return teams.find((team) => team.id === id)?.name ?? id;
 }
 
+function canEnterResult(fixture: AdminFixture): boolean {
+  return fixture.status === "scheduled" || fixture.status === "postponed";
+}
+
+function canCorrectResult(fixture: AdminFixture): boolean {
+  return fixture.status === "completed";
+}
+
 export function FixturesPage() {
   const [state, setState] = useState<FixturesState>({ status: "loading" });
   const [references, setReferences] = useState<ReferenceState>({
@@ -278,6 +302,9 @@ export function FixturesPage() {
     useState<FilterValues>(emptyFilterValues);
   const [createValues, setCreateValues] = useState<FormValues>(emptyFormValues);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [correctionFixtureId, setCorrectionFixtureId] = useState<string | null>(
+    null,
+  );
   const [editValues, setEditValues] = useState<FormValues>(emptyFormValues);
   const [rowActions, setRowActions] = useState<
     Readonly<Record<string, RowActionValues>>
@@ -408,7 +435,7 @@ export function FixturesPage() {
 
     setPendingAction(`edit:${fixture.id}`);
     try {
-      await updateFixture(fixture.id, toWritePayload(editValues));
+      await updateFixture(fixture.id, toEditPayload(fixture, editValues));
       await loadFixtures(activeFilters);
       setEditingId(null);
       setFeedback({ type: "success", message: "Fixture updated." });
@@ -436,6 +463,15 @@ export function FixturesPage() {
 
   async function handleEnterResult(fixture: AdminFixture) {
     setFeedback(null);
+    if (!canEnterResult(fixture)) {
+      setFeedback({
+        type: "error",
+        message:
+          "Results can only be entered for scheduled or postponed fixtures.",
+      });
+      return;
+    }
+
     const actionValues = rowActions[fixture.id] ?? makeRowActionValues(fixture);
     const validationMessage = getScoreValidationMessage(
       actionValues.homeScore,
@@ -464,6 +500,14 @@ export function FixturesPage() {
 
   async function handleCorrectResult(fixture: AdminFixture) {
     setFeedback(null);
+    if (!canCorrectResult(fixture)) {
+      setFeedback({
+        type: "error",
+        message: "Only completed fixture results can be corrected.",
+      });
+      return;
+    }
+
     const actionValues = rowActions[fixture.id] ?? makeRowActionValues(fixture);
     const validationMessage = getScoreValidationMessage(
       actionValues.correctedHomeScore,
@@ -487,6 +531,7 @@ export function FixturesPage() {
         reason: actionValues.correctionReason.trim(),
       });
       await loadFixtures(activeFilters);
+      setCorrectionFixtureId(null);
       setFeedback({ type: "success", message: "Fixture result corrected." });
     } catch (error) {
       setFeedback({ type: "error", message: getErrorMessage(error) });
@@ -941,6 +986,12 @@ export function FixturesPage() {
                             />
                           </label>
                           <div className="row-actions">
+                            {fixture.status === "completed" ? (
+                              <span className="form-help">
+                                Completed fixture scores can only be changed
+                                with a result correction.
+                              </span>
+                            ) : null}
                             <button
                               className="primary-button compact-button"
                               type="submit"
@@ -979,10 +1030,20 @@ export function FixturesPage() {
                           </span>
                         </td>
                         <td>
-                          {fixture.homeScore === null ||
-                          fixture.awayScore === null
-                            ? "—"
-                            : `${fixture.homeScore}-${fixture.awayScore}`}
+                          <div className="score-summary">
+                            <strong>
+                              {fixture.homeScore === null ||
+                              fixture.awayScore === null
+                                ? "—"
+                                : `${fixture.homeScore}-${fixture.awayScore}`}
+                            </strong>
+                            {fixture.resultSource ? (
+                              <span>Source: {fixture.resultSource}</span>
+                            ) : null}
+                            {fixture.resultEnteredAt ? (
+                              <span>Entered: {fixture.resultEnteredAt}</span>
+                            ) : null}
+                          </div>
                         </td>
                         <td>
                           <div className="fixture-actions">
@@ -1022,98 +1083,142 @@ export function FixturesPage() {
                             >
                               Update status
                             </button>
-                            <label>
-                              Home score
-                              <input
-                                aria-label={`Home score for ${fixture.id}`}
-                                value={actionValues.homeScore}
-                                onChange={(event) =>
-                                  updateRowAction(fixture, {
-                                    homeScore: event.target.value,
-                                  })
-                                }
-                              />
-                            </label>
-                            <label>
-                              Away score
-                              <input
-                                aria-label={`Away score for ${fixture.id}`}
-                                value={actionValues.awayScore}
-                                onChange={(event) =>
-                                  updateRowAction(fixture, {
-                                    awayScore: event.target.value,
-                                  })
-                                }
-                              />
-                            </label>
-                            <label>
-                              Result source
-                              <input
-                                aria-label={`Result source for ${fixture.id}`}
-                                value={actionValues.resultSource}
-                                onChange={(event) =>
-                                  updateRowAction(fixture, {
-                                    resultSource: event.target.value,
-                                  })
-                                }
-                              />
-                            </label>
-                            <button
-                              className="secondary-button compact-button"
-                              type="button"
-                              disabled={
-                                pendingAction === `result:${fixture.id}`
-                              }
-                              onClick={() => void handleEnterResult(fixture)}
-                            >
-                              Enter result
-                            </button>
-                            <label>
-                              Corrected home
-                              <input
-                                aria-label={`Corrected home score for ${fixture.id}`}
-                                value={actionValues.correctedHomeScore}
-                                onChange={(event) =>
-                                  updateRowAction(fixture, {
-                                    correctedHomeScore: event.target.value,
-                                  })
-                                }
-                              />
-                            </label>
-                            <label>
-                              Corrected away
-                              <input
-                                aria-label={`Corrected away score for ${fixture.id}`}
-                                value={actionValues.correctedAwayScore}
-                                onChange={(event) =>
-                                  updateRowAction(fixture, {
-                                    correctedAwayScore: event.target.value,
-                                  })
-                                }
-                              />
-                            </label>
-                            <label>
-                              Reason
-                              <input
-                                aria-label={`Correction reason for ${fixture.id}`}
-                                value={actionValues.correctionReason}
-                                onChange={(event) =>
-                                  updateRowAction(fixture, {
-                                    correctionReason: event.target.value,
-                                  })
-                                }
-                              />
-                            </label>
-                            <button
-                              className="secondary-button compact-button"
-                              type="button"
-                              disabled={
-                                pendingAction === `correct:${fixture.id}`
-                              }
-                              onClick={() => void handleCorrectResult(fixture)}
-                            >
-                              Correct result
-                            </button>
+                            {canEnterResult(fixture) ? (
+                              <div className="result-entry-panel">
+                                <label>
+                                  Home score
+                                  <input
+                                    aria-label={`Home score for ${fixture.id}`}
+                                    value={actionValues.homeScore}
+                                    onChange={(event) =>
+                                      updateRowAction(fixture, {
+                                        homeScore: event.target.value,
+                                      })
+                                    }
+                                  />
+                                </label>
+                                <label>
+                                  Away score
+                                  <input
+                                    aria-label={`Away score for ${fixture.id}`}
+                                    value={actionValues.awayScore}
+                                    onChange={(event) =>
+                                      updateRowAction(fixture, {
+                                        awayScore: event.target.value,
+                                      })
+                                    }
+                                  />
+                                </label>
+                                <label>
+                                  Result source
+                                  <input
+                                    aria-label={`Result source for ${fixture.id}`}
+                                    value={actionValues.resultSource}
+                                    onChange={(event) =>
+                                      updateRowAction(fixture, {
+                                        resultSource: event.target.value,
+                                      })
+                                    }
+                                  />
+                                </label>
+                                <button
+                                  className="secondary-button compact-button"
+                                  type="button"
+                                  disabled={
+                                    pendingAction === `result:${fixture.id}`
+                                  }
+                                  onClick={() =>
+                                    void handleEnterResult(fixture)
+                                  }
+                                >
+                                  {pendingAction === `result:${fixture.id}`
+                                    ? "Entering..."
+                                    : "Enter result"}
+                                </button>
+                              </div>
+                            ) : null}
+                            {canCorrectResult(fixture) ? (
+                              <div className="result-entry-panel">
+                                {correctionFixtureId === fixture.id ? (
+                                  <>
+                                    <label>
+                                      Corrected home
+                                      <input
+                                        aria-label={`Corrected home score for ${fixture.id}`}
+                                        value={actionValues.correctedHomeScore}
+                                        onChange={(event) =>
+                                          updateRowAction(fixture, {
+                                            correctedHomeScore:
+                                              event.target.value,
+                                          })
+                                        }
+                                      />
+                                    </label>
+                                    <label>
+                                      Corrected away
+                                      <input
+                                        aria-label={`Corrected away score for ${fixture.id}`}
+                                        value={actionValues.correctedAwayScore}
+                                        onChange={(event) =>
+                                          updateRowAction(fixture, {
+                                            correctedAwayScore:
+                                              event.target.value,
+                                          })
+                                        }
+                                      />
+                                    </label>
+                                    <label>
+                                      Reason
+                                      <input
+                                        aria-label={`Correction reason for ${fixture.id}`}
+                                        value={actionValues.correctionReason}
+                                        onChange={(event) =>
+                                          updateRowAction(fixture, {
+                                            correctionReason:
+                                              event.target.value,
+                                          })
+                                        }
+                                      />
+                                    </label>
+                                    <button
+                                      className="secondary-button compact-button"
+                                      type="button"
+                                      disabled={
+                                        pendingAction ===
+                                        `correct:${fixture.id}`
+                                      }
+                                      onClick={() =>
+                                        void handleCorrectResult(fixture)
+                                      }
+                                    >
+                                      {pendingAction === `correct:${fixture.id}`
+                                        ? "Correcting..."
+                                        : "Save correction"}
+                                    </button>
+                                    <button
+                                      className="secondary-button compact-button"
+                                      type="button"
+                                      onClick={() =>
+                                        setCorrectionFixtureId(null)
+                                      }
+                                    >
+                                      Cancel correction
+                                    </button>
+                                  </>
+                                ) : (
+                                  <button
+                                    className="secondary-button compact-button"
+                                    type="button"
+                                    onClick={() => {
+                                      setFeedback(null);
+                                      setCorrectionFixtureId(fixture.id);
+                                    }}
+                                  >
+                                    Correct result
+                                  </button>
+                                )}
+                              </div>
+                            ) : null}
                           </div>
                         </td>
                       </>
