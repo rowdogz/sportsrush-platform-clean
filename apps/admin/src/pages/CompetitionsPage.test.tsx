@@ -1,6 +1,7 @@
 import "@testing-library/jest-dom/vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { setAccessTokenProvider } from "../lib/apiClient";
 import { CompetitionsPage } from "./CompetitionsPage";
 
 function jsonResponse(body: unknown, status = 200): Response {
@@ -13,6 +14,7 @@ function jsonResponse(body: unknown, status = 200): Response {
 describe("CompetitionsPage", () => {
   afterEach(() => {
     vi.restoreAllMocks();
+    setAccessTokenProvider(() => null);
     window.localStorage.clear();
   });
 
@@ -100,8 +102,8 @@ describe("CompetitionsPage", () => {
     expect(screen.getByText("Admin access is required.")).toBeTruthy();
   });
 
-  it("sends a temporary bearer token when present", async () => {
-    window.localStorage.setItem("sr_admin_access_token", "token-123");
+  it("sends the configured bearer token when present", async () => {
+    setAccessTokenProvider(() => "token-123");
     const fetchMock = vi.fn().mockResolvedValue(
       jsonResponse({
         data: [],
