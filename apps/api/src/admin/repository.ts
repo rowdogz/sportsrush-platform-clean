@@ -26,6 +26,11 @@ export type ListResult<T> = {
   readonly total: number;
 };
 
+export type SeasonListFilters = {
+  readonly competitionId?: string | undefined;
+  readonly search?: string | undefined;
+};
+
 export type CompetitionRow = {
   readonly id: string;
   readonly sport_id: string;
@@ -254,6 +259,36 @@ export async function createSeason(
     ],
   );
   return findSeasonById(db, id) as Promise<SeasonRow>;
+}
+
+export async function listSeasons(
+  db: DbClient,
+  pagination: Pagination,
+  filters: SeasonListFilters = {},
+): Promise<ListResult<SeasonRow>> {
+  const where: string[] = [];
+  const params: unknown[] = [];
+
+  if (filters.competitionId) {
+    where.push("competition_id = ?");
+    params.push(filters.competitionId);
+  }
+
+  if (filters.search) {
+    where.push("(name LIKE ? OR slug LIKE ?)");
+    params.push(`%${filters.search}%`, `%${filters.search}%`);
+  }
+
+  const whereSql = where.length > 0 ? ` WHERE ${where.join(" AND ")}` : "";
+  const rows = await db.queryAll<SeasonRow>(
+    `SELECT * FROM seasons${whereSql} ORDER BY competition_id, starts_on DESC, name LIMIT ? OFFSET ?`,
+    [...params, pagination.limit, offset(pagination)],
+  );
+  const total = await db.queryOne<{ count: number }>(
+    `SELECT COUNT(*) AS count FROM seasons${whereSql}`,
+    params,
+  );
+  return { rows, total: total?.count ?? 0 };
 }
 
 export async function findSeasonById(

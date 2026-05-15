@@ -109,6 +109,7 @@ describe("Admin app shell", () => {
     expect(
       screen.getByRole("button", { name: "Competitions" }),
     ).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("button", { name: "Seasons" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Teams" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Fixtures" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Aliases" })).toBeTruthy();
@@ -135,6 +136,41 @@ describe("Admin app shell", () => {
     expect(
       screen.getByRole("button", { name: "Create competition" }),
     ).toBeTruthy();
+  });
+
+  it("opens the Seasons page from admin navigation", async () => {
+    window.localStorage.setItem("sr_admin_access_token", "stored-access-token");
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        jsonResponse({
+          data: [],
+          meta: { page: 1, limit: 50, total: 0, hasMore: false },
+        }),
+      )
+      .mockResolvedValueOnce(
+        jsonResponse({
+          data: [],
+          meta: { page: 1, limit: 50, total: 0, hasMore: false },
+        }),
+      )
+      .mockResolvedValueOnce(
+        jsonResponse({
+          data: [],
+          meta: { page: 1, limit: 50, total: 0, hasMore: false },
+        }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<App />);
+
+    await screen.findByRole("heading", { name: "Competitions" });
+
+    fireEvent.click(screen.getByRole("button", { name: "Seasons" }));
+    expect(
+      await screen.findByRole("heading", { name: "Seasons" }),
+    ).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Create season" })).toBeTruthy();
   });
 
   it("opens the Teams page from admin navigation", async () => {

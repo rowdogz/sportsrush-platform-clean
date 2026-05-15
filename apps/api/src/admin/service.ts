@@ -28,6 +28,7 @@ import {
   listAliasesBySource,
   listCompetitions,
   listFixtures,
+  listSeasons,
   markActiveSeason,
   setFixtureStatus,
   enterFixtureResult,
@@ -39,6 +40,7 @@ import {
   updateTeamAlias,
   type FixtureRow,
   type Pagination,
+  type SeasonListFilters,
 } from "./repository";
 import type {
   CreateCompetitionInput,
@@ -162,6 +164,14 @@ export async function createSeasonService(
   input: CreateSeasonInput,
 ) {
   return createSeason(context.db, randomUUID(), input, context.now);
+}
+
+export async function listSeasonsService(
+  context: ServiceContext,
+  pagination: Pagination,
+  filters: SeasonListFilters,
+) {
+  return listSeasons(context.db, pagination, filters);
 }
 
 export async function updateSeasonService(

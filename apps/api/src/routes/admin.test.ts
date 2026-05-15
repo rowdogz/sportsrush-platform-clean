@@ -326,6 +326,14 @@ describe("admin route slice 1 seasons", () => {
     expect(activateResponse.status).toBe(200);
     const activated = (await activateResponse.json()) as any;
     expect(activated.data.is_active).toBe(1);
+
+    const listResponse = await request(
+      `/v1/admin/seasons?competitionId=${competition.data.id}&search=2027`,
+    );
+    expect(listResponse.status).toBe(200);
+    const list = (await listResponse.json()) as any;
+    expect(list.data).toHaveLength(1);
+    expect(list.data[0].id).toBe(season2027.data.id);
   });
 
   it("returns validation errors for invalid activation payloads", async () => {

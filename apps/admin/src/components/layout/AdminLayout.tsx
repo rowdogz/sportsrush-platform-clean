@@ -3,6 +3,7 @@ import { useAuthSession } from "../../contexts/AuthSessionProvider";
 
 export type AdminScreen =
   | "competitions"
+  | "seasons"
   | "teams"
   | "fixtures"
   | "aliases"

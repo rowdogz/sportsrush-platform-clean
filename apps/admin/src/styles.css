@@ -251,6 +251,16 @@ a {
   padding: 0.65rem 0.75rem;
 }
 
+.checkbox-label {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.checkbox-label input {
+  width: auto;
+}
+
 .feedback-panel {
   border: 1px solid #d9e2ef;
   border-radius: 0.75rem;
