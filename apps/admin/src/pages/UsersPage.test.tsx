@@ -143,16 +143,138 @@ describe("UsersPage", () => {
     );
   });
 
-  it("states unsupported write actions are deferred", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce(userListResponse([])));
+  it("updates a user role after confirmation", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(userListResponse([user()]))
+      .mockResolvedValueOnce(jsonResponse({ data: user({ role: "admin" }) }))
+      .mockResolvedValueOnce(userListResponse([user({ role: "admin" })]));
+    vi.stubGlobal("fetch", fetchMock);
+    vi.spyOn(window, "confirm").mockReturnValue(true);
 
     render(<UsersPage />);
 
-    expect(await screen.findByText("Read-only user management")).toBeTruthy();
+    await screen.findByRole("cell", { name: "Alice Example" });
+    fireEvent.change(screen.getByLabelText("Role for alice@example.test"), {
+      target: { value: "admin" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Update role" }));
+
+    expect(await screen.findByText("User role updated.")).toBeTruthy();
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "/v1/admin/users/user-1/role",
+      expect.objectContaining({
+        method: "PATCH",
+        body: JSON.stringify({ role: "admin" }),
+      }),
+    );
+  });
+
+  it("updates a user status after confirmation", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(userListResponse([user()]))
+      .mockResolvedValueOnce(jsonResponse({ data: user({ is_active: 0 }) }))
+      .mockResolvedValueOnce(userListResponse([user({ is_active: 0 })]));
+    vi.stubGlobal("fetch", fetchMock);
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+
+    render(<UsersPage />);
+
+    await screen.findByRole("cell", { name: "Alice Example" });
+    fireEvent.change(screen.getByLabelText("Status for alice@example.test"), {
+      target: { value: "inactive" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Update status" }));
+
+    expect(await screen.findByText("User status updated.")).toBeTruthy();
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "/v1/admin/users/user-1/status",
+      expect.objectContaining({
+        method: "PATCH",
+        body: JSON.stringify({ isActive: false }),
+      }),
+    );
+  });
+
+  it("suspends a user after confirmation", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(userListResponse([user()]))
+      .mockResolvedValueOnce(jsonResponse({ data: user({ is_active: 0 }) }))
+      .mockResolvedValueOnce(userListResponse([user({ is_active: 0 })]));
+    vi.stubGlobal("fetch", fetchMock);
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+
+    render(<UsersPage />);
+
+    await screen.findByRole("cell", { name: "Alice Example" });
+    fireEvent.click(screen.getByRole("button", { name: "Suspend" }));
+
+    expect(await screen.findByText("User suspended.")).toBeTruthy();
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "/v1/admin/users/user-1/suspend",
+      expect.objectContaining({ method: "POST" }),
+    );
+  });
+
+  it("does not suspend a user when confirmation is cancelled", async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce(userListResponse([user()]));
+    vi.stubGlobal("fetch", fetchMock);
+    vi.spyOn(window, "confirm").mockReturnValue(false);
+
+    render(<UsersPage />);
+
+    await screen.findByRole("cell", { name: "Alice Example" });
+    fireEvent.click(screen.getByRole("button", { name: "Suspend" }));
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows validation feedback when role is unchanged", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValueOnce(userListResponse([user()])),
+    );
+
+    render(<UsersPage />);
+
+    await screen.findByRole("cell", { name: "Alice Example" });
+    fireEvent.click(screen.getByRole("button", { name: "Update role" }));
+
     expect(
-      screen.getByText(
-        "Create, archive, suspend, and role-change actions are deferred until matching admin API endpoints exist.",
-      ),
+      await screen.findByText("Choose a different role first."),
     ).toBeTruthy();
+  });
+
+  it("shows API errors from user actions", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(userListResponse([user()]))
+      .mockResolvedValueOnce(
+        jsonResponse(
+          {
+            error: {
+              code: "ADMIN_DOMAIN_ERROR",
+              message: "Admins cannot deactivate or suspend their own account.",
+            },
+          },
+          422,
+        ),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+
+    render(<UsersPage />);
+
+    await screen.findByRole("cell", { name: "Alice Example" });
+    fireEvent.click(screen.getByRole("button", { name: "Suspend" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Admins cannot deactivate or suspend their own account.",
+    );
   });
 });

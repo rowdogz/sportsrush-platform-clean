@@ -46,7 +46,11 @@ import {
   listSeasonsService,
   listTeamsService,
   lookupAliasService,
+  reactivateAdminUserService,
+  suspendAdminUserService,
   transitionFixtureService,
+  updateAdminUserRoleService,
+  updateAdminUserStatusService,
   updateAliasService,
   updateCompetitionService,
   updateFixtureService,
@@ -87,6 +91,14 @@ const UserListQuerySchema = z.object({
   search: z.string().min(1).optional(),
   role: z.enum(["user", "admin", "superadmin"]).optional(),
   isActive: z.enum(["true", "false"]).optional(),
+});
+
+const UpdateUserRoleSchema = z.object({
+  role: z.enum(["user", "admin", "superadmin"]),
+});
+
+const UpdateUserStatusSchema = z.object({
+  isActive: z.boolean(),
 });
 
 const RoundListQuerySchema = z.object({
@@ -172,6 +184,38 @@ adminRoutes.get("/users", async (c) => {
     result.rows,
     paginationMeta(pagination.page, pagination.limit, result.total),
   );
+});
+
+adminRoutes.patch("/users/:id/role", async (c) => {
+  const input = parseBody(UpdateUserRoleSchema, await c.req.json());
+  const context = await makeServiceContext(c);
+  return ok(
+    c,
+    await updateAdminUserRoleService(context, c.req.param("id"), input.role),
+  );
+});
+
+adminRoutes.patch("/users/:id/status", async (c) => {
+  const input = parseBody(UpdateUserStatusSchema, await c.req.json());
+  const context = await makeServiceContext(c);
+  return ok(
+    c,
+    await updateAdminUserStatusService(
+      context,
+      c.req.param("id"),
+      input.isActive,
+    ),
+  );
+});
+
+adminRoutes.post("/users/:id/suspend", async (c) => {
+  const context = await makeServiceContext(c);
+  return ok(c, await suspendAdminUserService(context, c.req.param("id")));
+});
+
+adminRoutes.post("/users/:id/reactivate", async (c) => {
+  const context = await makeServiceContext(c);
+  return ok(c, await reactivateAdminUserService(context, c.req.param("id")));
 });
 
 adminRoutes.get("/competitions", async (c) => {

@@ -18,6 +18,7 @@ import {
   createTeamAlias,
   deleteTeamAlias,
   findAliasBySource,
+  findAdminUserById,
   findCompetitionById,
   findFixtureById,
   findRoundById,
@@ -33,6 +34,8 @@ import {
   markActiveSeason,
   setFixtureStatus,
   enterFixtureResult,
+  updateAdminUserRole,
+  updateAdminUserStatus,
   updateCompetition,
   updateFixture,
   updateRound,
@@ -42,6 +45,7 @@ import {
   type FixtureRow,
   type Pagination,
   type SeasonListFilters,
+  type AdminUserRole,
   type UserListFilters,
 } from "./repository";
 import type {
@@ -73,6 +77,12 @@ const TRANSITIONS: Record<FixtureStatus, readonly FixtureStatus[]> = {
   cancelled: [],
   void: [],
 };
+
+const ADMIN_USER_ROLES: readonly AdminUserRole[] = [
+  "user",
+  "admin",
+  "superadmin",
+];
 
 export class AdminDomainError extends AppError {
   override readonly name = "AdminDomainError";
@@ -167,6 +177,82 @@ export async function listAdminUsersService(
   filters: UserListFilters,
 ) {
   return listAdminUsers(context.db, pagination, filters);
+}
+
+function assertAdminUserRole(
+  role: string,
+  correlationId: string,
+): asserts role is AdminUserRole {
+  assert(
+    ADMIN_USER_ROLES.includes(role as AdminUserRole),
+    "Invalid user role.",
+    correlationId,
+  );
+}
+
+async function assertAdminUserExists(context: ServiceContext, userId: string) {
+  const user = await findAdminUserById(context.db, userId);
+  assert(user !== null, "User not found.", context.correlationId);
+  return user;
+}
+
+function assertNotRemovingOwnAdminAccess(
+  context: ServiceContext,
+  userId: string,
+  nextRole: AdminUserRole,
+) {
+  assert(
+    userId !== context.actorUserId ||
+      nextRole === "admin" ||
+      nextRole === "superadmin",
+    "Admins cannot remove their own admin access.",
+    context.correlationId,
+  );
+}
+
+function assertNotDisablingSelf(context: ServiceContext, userId: string) {
+  assert(
+    userId !== context.actorUserId,
+    "Admins cannot deactivate or suspend their own account.",
+    context.correlationId,
+  );
+}
+
+export async function updateAdminUserRoleService(
+  context: ServiceContext,
+  userId: string,
+  role: string,
+) {
+  assertAdminUserRole(role, context.correlationId);
+  await assertAdminUserExists(context, userId);
+  assertNotRemovingOwnAdminAccess(context, userId, role);
+  return updateAdminUserRole(context.db, userId, role, context.now);
+}
+
+export async function updateAdminUserStatusService(
+  context: ServiceContext,
+  userId: string,
+  isActive: boolean,
+) {
+  await assertAdminUserExists(context, userId);
+  if (!isActive) {
+    assertNotDisablingSelf(context, userId);
+  }
+  return updateAdminUserStatus(context.db, userId, isActive, context.now);
+}
+
+export async function suspendAdminUserService(
+  context: ServiceContext,
+  userId: string,
+) {
+  return updateAdminUserStatusService(context, userId, false);
+}
+
+export async function reactivateAdminUserService(
+  context: ServiceContext,
+  userId: string,
+) {
+  return updateAdminUserStatusService(context, userId, true);
 }
 
 export async function createSeasonService(

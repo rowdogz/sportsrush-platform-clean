@@ -31,6 +31,10 @@ type RawUserListResponse = {
   readonly meta: UserListResponse["meta"];
 };
 
+type RawUserResponse = {
+  readonly data: RawUser;
+};
+
 function toBoolean(value: boolean | number | undefined): boolean {
   return value === true || value === 1;
 }
@@ -93,4 +97,48 @@ export async function listUsers(
     data: response.data.map(normalizeUser),
     meta: response.meta,
   };
+}
+
+export async function updateUserRole(
+  id: string,
+  role: UserRole,
+): Promise<AdminUser> {
+  const response = await apiRequest<RawUserResponse>(
+    `/v1/admin/users/${id}/role`,
+    {
+      method: "PATCH",
+      body: { role },
+    },
+  );
+  return normalizeUser(response.data);
+}
+
+export async function updateUserStatus(
+  id: string,
+  isActive: boolean,
+): Promise<AdminUser> {
+  const response = await apiRequest<RawUserResponse>(
+    `/v1/admin/users/${id}/status`,
+    {
+      method: "PATCH",
+      body: { isActive },
+    },
+  );
+  return normalizeUser(response.data);
+}
+
+export async function suspendUser(id: string): Promise<AdminUser> {
+  const response = await apiRequest<RawUserResponse>(
+    `/v1/admin/users/${id}/suspend`,
+    { method: "POST" },
+  );
+  return normalizeUser(response.data);
+}
+
+export async function reactivateUser(id: string): Promise<AdminUser> {
+  const response = await apiRequest<RawUserResponse>(
+    `/v1/admin/users/${id}/reactivate`,
+    { method: "POST" },
+  );
+  return normalizeUser(response.data);
 }

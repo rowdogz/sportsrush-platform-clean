@@ -27,15 +27,22 @@ import {
   correctFixtureResultService,
   enterFixtureResultService,
   getAllowedFixtureTransitions,
+  reactivateAdminUserService,
+  suspendAdminUserService,
   transitionFixtureService,
+  updateAdminUserRoleService,
+  updateAdminUserStatusService,
   type ServiceContext,
 } from "./service";
 import { normalizeAlias, normalizeSource } from "./normalization";
 
-const migrationPath = resolve(
-  __dirname,
-  "../../migrations/0003_competitions_teams_fixtures_results.sql",
-);
+const migrationPaths = [
+  resolve(__dirname, "../../migrations/0002_auth_schema.sql"),
+  resolve(
+    __dirname,
+    "../../migrations/0003_competitions_teams_fixtures_results.sql",
+  ),
+];
 
 const NOW = "2026-05-14T12:00:00.000Z";
 const NEXT = "2026-05-14T13:00:00.000Z";
@@ -47,7 +54,9 @@ async function createSqlDb(): Promise<SqlJsDatabase> {
   const SQL = await initSqlJs();
   const db = new SQL.Database();
   db.run("PRAGMA foreign_keys = ON;");
-  db.run(readFileSync(migrationPath, "utf8"));
+  migrationPaths.forEach((migrationPath) => {
+    db.run(readFileSync(migrationPath, "utf8"));
+  });
   return db;
 }
 
@@ -194,6 +203,31 @@ async function createContext() {
   return { sqlDb, db, context };
 }
 
+function seedUser(
+  sqlDb: SqlJsDatabase,
+  {
+    id,
+    role = "user",
+    isActive = 1,
+  }: {
+    readonly id: string;
+    readonly role?: string;
+    readonly isActive?: number;
+  },
+) {
+  sqlDb.run(
+    `INSERT INTO users
+       (id, email, email_normalized, role, is_active, is_legacy_migration, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, 0, ?, ?)`,
+    [id, `${id}@example.test`, `${id}@example.test`, role, isActive, NOW, NOW],
+  );
+  sqlDb.run(
+    `INSERT INTO user_profiles (user_id, display_name, timezone, created_at, updated_at)
+     VALUES (?, ?, 'UTC', ?, ?)`,
+    [id, id, NOW, NOW],
+  );
+}
+
 async function seedFixture(status: FixtureStatus = "scheduled") {
   const state = await createContext();
   await createFixture(
@@ -223,6 +257,44 @@ async function expectDomainFailure(promise: Promise<unknown>) {
 }
 
 describe("admin service fixture transitions", () => {
+  it("updates user role and status through service rules", async () => {
+    const { context, sqlDb } = await createContext();
+    seedUser(sqlDb, { id: "user-1" });
+
+    const roleUpdated = await updateAdminUserRoleService(
+      context,
+      "user-1",
+      "admin",
+    );
+    expect(roleUpdated?.role).toBe("admin");
+
+    const suspended = await suspendAdminUserService(context, "user-1");
+    expect(suspended?.is_active).toBe(0);
+
+    const reactivated = await reactivateAdminUserService(context, "user-1");
+    expect(reactivated?.is_active).toBe(1);
+
+    const statusUpdated = await updateAdminUserStatusService(
+      context,
+      "user-1",
+      false,
+    );
+    expect(statusUpdated?.is_active).toBe(0);
+  });
+
+  it("rejects invalid roles and self-disabling user changes", async () => {
+    const { context, sqlDb } = await createContext();
+    seedUser(sqlDb, { id: "admin-user-1", role: "admin" });
+
+    await expectDomainFailure(
+      updateAdminUserRoleService(context, "admin-user-1", "owner"),
+    );
+    await expectDomainFailure(
+      updateAdminUserRoleService(context, "admin-user-1", "user"),
+    );
+    await expectDomainFailure(suspendAdminUserService(context, "admin-user-1"));
+  });
+
   it("returns the canonical transition matrix", () => {
     expect(getAllowedFixtureTransitions("scheduled")).toEqual([
       "postponed",
