@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
-import { listUsers } from "../features/users/api";
+import {
+  listUsers,
+  reactivateUser,
+  suspendUser,
+  updateUserRole,
+  updateUserStatus,
+} from "../features/users/api";
 import type {
   AdminUser,
   UserListFilters,
@@ -21,6 +27,10 @@ type FilterValues = {
   readonly role: string;
   readonly status: string;
 };
+
+type FeedbackState =
+  | { readonly type: "success"; readonly message: string }
+  | { readonly type: "error"; readonly message: string };
 
 const emptyFilterValues: FilterValues = {
   search: "",
@@ -61,6 +71,10 @@ function toFilters(values: FilterValues): UserListFilters {
 export function UsersPage() {
   const [state, setState] = useState<UsersState>({ status: "loading" });
   const [filters, setFilters] = useState<FilterValues>(emptyFilterValues);
+  const [roleDrafts, setRoleDrafts] = useState<Record<string, UserRole>>({});
+  const [statusDrafts, setStatusDrafts] = useState<Record<string, string>>({});
+  const [feedback, setFeedback] = useState<FeedbackState | null>(null);
+  const [pendingAction, setPendingAction] = useState<string | null>(null);
 
   const loadUsers = useCallback(
     async (
@@ -74,6 +88,17 @@ export function UsersPage() {
       try {
         const response = await listUsers(toFilters(nextFilters));
         setState({ status: "success", users: response.data });
+        setRoleDrafts(
+          Object.fromEntries(response.data.map((user) => [user.id, user.role])),
+        );
+        setStatusDrafts(
+          Object.fromEntries(
+            response.data.map((user) => [
+              user.id,
+              user.isActive ? "active" : "inactive",
+            ]),
+          ),
+        );
       } catch (error) {
         setState({ status: "error", message: getErrorMessage(error) });
       }
@@ -88,6 +113,91 @@ export function UsersPage() {
   async function handleFilterSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     await loadUsers(filters, { showLoading: true });
+  }
+
+  async function handleRoleUpdate(user: AdminUser) {
+    const role = roleDrafts[user.id] ?? user.role;
+    setFeedback(null);
+    if (role === user.role) {
+      setFeedback({ type: "error", message: "Choose a different role first." });
+      return;
+    }
+    if (
+      !window.confirm(
+        `Change ${user.email}'s role from ${user.role} to ${role}?`,
+      )
+    ) {
+      return;
+    }
+
+    setPendingAction(`role:${user.id}`);
+    try {
+      await updateUserRole(user.id, role);
+      await loadUsers(filters);
+      setFeedback({ type: "success", message: "User role updated." });
+    } catch (error) {
+      setFeedback({ type: "error", message: getErrorMessage(error) });
+    } finally {
+      setPendingAction(null);
+    }
+  }
+
+  async function handleStatusUpdate(user: AdminUser) {
+    const status =
+      statusDrafts[user.id] ?? (user.isActive ? "active" : "inactive");
+    const isActive = status === "active";
+    setFeedback(null);
+    if (isActive === user.isActive) {
+      setFeedback({
+        type: "error",
+        message: "Choose a different status first.",
+      });
+      return;
+    }
+    if (
+      !window.confirm(
+        `${isActive ? "Reactivate" : "Deactivate"} ${user.email}?`,
+      )
+    ) {
+      return;
+    }
+
+    setPendingAction(`status:${user.id}`);
+    try {
+      await updateUserStatus(user.id, isActive);
+      await loadUsers(filters);
+      setFeedback({ type: "success", message: "User status updated." });
+    } catch (error) {
+      setFeedback({ type: "error", message: getErrorMessage(error) });
+    } finally {
+      setPendingAction(null);
+    }
+  }
+
+  async function handleSuspendToggle(user: AdminUser) {
+    setFeedback(null);
+    const action = user.isActive ? "Suspend" : "Reactivate";
+    if (!window.confirm(`${action} ${user.email}?`)) {
+      return;
+    }
+
+    setPendingAction(`suspend:${user.id}`);
+    try {
+      if (user.isActive) {
+        await suspendUser(user.id);
+      } else {
+        await reactivateUser(user.id);
+      }
+      await loadUsers(filters);
+      setFeedback({
+        type: "success",
+        message: user.isActive ? "User suspended." : "User reactivated.",
+      });
+    } catch (error) {
+      setFeedback({ type: "error", message: getErrorMessage(error) });
+    } finally {
+      setPendingAction(null);
+    }
   }
 
   return (
@@ -146,13 +256,14 @@ export function UsersPage() {
         </button>
       </form>
 
-      <div className="state-panel">
-        <strong>Read-only user management</strong>
-        <span>
-          Create, archive, suspend, and role-change actions are deferred until
-          matching admin API endpoints exist.
-        </span>
-      </div>
+      {feedback ? (
+        <div
+          className={`state-panel ${feedback.type === "error" ? "error-panel" : "success-panel"}`}
+          role={feedback.type === "error" ? "alert" : "status"}
+        >
+          {feedback.message}
+        </div>
+      ) : null}
 
       {state.status === "loading" ? (
         <div className="state-panel" role="status">
@@ -187,6 +298,7 @@ export function UsersPage() {
                 <th scope="col">Created</th>
                 <th scope="col">Updated</th>
                 <th scope="col">Legacy</th>
+                <th scope="col">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -210,6 +322,72 @@ export function UsersPage() {
                   <td>{user.createdAt}</td>
                   <td>{user.profileUpdatedAt ?? user.updatedAt}</td>
                   <td>{user.legacyWpUserId ?? "—"}</td>
+                  <td>
+                    <div className="row-actions">
+                      <label>
+                        <select
+                          aria-label={`Role for ${user.email}`}
+                          value={roleDrafts[user.id] ?? user.role}
+                          onChange={(event) =>
+                            setRoleDrafts({
+                              ...roleDrafts,
+                              [user.id]: event.target.value as UserRole,
+                            })
+                          }
+                        >
+                          {userRoles.map((role) => (
+                            <option key={role} value={role}>
+                              {role}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        disabled={pendingAction === `role:${user.id}`}
+                        onClick={() => void handleRoleUpdate(user)}
+                      >
+                        Update role
+                      </button>
+                      <label>
+                        <select
+                          aria-label={`Status for ${user.email}`}
+                          value={
+                            statusDrafts[user.id] ??
+                            (user.isActive ? "active" : "inactive")
+                          }
+                          onChange={(event) =>
+                            setStatusDrafts({
+                              ...statusDrafts,
+                              [user.id]: event.target.value,
+                            })
+                          }
+                        >
+                          <option value="active">active</option>
+                          <option value="inactive">inactive</option>
+                        </select>
+                      </label>
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        disabled={pendingAction === `status:${user.id}`}
+                        onClick={() => void handleStatusUpdate(user)}
+                      >
+                        Update status
+                      </button>
+                      <button
+                        className={
+                          user.isActive ? "danger-button" : "secondary-button"
+                        }
+                        type="button"
+                        disabled={pendingAction === `suspend:${user.id}`}
+                        onClick={() => void handleSuspendToggle(user)}
+                      >
+                        {user.isActive ? "Suspend" : "Reactivate"}
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>

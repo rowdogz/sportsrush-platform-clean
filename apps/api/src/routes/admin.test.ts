@@ -299,6 +299,105 @@ describe("admin route slice 1 users", () => {
     expect(filtered.data[0].email).toBe("admin@example.test");
     expect(filtered.data[0].is_active).toBe(0);
   });
+
+  it("updates user role and status", async () => {
+    const { request, sqlDb } = await createTestHarness();
+    seedUser(sqlDb, {
+      id: "user-1",
+      email: "alice@example.test",
+      displayName: "Alice Example",
+      role: "user",
+    });
+
+    const roleResponse = await request("/v1/admin/users/user-1/role", {
+      method: "PATCH",
+      body: JSON.stringify({ role: "admin" }),
+    });
+    expect(roleResponse.status).toBe(200);
+    const roleBody = (await roleResponse.json()) as any;
+    expect(roleBody.data.role).toBe("admin");
+
+    const statusResponse = await request("/v1/admin/users/user-1/status", {
+      method: "PATCH",
+      body: JSON.stringify({ isActive: false }),
+    });
+    expect(statusResponse.status).toBe(200);
+    const statusBody = (await statusResponse.json()) as any;
+    expect(statusBody.data.is_active).toBe(0);
+  });
+
+  it("suspends and reactivates users", async () => {
+    const { request, sqlDb } = await createTestHarness();
+    seedUser(sqlDb, {
+      id: "user-1",
+      email: "alice@example.test",
+      displayName: "Alice Example",
+    });
+
+    const suspendResponse = await request("/v1/admin/users/user-1/suspend", {
+      method: "POST",
+    });
+    expect(suspendResponse.status).toBe(200);
+    const suspended = (await suspendResponse.json()) as any;
+    expect(suspended.data.is_active).toBe(0);
+
+    const reactivateResponse = await request(
+      "/v1/admin/users/user-1/reactivate",
+      {
+        method: "POST",
+      },
+    );
+    expect(reactivateResponse.status).toBe(200);
+    const reactivated = (await reactivateResponse.json()) as any;
+    expect(reactivated.data.is_active).toBe(1);
+  });
+
+  it("rejects invalid user role payloads", async () => {
+    const { request, sqlDb } = await createTestHarness();
+    seedUser(sqlDb, {
+      id: "user-1",
+      email: "alice@example.test",
+      displayName: "Alice Example",
+    });
+
+    const response = await request("/v1/admin/users/user-1/role", {
+      method: "PATCH",
+      body: JSON.stringify({ role: "owner" }),
+    });
+    expect(response.status).toBe(400);
+    const body = (await response.json()) as any;
+    expect(body.error.code).toBe("VALIDATION_ERROR");
+  });
+
+  it("prevents admins from removing their own access", async () => {
+    const { request, sqlDb } = await createTestHarness();
+    seedUser(sqlDb, {
+      id: "admin-user",
+      email: "admin@example.test",
+      displayName: "Admin Example",
+      role: "admin",
+    });
+
+    const roleResponse = await request("/v1/admin/users/admin-user/role", {
+      method: "PATCH",
+      body: JSON.stringify({ role: "user" }),
+    });
+    expect(roleResponse.status).toBe(422);
+    const roleBody = (await roleResponse.json()) as any;
+    expect(roleBody.error.message).toBe(
+      "Admins cannot remove their own admin access.",
+    );
+
+    const suspendResponse = await request(
+      "/v1/admin/users/admin-user/suspend",
+      { method: "POST" },
+    );
+    expect(suspendResponse.status).toBe(422);
+    const suspendBody = (await suspendResponse.json()) as any;
+    expect(suspendBody.error.message).toBe(
+      "Admins cannot deactivate or suspend their own account.",
+    );
+  });
 });
 
 describe("admin route slice 1 competitions", () => {

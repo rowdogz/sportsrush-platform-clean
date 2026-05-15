@@ -37,6 +37,8 @@ export type UserListFilters = {
   readonly isActive?: boolean | undefined;
 };
 
+export type AdminUserRole = "user" | "admin" | "superadmin";
+
 export type CompetitionRow = {
   readonly id: string;
   readonly sport_id: string;
@@ -300,6 +302,55 @@ export async function listAdminUsers(
     params,
   );
   return { rows, total: total?.count ?? 0 };
+}
+
+export async function findAdminUserById(
+  db: DbClient,
+  id: string,
+): Promise<AdminUserRow | null> {
+  return db.queryOne<AdminUserRow>(
+    `SELECT u.id,
+            u.email,
+            p.display_name,
+            u.role,
+            u.is_active,
+            u.email_verified_at,
+            u.created_at,
+            u.updated_at,
+            p.updated_at AS profile_updated_at,
+            u.legacy_wp_user_id
+       FROM users u
+       LEFT JOIN user_profiles p ON p.user_id = u.id
+      WHERE u.id = ?`,
+    [id],
+  );
+}
+
+export async function updateAdminUserRole(
+  db: DbClient,
+  id: string,
+  role: AdminUserRole,
+  now: string,
+): Promise<AdminUserRow | null> {
+  await db.execute("UPDATE users SET role = ?, updated_at = ? WHERE id = ?", [
+    role,
+    now,
+    id,
+  ]);
+  return findAdminUserById(db, id);
+}
+
+export async function updateAdminUserStatus(
+  db: DbClient,
+  id: string,
+  isActive: boolean,
+  now: string,
+): Promise<AdminUserRow | null> {
+  await db.execute(
+    "UPDATE users SET is_active = ?, updated_at = ? WHERE id = ?",
+    [isActive ? 1 : 0, now, id],
+  );
+  return findAdminUserById(db, id);
 }
 
 export async function createSeason(

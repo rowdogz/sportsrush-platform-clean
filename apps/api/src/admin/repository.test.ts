@@ -11,11 +11,14 @@ import {
   createTeam,
   createTeamAlias,
   findAliasBySource,
+  findAdminUserById,
   findFixtureById,
   insertResultCorrection,
   listAliasesBySource,
   listCompetitions,
   listFixtures,
+  updateAdminUserRole,
+  updateAdminUserStatus,
   updateCompetition,
   updateFixture,
   updateRound,
@@ -23,10 +26,13 @@ import {
   updateTeam,
 } from "./repository";
 
-const migrationPath = resolve(
-  __dirname,
-  "../../migrations/0003_competitions_teams_fixtures_results.sql",
-);
+const migrationPaths = [
+  resolve(__dirname, "../../migrations/0002_auth_schema.sql"),
+  resolve(
+    __dirname,
+    "../../migrations/0003_competitions_teams_fixtures_results.sql",
+  ),
+];
 
 const NOW = "2026-05-14T12:00:00.000Z";
 const PAGE = { page: 1, limit: 25 };
@@ -37,7 +43,9 @@ async function createSqlDb(): Promise<SqlJsDatabase> {
   const SQL = await initSqlJs();
   const db = new SQL.Database();
   db.run("PRAGMA foreign_keys = ON;");
-  db.run(readFileSync(migrationPath, "utf8"));
+  migrationPaths.forEach((migrationPath) => {
+    db.run(readFileSync(migrationPath, "utf8"));
+  });
   return db;
 }
 
@@ -126,6 +134,20 @@ async function createRepositoryDb() {
   return { sqlDb, db };
 }
 
+function seedUser(sqlDb: SqlJsDatabase) {
+  sqlDb.run(
+    `INSERT INTO users
+       (id, email, email_normalized, role, is_active, is_legacy_migration, created_at, updated_at)
+     VALUES ('user-1', 'alice@example.test', 'alice@example.test', 'user', 1, 0, ?, ?)`,
+    [NOW, NOW],
+  );
+  sqlDb.run(
+    `INSERT INTO user_profiles (user_id, display_name, timezone, created_at, updated_at)
+     VALUES ('user-1', 'Alice Example', 'UTC', ?, ?)`,
+    [NOW, NOW],
+  );
+}
+
 async function seedCompetitionSeasonTeams() {
   const context = await createRepositoryDb();
   const { db } = context;
@@ -187,6 +209,21 @@ async function seedCompetitionSeasonTeams() {
 }
 
 describe("admin repository layer", () => {
+  it("finds and updates admin user role and status", async () => {
+    const { db, sqlDb } = await createRepositoryDb();
+    seedUser(sqlDb);
+
+    const existing = await findAdminUserById(db, "user-1");
+    expect(existing?.display_name).toBe("Alice Example");
+    expect(existing?.role).toBe("user");
+
+    const roleUpdated = await updateAdminUserRole(db, "user-1", "admin", NOW);
+    expect(roleUpdated?.role).toBe("admin");
+
+    const statusUpdated = await updateAdminUserStatus(db, "user-1", false, NOW);
+    expect(statusUpdated?.is_active).toBe(0);
+  });
+
   it("creates, lists, and updates competitions", async () => {
     const { db } = await createRepositoryDb();
 
