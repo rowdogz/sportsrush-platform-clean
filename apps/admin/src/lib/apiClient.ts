@@ -9,6 +9,16 @@ type ApiErrorResponse = {
   readonly error?: ApiErrorBody;
 };
 
+type AccessTokenProvider = () => string | null;
+
+export type ApiRequestOptions = {
+  readonly method?: string;
+  readonly body?: unknown;
+  readonly headers?: HeadersInit;
+};
+
+let accessTokenProvider: AccessTokenProvider = () => null;
+
 export class ApiError extends Error {
   readonly status: number;
   readonly code: string;
@@ -41,9 +51,12 @@ function getApiBaseUrl(): string {
   return (import.meta.env.VITE_API_BASE_URL ?? "").trim().replace(/\/$/, "");
 }
 
+export function setAccessTokenProvider(provider: AccessTokenProvider): void {
+  accessTokenProvider = provider;
+}
+
 function getAccessToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return window.localStorage.getItem("sr_admin_access_token");
+  return accessTokenProvider();
 }
 
 function buildUrl(path: string): string {
@@ -76,17 +89,40 @@ function getErrorBody(payload: unknown): ApiErrorBody | undefined {
   return error && typeof error === "object" ? error : undefined;
 }
 
-export async function apiRequest<T>(path: string): Promise<T> {
+export async function apiRequest<T>(
+  path: string,
+  options: ApiRequestOptions = {},
+): Promise<T> {
   const token = getAccessToken();
   const headers = new Headers({ Accept: "application/json" });
+
+  if (options.headers) {
+    new Headers(options.headers).forEach((value, key) => {
+      headers.set(key, value);
+    });
+  }
+
+  let body: BodyInit | undefined;
+  if (options.body !== undefined) {
+    headers.set("Content-Type", "application/json");
+    body = JSON.stringify(options.body);
+  }
 
   if (token) {
     headers.set("Authorization", `Bearer ${token}`);
   }
 
+  const requestInit: RequestInit = { headers };
+  if (options.method) {
+    requestInit.method = options.method;
+  }
+  if (body !== undefined) {
+    requestInit.body = body;
+  }
+
   let response: Response;
   try {
-    response = await fetch(buildUrl(path), { headers });
+    response = await fetch(buildUrl(path), requestInit);
   } catch (error) {
     throw new ApiError({
       status: 0,
