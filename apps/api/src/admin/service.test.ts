@@ -36,6 +36,7 @@ import {
   createTeamService,
   deleteAliasService,
   enterFixtureResultService,
+  exportAdminAuditEventsService,
   getAllowedFixtureTransitions,
   listAdminAuditEventsService,
   reactivateAdminUserService,
@@ -311,6 +312,27 @@ describe("admin service fixture transitions", () => {
         },
       ),
     );
+  });
+
+  it("exports filtered audit events as escaped CSV", async () => {
+    const { context, sqlDb } = await createContext();
+    seedUser(sqlDb, { id: "user-1" });
+    await updateAdminUserRoleService(context, "user-1", "admin");
+
+    const exported = await exportAdminAuditEventsService(context, {
+      entityType: "user",
+      action: "user.role.update",
+    });
+
+    expect(exported.filename).toBe("audit-events-2026-05-14.csv");
+    expect(exported.contentType).toBe("text/csv; charset=utf-8");
+    expect(exported.csv).toContain(
+      "occurredAt,actorUserId,actorEmail,actorDisplayName,action,entityType,entityId,summary,before,after,correlationId",
+    );
+    expect(exported.csv).toContain(
+      '"2026-05-14T12:00:00.000Z","admin-user-1","admin-user-1@example.test","admin-user-1","user.role.update","user","user-1","user.role.update on user user-1","{""id"":""user-1""',
+    );
+    expect(exported.csv).toContain('""role"":""admin""');
   });
 
   it("writes audit events for admin mutation areas", async () => {

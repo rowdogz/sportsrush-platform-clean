@@ -37,6 +37,7 @@ import {
   createTeamService,
   deleteAliasService,
   enterFixtureResultService,
+  exportAdminAuditEventsService,
   getFixtureService,
   listAdminUsersService,
   listAdminAuditEventsService,
@@ -196,12 +197,50 @@ adminRoutes.get("/users", async (c) => {
   );
 });
 
+function parseAuditEventFilters(raw: {
+  readonly actorUserId: string | undefined;
+  readonly entityType: string | undefined;
+  readonly entityId: string | undefined;
+  readonly action: string | undefined;
+  readonly dateFrom: string | undefined;
+  readonly dateTo: string | undefined;
+}) {
+  const filters = parseQuery(AuditEventListQuerySchema, {
+    actorUserId: raw.actorUserId,
+    entityType: raw.entityType,
+    entityId: raw.entityId,
+    action: raw.action,
+    dateFrom: raw.dateFrom,
+    dateTo: raw.dateTo,
+  });
+  return filters;
+}
+
+adminRoutes.get("/audit-events/export", async (c) => {
+  const filters = parseAuditEventFilters({
+    actorUserId: c.req.query("actorUserId"),
+    entityType: c.req.query("entityType"),
+    entityId: c.req.query("entityId"),
+    action: c.req.query("action"),
+    dateFrom: c.req.query("dateFrom"),
+    dateTo: c.req.query("dateTo"),
+  });
+  const context = await makeServiceContext(c);
+  const exportFile = await exportAdminAuditEventsService(context, filters);
+  c.header("Content-Type", exportFile.contentType);
+  c.header(
+    "Content-Disposition",
+    `attachment; filename="${exportFile.filename}"`,
+  );
+  return c.body(exportFile.csv);
+});
+
 adminRoutes.get("/audit-events", async (c) => {
   const pagination = parsePagination({
     page: c.req.query("page"),
     limit: c.req.query("limit"),
   });
-  const filters = parseQuery(AuditEventListQuerySchema, {
+  const filters = parseAuditEventFilters({
     actorUserId: c.req.query("actorUserId"),
     entityType: c.req.query("entityType"),
     entityId: c.req.query("entityId"),

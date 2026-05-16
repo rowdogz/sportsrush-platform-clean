@@ -267,6 +267,16 @@ describe("admin route slice 1 auth", () => {
     expect(body.error.correlationId).toBeDefined();
   });
 
+  it("requires admin auth for audit event export", async () => {
+    const { request } = await createTestHarness();
+    const response = await request(
+      "/v1/admin/audit-events/export",
+      { method: "GET" },
+      null,
+    );
+    expect(response.status).toBe(401);
+  });
+
   it("forbids non-admin users", async () => {
     const { request, userToken } = await createTestHarness();
     const response = await request(
@@ -322,6 +332,38 @@ describe("admin route slice 1 users", () => {
     const filtered = (await filteredResponse.json()) as any;
     expect(filtered.data).toHaveLength(1);
     expect(filtered.data[0].id).toBe("audit-1");
+  });
+
+  it("exports filtered audit events as CSV", async () => {
+    const { request, sqlDb } = await createTestHarness();
+    seedUser(sqlDb, {
+      id: "user-1",
+      email: "alice@example.test",
+      displayName: 'Alice "Example"',
+    });
+    sqlDb.run(
+      `INSERT INTO audit_events
+         (id, actor_user_id, action, target_type, target_id, before_metadata, after_metadata, created_at)
+       VALUES
+         ('audit-1', 'user-1', 'team.update', 'team', 'team-1', '{"name":"Old, Name"}', '{"name":"New Name"}', '2026-05-14T12:00:00.000Z'),
+         ('audit-2', 'admin-user', 'user.role.update', 'user', 'user-1', '{"role":"user"}', '{"role":"admin"}', '2026-05-14T13:00:00.000Z')`,
+    );
+
+    const response = await request(
+      "/v1/admin/audit-events/export?actorUserId=user-1&entityType=team&entityId=team-1&action=team.update&dateFrom=2026-05-14T11%3A00%3A00.000Z&dateTo=2026-05-14T12%3A30%3A00.000Z",
+    );
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toContain("text/csv");
+    expect(response.headers.get("content-disposition")).toContain(
+      'filename="audit-events-',
+    );
+    const csv = await response.text();
+    expect(csv).toContain(
+      "occurredAt,actorUserId,actorEmail,actorDisplayName,action,entityType,entityId,summary,before,after,correlationId",
+    );
+    expect(csv).toContain('"alice@example.test","Alice ""Example"""');
+    expect(csv).toContain('"{""name"":""Old, Name""}"');
+    expect(csv).not.toContain("user.role.update");
   });
 
   it("lists and filters admin users", async () => {

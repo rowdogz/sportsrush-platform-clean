@@ -18,6 +18,7 @@ import {
   createTeam,
   createTeamAlias,
   deleteTeamAlias,
+  exportAdminAuditEvents,
   findAliasBySource,
   findAdminUserById,
   findCompetitionById,
@@ -127,6 +128,12 @@ export type AdminAuditEvent = {
   readonly correlationId: string | null;
 };
 
+export type AdminAuditEventExport = {
+  readonly filename: string;
+  readonly contentType: "text/csv; charset=utf-8";
+  readonly csv: string;
+};
+
 async function writeAuditEvent(
   context: ServiceContext,
   action: string,
@@ -194,6 +201,65 @@ function getAuditSummary(
   entityId: string | null,
 ): string {
   return `${action} on ${entityType}${entityId ? ` ${entityId}` : ""}`;
+}
+
+function toAdminAuditEvent(row: {
+  readonly id: string;
+  readonly actor_user_id: string | null;
+  readonly actor_email: string | null;
+  readonly actor_display_name: string | null;
+  readonly action: string;
+  readonly target_type: string;
+  readonly target_id: string | null;
+  readonly before_metadata: string | null;
+  readonly after_metadata: string | null;
+  readonly created_at: string;
+}): AdminAuditEvent {
+  const beforeMetadata = parseAuditMetadata(row.before_metadata);
+  const afterMetadata = parseAuditMetadata(row.after_metadata);
+  return {
+    id: row.id,
+    actorUserId: row.actor_user_id,
+    actorEmail: row.actor_email,
+    actorDisplayName: row.actor_display_name,
+    action: row.action,
+    entityType: row.target_type,
+    entityId: row.target_id,
+    summary: getAuditSummary(row.action, row.target_type, row.target_id),
+    beforeMetadata,
+    afterMetadata,
+    changes: getAuditChanges(beforeMetadata, afterMetadata),
+    createdAt: row.created_at,
+    correlationId: null,
+  };
+}
+
+function csvCell(value: unknown): string {
+  const serialized =
+    typeof value === "string"
+      ? value
+      : value === null || value === undefined
+        ? ""
+        : JSON.stringify(value);
+  return `"${serialized.replaceAll('"', '""')}"`;
+}
+
+function auditEventToCsvRow(event: AdminAuditEvent): string {
+  return [
+    event.createdAt,
+    event.actorUserId,
+    event.actorEmail,
+    event.actorDisplayName,
+    event.action,
+    event.entityType,
+    event.entityId,
+    event.summary,
+    event.beforeMetadata,
+    event.afterMetadata,
+    event.correlationId,
+  ]
+    .map(csvCell)
+    .join(",");
 }
 
 function assertAuditFilters(
@@ -322,26 +388,37 @@ export async function listAdminAuditEventsService(
   assertAuditFilters(filters, context.correlationId);
   const result = await listAdminAuditEvents(context.db, pagination, filters);
   return {
-    rows: result.rows.map((row): AdminAuditEvent => {
-      const beforeMetadata = parseAuditMetadata(row.before_metadata);
-      const afterMetadata = parseAuditMetadata(row.after_metadata);
-      return {
-        id: row.id,
-        actorUserId: row.actor_user_id,
-        actorEmail: row.actor_email,
-        actorDisplayName: row.actor_display_name,
-        action: row.action,
-        entityType: row.target_type,
-        entityId: row.target_id,
-        summary: getAuditSummary(row.action, row.target_type, row.target_id),
-        beforeMetadata,
-        afterMetadata,
-        changes: getAuditChanges(beforeMetadata, afterMetadata),
-        createdAt: row.created_at,
-        correlationId: null,
-      };
-    }),
+    rows: result.rows.map(toAdminAuditEvent),
     total: result.total,
+  };
+}
+
+export async function exportAdminAuditEventsService(
+  context: ServiceContext,
+  filters: AuditEventListFilters,
+): Promise<AdminAuditEventExport> {
+  assertAuditFilters(filters, context.correlationId);
+  const rows = await exportAdminAuditEvents(context.db, filters);
+  const events = rows.map(toAdminAuditEvent);
+  const header = [
+    "occurredAt",
+    "actorUserId",
+    "actorEmail",
+    "actorDisplayName",
+    "action",
+    "entityType",
+    "entityId",
+    "summary",
+    "before",
+    "after",
+    "correlationId",
+  ].join(",");
+  const csv = [header, ...events.map(auditEventToCsvRow)].join("\n");
+  const date = context.now.slice(0, 10);
+  return {
+    filename: `audit-events-${date}.csv`,
+    contentType: "text/csv; charset=utf-8",
+    csv: `${csv}\n`,
   };
 }
 

@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
-import { listAuditEvents } from "../features/audit-events/api";
+import {
+  exportAuditEvents,
+  listAuditEvents,
+} from "../features/audit-events/api";
 import type {
   AdminAuditEvent,
   AuditEventListFilters,
@@ -76,6 +79,11 @@ function formatJson(value: unknown): string {
 export function AuditLogPage() {
   const [state, setState] = useState<AuditLogState>({ status: "loading" });
   const [filters, setFilters] = useState<FilterValues>(emptyFilterValues);
+  const [exportState, setExportState] = useState<
+    | { readonly status: "idle" }
+    | { readonly status: "exporting" }
+    | { readonly status: "error"; readonly message: string }
+  >({ status: "idle" });
 
   const loadAuditEvents = useCallback(
     async (
@@ -103,6 +111,26 @@ export function AuditLogPage() {
   async function handleFilterSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     await loadAuditEvents(filters, { showLoading: true });
+  }
+
+  async function handleExport() {
+    setExportState({ status: "exporting" });
+
+    try {
+      const response = await exportAuditEvents(toFilters(filters));
+      const blob = new Blob([response.csv], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = response.filename;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      setExportState({ status: "idle" });
+    } catch (error) {
+      setExportState({ status: "error", message: getErrorMessage(error) });
+    }
   }
 
   return (
@@ -174,10 +202,27 @@ export function AuditLogPage() {
             />
           </label>
         </div>
-        <button className="secondary-button" type="submit">
-          Apply filters
-        </button>
+        <div className="form-actions">
+          <button className="secondary-button" type="submit">
+            Apply filters
+          </button>
+          <button
+            className="secondary-button"
+            type="button"
+            onClick={handleExport}
+            disabled={exportState.status === "exporting"}
+          >
+            {exportState.status === "exporting" ? "Exporting…" : "Export CSV"}
+          </button>
+        </div>
       </form>
+
+      {exportState.status === "error" ? (
+        <div className="state-panel error-panel" role="alert">
+          <strong>Unable to export audit events</strong>
+          <span>{exportState.message}</span>
+        </div>
+      ) : null}
 
       {state.status === "loading" ? (
         <div className="state-panel" role="status">

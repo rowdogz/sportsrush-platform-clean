@@ -17,6 +17,11 @@ export type ApiRequestOptions = {
   readonly headers?: HeadersInit;
 };
 
+export type ApiTextResponse = {
+  readonly text: string;
+  readonly headers: Headers;
+};
+
 let accessTokenProvider: AccessTokenProvider = () => null;
 
 export class ApiError extends Error {
@@ -93,8 +98,43 @@ export async function apiRequest<T>(
   path: string,
   options: ApiRequestOptions = {},
 ): Promise<T> {
+  const response = await sendApiRequest(path, options, "application/json");
+  const payload = await readJson(response);
+
+  if (!response.ok) {
+    throwApiError(response, payload);
+  }
+
+  return payload as T;
+}
+
+export async function apiTextRequest(
+  path: string,
+  options: ApiRequestOptions = {},
+): Promise<ApiTextResponse> {
+  const response = await sendApiRequest(path, options, "text/csv");
+  const text = await response.text();
+
+  if (!response.ok) {
+    let payload: unknown = null;
+    try {
+      payload = text ? (JSON.parse(text) as unknown) : null;
+    } catch {
+      payload = null;
+    }
+    throwApiError(response, payload);
+  }
+
+  return { text, headers: response.headers };
+}
+
+async function sendApiRequest(
+  path: string,
+  options: ApiRequestOptions,
+  accept: string,
+): Promise<Response> {
   const token = getAccessToken();
-  const headers = new Headers({ Accept: "application/json" });
+  const headers = new Headers({ Accept: accept });
 
   if (options.headers) {
     new Headers(options.headers).forEach((value, key) => {
@@ -122,7 +162,7 @@ export async function apiRequest<T>(
 
   let response: Response;
   try {
-    response = await fetch(buildUrl(path), requestInit);
+    return await fetch(buildUrl(path), requestInit);
   } catch (error) {
     throw new ApiError({
       status: 0,
@@ -133,23 +173,19 @@ export async function apiRequest<T>(
           : "Unable to reach the SportsRush API.",
     });
   }
+}
 
-  const payload = await readJson(response);
-
-  if (!response.ok) {
-    const errorBody = getErrorBody(payload);
-    throw new ApiError({
-      status: response.status,
-      code: errorBody?.code ?? "http_error",
-      message: errorBody?.message ?? `Request failed with ${response.status}`,
-      ...(errorBody && "details" in errorBody
-        ? { details: errorBody.details }
-        : {}),
-      ...(errorBody?.correlationId
-        ? { correlationId: errorBody.correlationId }
-        : {}),
-    });
-  }
-
-  return payload as T;
+function throwApiError(response: Response, payload: unknown): never {
+  const errorBody = getErrorBody(payload);
+  throw new ApiError({
+    status: response.status,
+    code: errorBody?.code ?? "http_error",
+    message: errorBody?.message ?? `Request failed with ${response.status}`,
+    ...(errorBody && "details" in errorBody
+      ? { details: errorBody.details }
+      : {}),
+    ...(errorBody?.correlationId
+      ? { correlationId: errorBody.correlationId }
+      : {}),
+  });
 }

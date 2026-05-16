@@ -273,6 +273,35 @@ export async function listAdminAuditEvents(
   pagination: Pagination,
   filters: AuditEventListFilters = {},
 ): Promise<ListResult<AdminAuditEventRow>> {
+  const { fromSql, params } = buildAdminAuditEventQuery(filters);
+
+  const rows = await db.queryAll<AdminAuditEventRow>(
+    `SELECT ae.id,
+            ae.actor_user_id,
+            u.email AS actor_email,
+            p.display_name AS actor_display_name,
+            ae.action,
+            ae.target_type,
+            ae.target_id,
+            ae.before_metadata,
+            ae.after_metadata,
+            ae.created_at
+       ${fromSql}
+      ORDER BY ae.created_at DESC, ae.id DESC
+      LIMIT ? OFFSET ?`,
+    [...params, pagination.limit, offset(pagination)],
+  );
+  const total = await db.queryOne<{ count: number }>(
+    `SELECT COUNT(*) AS count ${fromSql}`,
+    params,
+  );
+  return { rows, total: total?.count ?? 0 };
+}
+
+function buildAdminAuditEventQuery(filters: AuditEventListFilters): {
+  readonly fromSql: string;
+  readonly params: unknown[];
+} {
   const where: string[] = [];
   const params: unknown[] = [];
 
@@ -311,7 +340,16 @@ export async function listAdminAuditEvents(
     LEFT JOIN users u ON u.id = ae.actor_user_id
     LEFT JOIN user_profiles p ON p.user_id = ae.actor_user_id${whereSql}`;
 
-  const rows = await db.queryAll<AdminAuditEventRow>(
+  return { fromSql, params };
+}
+
+export async function exportAdminAuditEvents(
+  db: DbClient,
+  filters: AuditEventListFilters = {},
+): Promise<readonly AdminAuditEventRow[]> {
+  const { fromSql, params } = buildAdminAuditEventQuery(filters);
+
+  return db.queryAll<AdminAuditEventRow>(
     `SELECT ae.id,
             ae.actor_user_id,
             u.email AS actor_email,
@@ -323,15 +361,9 @@ export async function listAdminAuditEvents(
             ae.after_metadata,
             ae.created_at
        ${fromSql}
-      ORDER BY ae.created_at DESC, ae.id DESC
-      LIMIT ? OFFSET ?`,
-    [...params, pagination.limit, offset(pagination)],
-  );
-  const total = await db.queryOne<{ count: number }>(
-    `SELECT COUNT(*) AS count ${fromSql}`,
+      ORDER BY ae.created_at DESC, ae.id DESC`,
     params,
   );
-  return { rows, total: total?.count ?? 0 };
 }
 
 export async function createCompetition(

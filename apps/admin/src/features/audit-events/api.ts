@@ -1,4 +1,4 @@
-import { apiRequest } from "../../lib/apiClient";
+import { apiRequest, apiTextRequest } from "../../lib/apiClient";
 import type {
   AdminAuditEvent,
   AuditEventListFilters,
@@ -84,18 +84,33 @@ function normalizeAuditEvent(event: RawAuditEvent): AdminAuditEvent {
   };
 }
 
-export async function listAuditEvents(
-  filters: AuditEventListFilters = {},
-): Promise<AuditEventListResponse> {
+function buildAuditEventParams(
+  filters: AuditEventListFilters,
+  options: { readonly includePagination: boolean },
+): URLSearchParams {
   const params = new URLSearchParams();
-  params.set("page", "1");
-  params.set("limit", "50");
+  if (options.includePagination) {
+    params.set("page", "1");
+    params.set("limit", "50");
+  }
   appendOptionalParam(params, "actorUserId", filters.actorUserId);
   appendOptionalParam(params, "entityType", filters.entityType);
   appendOptionalParam(params, "entityId", filters.entityId);
   appendOptionalParam(params, "action", filters.action);
   appendOptionalParam(params, "dateFrom", filters.dateFrom);
   appendOptionalParam(params, "dateTo", filters.dateTo);
+  return params;
+}
+
+function filenameFromDisposition(value: string | null): string {
+  const match = value?.match(/filename="?([^";]+)"?/i);
+  return match?.[1] ?? "audit-events.csv";
+}
+
+export async function listAuditEvents(
+  filters: AuditEventListFilters = {},
+): Promise<AuditEventListResponse> {
+  const params = buildAuditEventParams(filters, { includePagination: true });
 
   const response = await apiRequest<RawAuditEventListResponse>(
     `/v1/admin/audit-events?${params.toString()}`,
@@ -104,5 +119,22 @@ export async function listAuditEvents(
   return {
     data: response.data.map(normalizeAuditEvent),
     meta: response.meta,
+  };
+}
+
+export async function exportAuditEvents(
+  filters: AuditEventListFilters = {},
+): Promise<{ readonly csv: string; readonly filename: string }> {
+  const params = buildAuditEventParams(filters, { includePagination: false });
+  const queryString = params.toString();
+  const response = await apiTextRequest(
+    `/v1/admin/audit-events/export${queryString ? `?${queryString}` : ""}`,
+  );
+
+  return {
+    csv: response.text,
+    filename: filenameFromDisposition(
+      response.headers.get("Content-Disposition"),
+    ),
   };
 }
