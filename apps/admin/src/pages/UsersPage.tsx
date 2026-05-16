@@ -24,9 +24,11 @@ import {
   AdminTableLoading,
 } from "../components/admin/AdminTableState";
 import {
-  mergeStoredObject,
-  usePersistedAdminState,
-} from "../hooks/usePersistedAdminState";
+  appendStringParam,
+  readEnumParam,
+  readStringParam,
+  useAdminSearchParams,
+} from "../hooks/useAdminSearchParams";
 import { ApiError } from "../lib/apiClient";
 
 type UsersState =
@@ -83,11 +85,27 @@ function toFilters(values: FilterValues): UserListFilters {
 
 export function UsersPage() {
   const [state, setState] = useState<UsersState>({ status: "loading" });
-  const [filters, setFilters] = usePersistedAdminState(
-    "sr-admin:users:filters",
-    emptyFilterValues,
-    mergeStoredObject(emptyFilterValues),
-  );
+  const [filters, setFilters] = useAdminSearchParams({
+    storageKey: "sr-admin:users:filters",
+    defaults: emptyFilterValues,
+    paramKeys: ["search", "role", "status"],
+    parse: (params, fallback) => ({
+      search: readStringParam(params, "search", fallback.search),
+      role: readEnumParam(params, "role", fallback.role, ["", ...userRoles]),
+      status: readEnumParam(params, "status", fallback.status, [
+        "",
+        "active",
+        "inactive",
+      ]),
+    }),
+    serialize: (value, defaults) => {
+      const params = new URLSearchParams();
+      appendStringParam(params, "search", value.search, defaults.search);
+      appendStringParam(params, "role", value.role, defaults.role);
+      appendStringParam(params, "status", value.status, defaults.status);
+      return params;
+    },
+  });
   const [roleDrafts, setRoleDrafts] = useState<Record<string, UserRole>>({});
   const [statusDrafts, setStatusDrafts] = useState<Record<string, string>>({});
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);

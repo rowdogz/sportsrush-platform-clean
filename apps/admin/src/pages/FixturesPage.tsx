@@ -33,9 +33,12 @@ import {
   AdminTableLoading,
 } from "../components/admin/AdminTableState";
 import {
-  mergeStoredObject,
-  usePersistedAdminState,
-} from "../hooks/usePersistedAdminState";
+  appendStringParam,
+  readDateParam,
+  readEnumParam,
+  readStringParam,
+  useAdminSearchParams,
+} from "../hooks/useAdminSearchParams";
 import { ApiError } from "../lib/apiClient";
 
 type FixturesState =
@@ -310,16 +313,49 @@ export function FixturesPage() {
     teams: [],
     rounds: [],
   });
-  const [filters, setFilters] = usePersistedAdminState(
-    "sr-admin:fixtures:filters",
-    emptyFilterValues,
-    mergeStoredObject(emptyFilterValues),
-  );
-  const [activeFilters, setActiveFilters] = usePersistedAdminState(
-    "sr-admin:fixtures:active-filters",
-    emptyFilterValues,
-    mergeStoredObject(emptyFilterValues),
-  );
+  const [filters, setFilters] = useAdminSearchParams({
+    storageKey: "sr-admin:fixtures:filters",
+    defaults: emptyFilterValues,
+    paramKeys: [
+      "competitionId",
+      "seasonId",
+      "roundId",
+      "status",
+      "dateFrom",
+      "dateTo",
+    ],
+    parse: (params, fallback) => ({
+      competitionId: readStringParam(
+        params,
+        "competitionId",
+        fallback.competitionId,
+      ),
+      seasonId: readStringParam(params, "seasonId", fallback.seasonId),
+      round: readStringParam(params, "roundId", fallback.round),
+      status: readEnumParam(params, "status", fallback.status, [
+        "",
+        ...fixtureStatuses,
+      ]),
+      dateFrom: readDateParam(params, "dateFrom", fallback.dateFrom),
+      dateTo: readDateParam(params, "dateTo", fallback.dateTo),
+    }),
+    serialize: (value, defaults) => {
+      const params = new URLSearchParams();
+      appendStringParam(
+        params,
+        "competitionId",
+        value.competitionId,
+        defaults.competitionId,
+      );
+      appendStringParam(params, "seasonId", value.seasonId, defaults.seasonId);
+      appendStringParam(params, "roundId", value.round, defaults.round);
+      appendStringParam(params, "status", value.status, defaults.status);
+      appendStringParam(params, "dateFrom", value.dateFrom, defaults.dateFrom);
+      appendStringParam(params, "dateTo", value.dateTo, defaults.dateTo);
+      return params;
+    },
+  });
+  const [activeFilters, setActiveFilters] = useState<FilterValues>(filters);
   const [createValues, setCreateValues] = useState<FormValues>(emptyFormValues);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [correctionFixtureId, setCorrectionFixtureId] = useState<string | null>(

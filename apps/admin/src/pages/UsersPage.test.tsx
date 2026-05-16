@@ -1,5 +1,11 @@
 import "@testing-library/jest-dom/vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { setAccessTokenProvider } from "../lib/apiClient";
 import { UsersPage } from "./UsersPage";
@@ -39,6 +45,7 @@ describe("UsersPage", () => {
     vi.restoreAllMocks();
     setAccessTokenProvider(() => null);
     window.localStorage.clear();
+    window.history.replaceState(null, "", "/");
   });
 
   it("shows loading and then renders users", async () => {
@@ -165,6 +172,72 @@ describe("UsersPage", () => {
       1,
       "/v1/admin/users?page=1&limit=50&search=admin&role=admin&isActive=false",
       expect.objectContaining({ headers: expect.any(Headers) }),
+    );
+  });
+
+  it("loads user filters from URL before persisted state", async () => {
+    window.localStorage.setItem(
+      "sr-admin:users:filters",
+      JSON.stringify({ search: "local", role: "user", status: "active" }),
+    );
+    window.history.replaceState(
+      null,
+      "",
+      "/?search=admin&role=admin&status=inactive",
+    );
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(userListResponse([user({ role: "admin" })]));
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<UsersPage />);
+
+    expect(
+      await screen.findByRole("cell", { name: "Alice Example" }),
+    ).toBeTruthy();
+    expect(screen.getByLabelText("Search")).toHaveValue("admin");
+    expect(screen.getByLabelText("Role")).toHaveValue("admin");
+    expect(screen.getByLabelText("Status")).toHaveValue("inactive");
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      "/v1/admin/users?page=1&limit=50&search=admin&role=admin&isActive=false",
+      expect.objectContaining({ headers: expect.any(Headers) }),
+    );
+  });
+
+  it("updates and cleans URL params when user filters change", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce(userListResponse([])));
+
+    render(<UsersPage />);
+
+    await screen.findByText("No users found");
+    fireEvent.change(screen.getByLabelText("Search"), {
+      target: { value: "admin" },
+    });
+    expect(window.location.search).toBe("?search=admin");
+
+    fireEvent.change(screen.getByLabelText("Search"), {
+      target: { value: "" },
+    });
+    expect(window.location.search).toBe("");
+  });
+
+  it("restores user filter controls on browser navigation", async () => {
+    window.history.replaceState(null, "", "/?search=admin");
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce(userListResponse([])));
+
+    render(<UsersPage />);
+
+    await screen.findByText("No users found");
+    expect(screen.getByLabelText("Search")).toHaveValue("admin");
+
+    act(() => {
+      window.history.pushState(null, "", "/?search=alice");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+
+    await waitFor(() =>
+      expect(screen.getByLabelText("Search")).toHaveValue("alice"),
     );
   });
 

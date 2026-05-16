@@ -22,9 +22,12 @@ import {
   AdminTableLoading,
 } from "../components/admin/AdminTableState";
 import {
-  mergeStoredObject,
-  usePersistedAdminState,
-} from "../hooks/usePersistedAdminState";
+  appendStringParam,
+  readDateParam,
+  readEnumParam,
+  readStringParam,
+  useAdminSearchParams,
+} from "../hooks/useAdminSearchParams";
 import { ApiError } from "../lib/apiClient";
 
 type TeamAliasesState =
@@ -144,16 +147,24 @@ export function TeamAliasesPage() {
   const [state, setState] = useState<TeamAliasesState>({
     status: "loading",
   });
-  const [filters, setFilters] = usePersistedAdminState(
-    "sr-admin:team-aliases:filters",
-    emptyFilterValues,
-    mergeStoredObject(emptyFilterValues),
-  );
-  const [activeFilters, setActiveFilters] = usePersistedAdminState(
-    "sr-admin:team-aliases:active-filters",
-    emptyFilterValues,
-    mergeStoredObject(emptyFilterValues),
-  );
+  const [filters, setFilters] = useAdminSearchParams({
+    storageKey: "sr-admin:team-aliases:filters",
+    defaults: emptyFilterValues,
+    paramKeys: ["sportId", "source", "search"],
+    parse: (params, fallback) => ({
+      sportId: readStringParam(params, "sportId", fallback.sportId),
+      source: readStringParam(params, "source", fallback.source),
+      alias: readStringParam(params, "search", fallback.alias),
+    }),
+    serialize: (value, defaults) => {
+      const params = new URLSearchParams();
+      appendStringParam(params, "sportId", value.sportId, defaults.sportId);
+      appendStringParam(params, "source", value.source, defaults.source);
+      appendStringParam(params, "search", value.alias, defaults.alias);
+      return params;
+    },
+  });
+  const [activeFilters, setActiveFilters] = useState<FilterValues>(filters);
   const [createValues, setCreateValues] = useState<FormValues>(emptyFormValues);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<FormValues>(emptyFormValues);

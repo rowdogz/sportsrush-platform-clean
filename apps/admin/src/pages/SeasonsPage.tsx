@@ -24,9 +24,12 @@ import {
   AdminTableLoading,
 } from "../components/admin/AdminTableState";
 import {
-  mergeStoredObject,
-  usePersistedAdminState,
-} from "../hooks/usePersistedAdminState";
+  appendStringParam,
+  readDateParam,
+  readEnumParam,
+  readStringParam,
+  useAdminSearchParams,
+} from "../hooks/useAdminSearchParams";
 import { ApiError } from "../lib/apiClient";
 
 type SeasonsState =
@@ -141,16 +144,31 @@ export function SeasonsPage() {
   const [competitions, setCompetitions] = useState<readonly AdminCompetition[]>(
     [],
   );
-  const [filters, setFilters] = usePersistedAdminState(
-    "sr-admin:seasons:filters",
-    emptyFilterValues,
-    mergeStoredObject(emptyFilterValues),
-  );
-  const [activeFilters, setActiveFilters] = usePersistedAdminState(
-    "sr-admin:seasons:active-filters",
-    emptyFilterValues,
-    mergeStoredObject(emptyFilterValues),
-  );
+  const [filters, setFilters] = useAdminSearchParams({
+    storageKey: "sr-admin:seasons:filters",
+    defaults: emptyFilterValues,
+    paramKeys: ["competitionId", "search"],
+    parse: (params, fallback) => ({
+      competitionId: readStringParam(
+        params,
+        "competitionId",
+        fallback.competitionId,
+      ),
+      search: readStringParam(params, "search", fallback.search),
+    }),
+    serialize: (value, defaults) => {
+      const params = new URLSearchParams();
+      appendStringParam(
+        params,
+        "competitionId",
+        value.competitionId,
+        defaults.competitionId,
+      );
+      appendStringParam(params, "search", value.search, defaults.search);
+      return params;
+    },
+  });
+  const [activeFilters, setActiveFilters] = useState<FilterValues>(filters);
   const [createValues, setCreateValues] = useState<FormValues>(emptyFormValues);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<FormValues>(emptyFormValues);
