@@ -11,6 +11,7 @@ import {
   createSeason,
   createTeam,
   createTeamAlias,
+  exportAdminAuditEvents,
   findAliasBySource,
   findAdminUserById,
   findFixtureById,
@@ -292,6 +293,17 @@ describe("admin repository layer", () => {
     );
     expect(filtered.total).toBe(1);
     expect(filtered.rows[0]?.id).toBe("audit-old");
+
+    const exported = await exportAdminAuditEvents(db, {
+      actorUserId: "user-1",
+      entityType: "team",
+      entityId: "team-1",
+      action: "team.update",
+      dateFrom: "2026-05-14T11:00:00.000Z",
+      dateTo: "2026-05-14T12:30:00.000Z",
+    });
+    expect(exported).toHaveLength(1);
+    expect(exported[0]?.id).toBe("audit-old");
   });
 
   it("finds and updates admin user role and status", async () => {

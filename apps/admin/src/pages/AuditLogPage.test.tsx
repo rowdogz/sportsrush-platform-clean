@@ -18,6 +18,17 @@ function auditListResponse(data: readonly Record<string, unknown>[]): Response {
   });
 }
 
+function csvResponse(body: string, status = 200): Response {
+  return new Response(body, {
+    status,
+    headers: {
+      "Content-Type": "text/csv",
+      "Content-Disposition":
+        'attachment; filename="audit-events-2026-05-14.csv"',
+    },
+  });
+}
+
 function auditEvent(overrides: Record<string, unknown> = {}) {
   return {
     id: "audit-1",
@@ -174,5 +185,77 @@ describe("AuditLogPage", () => {
       "/v1/admin/audit-events?page=1&limit=50&actorUserId=admin-user&entityType=team&entityId=team-1&action=team.update&dateFrom=2026-05-14T12%3A00&dateTo=2026-05-15T12%3A00",
       expect.any(Object),
     );
+  });
+
+  it("exports CSV with current filters", async () => {
+    const createObjectUrl = vi.fn().mockReturnValue("blob:audit-events");
+    const revokeObjectUrl = vi.fn();
+    Object.defineProperty(URL, "createObjectURL", {
+      configurable: true,
+      value: createObjectUrl,
+    });
+    Object.defineProperty(URL, "revokeObjectURL", {
+      configurable: true,
+      value: revokeObjectUrl,
+    });
+    const clickSpy = vi
+      .spyOn(HTMLAnchorElement.prototype, "click")
+      .mockImplementation(() => undefined);
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(auditListResponse([]))
+      .mockResolvedValueOnce(csvResponse("occurredAt,actorUserId\n"));
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<AuditLogPage />);
+
+    await screen.findByText("No audit events found");
+    fireEvent.change(screen.getByLabelText("Actor user ID"), {
+      target: { value: "admin-user" },
+    });
+    fireEvent.change(screen.getByLabelText("Entity type"), {
+      target: { value: "team" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Export CSV" }));
+
+    expect(
+      await screen.findByRole("button", { name: "Export CSV" }),
+    ).toBeEnabled();
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "/v1/admin/audit-events/export?actorUserId=admin-user&entityType=team",
+      expect.objectContaining({ headers: expect.any(Headers) }),
+    );
+    expect(createObjectUrl).toHaveBeenCalledWith(expect.any(Blob));
+    expect(clickSpy).toHaveBeenCalled();
+    expect(revokeObjectUrl).toHaveBeenCalledWith("blob:audit-events");
+  });
+
+  it("renders an export failure state", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(auditListResponse([]))
+      .mockResolvedValueOnce(
+        jsonResponse(
+          {
+            error: {
+              code: "export_failed",
+              message: "Unable to export audit events.",
+            },
+          },
+          500,
+        ),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<AuditLogPage />);
+
+    await screen.findByText("No audit events found");
+    fireEvent.click(screen.getByRole("button", { name: "Export CSV" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Unable to export audit events",
+    );
+    expect(screen.getByText("Unable to export audit events.")).toBeTruthy();
   });
 });
