@@ -3,6 +3,7 @@ import {
   exportAuditEvents,
   listAuditEvents,
 } from "../features/audit-events/api";
+import { AuditDiff } from "../features/audit-events/AuditDiff";
 import type {
   AdminAuditEvent,
   AuditEventListFilters,
@@ -74,10 +75,6 @@ function getActorLabel(event: AdminAuditEvent): string {
     event.actorUserId ??
     "Unknown actor"
   );
-}
-
-function formatJson(value: unknown): string {
-  return JSON.stringify(value ?? null, null, 2);
 }
 
 export function AuditLogPage() {
@@ -429,20 +426,10 @@ function AuditEventRow({ event }: { readonly event: AdminAuditEvent }) {
                 <dd>{event.correlationId ?? "—"}</dd>
               </div>
             </dl>
-            <div className="metadata-grid">
-              <div>
-                <strong>Changes</strong>
-                <pre>{formatJson(event.changes)}</pre>
-              </div>
-              <div>
-                <strong>Before</strong>
-                <pre>{formatJson(event.beforeMetadata)}</pre>
-              </div>
-              <div>
-                <strong>After</strong>
-                <pre>{formatJson(event.afterMetadata)}</pre>
-              </div>
-            </div>
+            <AuditDiff
+              before={event.beforeMetadata}
+              after={event.afterMetadata}
+            />
           </div>
         </details>
       </td>

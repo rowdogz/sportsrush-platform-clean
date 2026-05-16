@@ -51,6 +51,19 @@ function auditEvent(overrides: Record<string, unknown> = {}) {
   };
 }
 
+async function renderAuditEventDetails(
+  overrides: Record<string, unknown> = {},
+) {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValueOnce(auditListResponse([auditEvent(overrides)])),
+  );
+
+  render(<AuditLogPage />);
+
+  fireEvent.click(await screen.findByText("View event details"));
+}
+
 describe("AuditLogPage", () => {
   afterEach(() => {
     vi.restoreAllMocks();
@@ -87,34 +100,90 @@ describe("AuditLogPage", () => {
   });
 
   it("renders expandable event details", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValueOnce(
-        auditListResponse([
-          auditEvent({
-            correlationId: "correlation-1",
-            beforeMetadata: { profile: { role: "user" } },
-            afterMetadata: { profile: { role: "admin" } },
-            changes: {
-              profile: {
-                before: { role: "user" },
-                after: { role: "admin" },
-              },
-            },
-          }),
-        ]),
-      ),
-    );
+    await renderAuditEventDetails({
+      correlationId: "correlation-1",
+      beforeMetadata: { profile: { role: "user" } },
+      afterMetadata: { profile: { role: "admin" } },
+    });
 
-    render(<AuditLogPage />);
-
-    fireEvent.click(await screen.findByText("View event details"));
     expect(screen.getByText("Timestamp")).toBeTruthy();
     expect(screen.getAllByText("Actor").length).toBeGreaterThan(1);
     expect(screen.getByText("Correlation ID")).toBeTruthy();
     expect(screen.getByText("correlation-1")).toBeTruthy();
-    expect(screen.getAllByText(/"role":/).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/"profile":/).length).toBeGreaterThan(0);
+    expect(screen.getByText("Metadata")).toBeTruthy();
+    expect(screen.getByText("profile")).toBeTruthy();
+    expect(screen.getByText("role")).toBeTruthy();
+  });
+
+  it("renders primitive field changes", async () => {
+    await renderAuditEventDetails({
+      beforeMetadata: { name: "Old name" },
+      afterMetadata: { name: "New name" },
+    });
+
+    expect(screen.getByText("name")).toBeTruthy();
+    expect(screen.getByText("Old name")).toBeTruthy();
+    expect(screen.getByText("New name")).toBeTruthy();
+    expect(screen.getAllByText("changed").length).toBeGreaterThan(0);
+  });
+
+  it("renders nested object changes with unchanged context", async () => {
+    await renderAuditEventDetails({
+      beforeMetadata: { profile: { role: "user", displayName: "Admin User" } },
+      afterMetadata: { profile: { role: "admin", displayName: "Admin User" } },
+    });
+
+    expect(screen.getByText("profile")).toBeTruthy();
+    expect(screen.getByText("role")).toBeTruthy();
+    expect(screen.getByText("displayName")).toBeTruthy();
+    expect(screen.getAllByText("user").length).toBeGreaterThan(1);
+    expect(screen.getByText("admin")).toBeTruthy();
+    expect(screen.getAllByText("Admin User").length).toBeGreaterThan(1);
+    expect(screen.getAllByText("unchanged").length).toBeGreaterThan(0);
+  });
+
+  it("renders added fields", async () => {
+    await renderAuditEventDetails({
+      beforeMetadata: { name: "Wigan" },
+      afterMetadata: { name: "Wigan", shortName: "WIG" },
+    });
+
+    expect(screen.getByText("shortName")).toBeTruthy();
+    expect(screen.getByText("WIG")).toBeTruthy();
+    expect(screen.getAllByText("added").length).toBeGreaterThan(0);
+  });
+
+  it("renders removed fields", async () => {
+    await renderAuditEventDetails({
+      beforeMetadata: { name: "Wigan", legacyId: "wp_1" },
+      afterMetadata: { name: "Wigan" },
+    });
+
+    expect(screen.getByText("legacyId")).toBeTruthy();
+    expect(screen.getByText("wp_1")).toBeTruthy();
+    expect(screen.getAllByText("removed").length).toBeGreaterThan(0);
+  });
+
+  it("renders array values safely", async () => {
+    await renderAuditEventDetails({
+      beforeMetadata: { teamIds: ["team-1"] },
+      afterMetadata: { teamIds: ["team-1", "team-2"] },
+    });
+
+    expect(screen.getByText("teamIds")).toBeTruthy();
+    expect(screen.getAllByText(/team-1/).length).toBeGreaterThan(0);
+    expect(screen.getByText(/team-2/)).toBeTruthy();
+  });
+
+  it("renders null and empty values intentionally", async () => {
+    await renderAuditEventDetails({
+      beforeMetadata: { shortName: null, countryCode: "GB" },
+      afterMetadata: { shortName: "", countryCode: null },
+    });
+
+    expect(screen.getByText("shortName")).toBeTruthy();
+    expect(screen.getByText('""')).toBeTruthy();
+    expect(screen.getAllByText("null").length).toBeGreaterThan(0);
   });
 
   it("renders an empty state", async () => {
