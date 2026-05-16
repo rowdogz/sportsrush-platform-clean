@@ -413,6 +413,71 @@ describe("AuditLogPage", () => {
     );
   });
 
+  it("restores persisted audit filters and page size", async () => {
+    window.localStorage.setItem(
+      "sr-admin:audit-log:filters",
+      JSON.stringify({
+        actorUserId: "admin-user",
+        entityType: "fixture",
+        entityId: "",
+        action: "",
+        dateFrom: "",
+        dateTo: "",
+      }),
+    );
+    window.localStorage.setItem(
+      "sr-admin:audit-log:applied-filters",
+      JSON.stringify({
+        actorUserId: "admin-user",
+        entityType: "fixture",
+        entityId: "",
+        action: "",
+        dateFrom: "",
+        dateTo: "",
+      }),
+    );
+    window.localStorage.setItem("sr-admin:audit-log:page-size", "100");
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(auditListResponse([auditEvent()]));
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<AuditLogPage />);
+
+    expect(
+      await screen.findByRole("cell", { name: "user.role.update" }),
+    ).toBeTruthy();
+    expect(screen.getByLabelText("Actor user ID")).toHaveValue("admin-user");
+    expect(screen.getByLabelText("Entity type")).toHaveValue("fixture");
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      "/v1/admin/audit-events?page=1&limit=100&actorUserId=admin-user&entityType=fixture",
+      expect.objectContaining({ headers: expect.any(Headers) }),
+    );
+  });
+
+  it("resets invalid persisted audit page size", async () => {
+    window.localStorage.setItem("sr-admin:audit-log:page-size", "999");
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(auditListResponse([auditEvent()]));
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<AuditLogPage />);
+
+    expect(
+      await screen.findByRole("cell", { name: "user.role.update" }),
+    ).toBeTruthy();
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      "/v1/admin/audit-events?page=1&limit=50",
+      expect.objectContaining({ headers: expect.any(Headers) }),
+    );
+    expect(window.localStorage.getItem("sr-admin:audit-log:page-size")).toBe(
+      "50",
+    );
+  });
+
   it("exports CSV with current filters", async () => {
     const createObjectUrl = vi.fn().mockReturnValue("blob:audit-events");
     const revokeObjectUrl = vi.fn();

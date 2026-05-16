@@ -3,12 +3,26 @@ import {
   exportAuditEvents,
   listAuditEvents,
 } from "../features/audit-events/api";
+import {
+  AdminPagination,
+  normalizeAdminPageSize,
+} from "../components/admin/AdminPagination";
+import {
+  AdminTableEmpty,
+  AdminTableError,
+  AdminTableLoading,
+} from "../components/admin/AdminTableState";
 import { AuditDiff } from "../features/audit-events/AuditDiff";
 import type {
   AdminAuditEvent,
   AuditEventListFilters,
   AuditEventListMeta,
 } from "../features/audit-events/types";
+import {
+  mergeStoredObject,
+  persistedPositiveNumber,
+  usePersistedAdminState,
+} from "../hooks/usePersistedAdminState";
 import { ApiError } from "../lib/apiClient";
 
 type AuditLogState =
@@ -38,7 +52,7 @@ const emptyFilterValues: FilterValues = {
   dateTo: "",
 };
 
-const pageSizeOptions = [25, 50, 100] as const;
+const storageKeyPrefix = "sr-admin:audit-log";
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
@@ -79,10 +93,21 @@ function getActorLabel(event: AdminAuditEvent): string {
 
 export function AuditLogPage() {
   const [state, setState] = useState<AuditLogState>({ status: "loading" });
-  const [filters, setFilters] = useState<FilterValues>(emptyFilterValues);
-  const [appliedFilters, setAppliedFilters] =
-    useState<FilterValues>(emptyFilterValues);
-  const [pageSize, setPageSize] = useState(50);
+  const [filters, setFilters] = usePersistedAdminState(
+    `${storageKeyPrefix}:filters`,
+    emptyFilterValues,
+    mergeStoredObject(emptyFilterValues),
+  );
+  const [appliedFilters, setAppliedFilters] = usePersistedAdminState(
+    `${storageKeyPrefix}:applied-filters`,
+    emptyFilterValues,
+    mergeStoredObject(emptyFilterValues),
+  );
+  const [pageSize, setPageSize] = usePersistedAdminState(
+    `${storageKeyPrefix}:page-size`,
+    50,
+    (value) => normalizeAdminPageSize(persistedPositiveNumber(50)(value)),
+  );
   const [exportState, setExportState] = useState<
     | { readonly status: "idle" }
     | { readonly status: "exporting" }
@@ -94,7 +119,7 @@ export function AuditLogPage() {
       nextFilters: FilterValues,
       {
         page = 1,
-        limit = 50,
+        limit = pageSize,
         showLoading = false,
       }: {
         readonly page?: number;
@@ -120,11 +145,15 @@ export function AuditLogPage() {
         setState({ status: "error", message: getErrorMessage(error) });
       }
     },
-    [],
+    [pageSize],
   );
 
   useEffect(() => {
-    void loadAuditEvents(emptyFilterValues, { showLoading: true });
+    void loadAuditEvents(appliedFilters, {
+      page: 1,
+      limit: pageSize,
+      showLoading: true,
+    });
   }, [loadAuditEvents]);
 
   async function handleFilterSubmit(event: FormEvent<HTMLFormElement>) {
@@ -266,28 +295,27 @@ export function AuditLogPage() {
       ) : null}
 
       {state.status === "loading" ? (
-        <div className="state-panel" role="status">
-          Loading audit events…
-        </div>
+        <AdminTableLoading message="Loading audit events…" />
       ) : null}
 
       {state.status === "error" ? (
-        <div className="state-panel error-panel" role="alert">
-          <strong>Unable to load audit events</strong>
-          <span>{state.message}</span>
-        </div>
+        <AdminTableError
+          title="Unable to load audit events"
+          message={state.message}
+        />
       ) : null}
 
       {state.status === "success" && state.events.length === 0 ? (
-        <div className="state-panel">
-          <strong>No audit events found</strong>
-          <span>Admin mutations will appear here after they are recorded.</span>
-        </div>
+        <AdminTableEmpty
+          title="No audit events found"
+          message="Admin mutations will appear here after they are recorded."
+        />
       ) : null}
 
       {state.status === "success" && state.events.length > 0 ? (
         <>
-          <AuditPagination
+          <AdminPagination
+            label="Audit event pagination"
             meta={state.meta}
             pageSize={pageSize}
             onPageChange={handlePageChange}
@@ -312,7 +340,8 @@ export function AuditLogPage() {
               </tbody>
             </table>
           </div>
-          <AuditPagination
+          <AdminPagination
+            label="Audit event pagination"
             meta={state.meta}
             pageSize={pageSize}
             onPageChange={handlePageChange}
@@ -321,63 +350,6 @@ export function AuditLogPage() {
         </>
       ) : null}
     </section>
-  );
-}
-
-function AuditPagination({
-  meta,
-  pageSize,
-  onPageChange,
-  onPageSizeChange,
-}: {
-  readonly meta: AuditEventListMeta;
-  readonly pageSize: number;
-  readonly onPageChange: (page: number) => void;
-  readonly onPageSizeChange: (pageSize: number) => void;
-}) {
-  const firstItem = meta.total === 0 ? 0 : (meta.page - 1) * meta.limit + 1;
-  const lastItem = Math.min(meta.page * meta.limit, meta.total);
-
-  return (
-    <div className="pagination-bar" aria-label="Audit event pagination">
-      <div>
-        <strong>Page {meta.page}</strong>
-        <span>
-          Showing {firstItem}–{lastItem} of {meta.total}
-        </span>
-      </div>
-      <label>
-        Page size
-        <select
-          value={pageSize}
-          onChange={(event) => onPageSizeChange(Number(event.target.value))}
-        >
-          {pageSizeOptions.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
-      </label>
-      <div className="row-actions">
-        <button
-          className="secondary-button"
-          type="button"
-          onClick={() => onPageChange(meta.page - 1)}
-          disabled={meta.page <= 1}
-        >
-          Previous
-        </button>
-        <button
-          className="secondary-button"
-          type="button"
-          onClick={() => onPageChange(meta.page + 1)}
-          disabled={!meta.hasMore}
-        >
-          Next
-        </button>
-      </div>
-    </div>
   );
 }
 

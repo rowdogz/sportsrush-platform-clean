@@ -9,6 +9,17 @@ import type {
   AdminCompetition,
   CompetitionWritePayload,
 } from "../features/competitions/types";
+import {
+  AdminFeedback,
+  adminErrorToast,
+  adminSuccessToast,
+  type AdminFeedbackState,
+} from "../components/admin/AdminFeedback";
+import {
+  AdminTableEmpty,
+  AdminTableError,
+  AdminTableLoading,
+} from "../components/admin/AdminTableState";
 import { ApiError } from "../lib/apiClient";
 
 type CompetitionsState =
@@ -28,9 +39,7 @@ type FormValues = {
   readonly legacyId: string;
 };
 
-type FeedbackState =
-  | { readonly type: "success"; readonly message: string }
-  | { readonly type: "error"; readonly message: string };
+type FeedbackState = AdminFeedbackState;
 
 const emptyFormValues: FormValues = {
   sportId: "",
@@ -125,7 +134,7 @@ export function CompetitionsPage() {
 
     const validationMessage = getRequiredValidationMessage(createValues);
     if (validationMessage) {
-      setFeedback({ type: "error", message: validationMessage });
+      setFeedback(adminErrorToast(validationMessage));
       return;
     }
 
@@ -134,9 +143,9 @@ export function CompetitionsPage() {
       await createCompetition(toWritePayload(createValues));
       await loadCompetitions();
       setCreateValues(emptyFormValues);
-      setFeedback({ type: "success", message: "Competition created." });
+      setFeedback(adminSuccessToast("Competition created."));
     } catch (error) {
-      setFeedback({ type: "error", message: getErrorMessage(error) });
+      setFeedback(adminErrorToast(getErrorMessage(error)));
     } finally {
       setPendingAction(null);
     }
@@ -157,7 +166,7 @@ export function CompetitionsPage() {
 
     const validationMessage = getRequiredValidationMessage(editValues);
     if (validationMessage) {
-      setFeedback({ type: "error", message: validationMessage });
+      setFeedback(adminErrorToast(validationMessage));
       return;
     }
 
@@ -166,9 +175,9 @@ export function CompetitionsPage() {
       await updateCompetition(competition.id, toWritePayload(editValues));
       await loadCompetitions();
       setEditingId(null);
-      setFeedback({ type: "success", message: "Competition updated." });
+      setFeedback(adminSuccessToast("Competition updated."));
     } catch (error) {
-      setFeedback({ type: "error", message: getErrorMessage(error) });
+      setFeedback(adminErrorToast(getErrorMessage(error)));
     } finally {
       setPendingAction(null);
     }
@@ -184,9 +193,9 @@ export function CompetitionsPage() {
     try {
       await archiveCompetition(competition.id);
       await loadCompetitions();
-      setFeedback({ type: "success", message: "Competition archived." });
+      setFeedback(adminSuccessToast("Competition archived."));
     } catch (error) {
-      setFeedback({ type: "error", message: getErrorMessage(error) });
+      setFeedback(adminErrorToast(getErrorMessage(error)));
     } finally {
       setPendingAction(null);
     }
@@ -280,37 +289,24 @@ export function CompetitionsPage() {
         </button>
       </form>
 
-      {feedback ? (
-        <div
-          className={
-            feedback.type === "success"
-              ? "feedback-panel success-panel"
-              : "feedback-panel error-panel"
-          }
-          role={feedback.type === "success" ? "status" : "alert"}
-        >
-          {feedback.message}
-        </div>
-      ) : null}
+      <AdminFeedback feedback={feedback} />
 
       {state.status === "loading" ? (
-        <div className="state-panel" role="status">
-          Loading competitions…
-        </div>
+        <AdminTableLoading message="Loading competitions…" />
       ) : null}
 
       {state.status === "error" ? (
-        <div className="state-panel error-panel" role="alert">
-          <strong>Unable to load competitions</strong>
-          <span>{state.message}</span>
-        </div>
+        <AdminTableError
+          title="Unable to load competitions"
+          message={state.message}
+        />
       ) : null}
 
       {state.status === "success" && state.competitions.length === 0 ? (
-        <div className="state-panel">
-          <strong>No competitions found</strong>
-          <span>Competitions will appear here after they are added.</span>
-        </div>
+        <AdminTableEmpty
+          title="No competitions found"
+          message="Competitions will appear here after they are added."
+        />
       ) : null}
 
       {state.status === "success" && state.competitions.length > 0 ? (

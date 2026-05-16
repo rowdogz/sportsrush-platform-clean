@@ -21,6 +21,21 @@ import { listRounds } from "../features/rounds/api";
 import type { AdminRound } from "../features/rounds/types";
 import { listTeams } from "../features/teams/api";
 import type { AdminTeam } from "../features/teams/types";
+import {
+  AdminFeedback,
+  adminErrorToast,
+  adminSuccessToast,
+  type AdminFeedbackState,
+} from "../components/admin/AdminFeedback";
+import {
+  AdminTableEmpty,
+  AdminTableError,
+  AdminTableLoading,
+} from "../components/admin/AdminTableState";
+import {
+  mergeStoredObject,
+  usePersistedAdminState,
+} from "../hooks/usePersistedAdminState";
 import { ApiError } from "../lib/apiClient";
 
 type FixturesState =
@@ -78,9 +93,7 @@ type RowActionValues = {
   readonly correctionReason: string;
 };
 
-type FeedbackState =
-  | { readonly type: "success"; readonly message: string }
-  | { readonly type: "error"; readonly message: string };
+type FeedbackState = AdminFeedbackState;
 
 const defaultSportId = "sport-rugby-league";
 
@@ -297,9 +310,16 @@ export function FixturesPage() {
     teams: [],
     rounds: [],
   });
-  const [filters, setFilters] = useState<FilterValues>(emptyFilterValues);
-  const [activeFilters, setActiveFilters] =
-    useState<FilterValues>(emptyFilterValues);
+  const [filters, setFilters] = usePersistedAdminState(
+    "sr-admin:fixtures:filters",
+    emptyFilterValues,
+    mergeStoredObject(emptyFilterValues),
+  );
+  const [activeFilters, setActiveFilters] = usePersistedAdminState(
+    "sr-admin:fixtures:active-filters",
+    emptyFilterValues,
+    mergeStoredObject(emptyFilterValues),
+  );
   const [createValues, setCreateValues] = useState<FormValues>(emptyFormValues);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [correctionFixtureId, setCorrectionFixtureId] = useState<string | null>(
@@ -341,7 +361,11 @@ export function FixturesPage() {
   useEffect(() => {
     async function loadInitialData() {
       const [competitionsResponse, teamsResponse, fixturesResponse] =
-        await Promise.all([listCompetitions(), listTeams(), listFixtures()]);
+        await Promise.all([
+          listCompetitions(),
+          listTeams(),
+          listFixtures(toFilters(activeFilters)),
+        ]);
       setReferences({
         competitions: competitionsResponse.data,
         teams: teamsResponse.data,
@@ -392,7 +416,7 @@ export function FixturesPage() {
 
     const validationMessage = getRequiredValidationMessage(createValues);
     if (validationMessage) {
-      setFeedback({ type: "error", message: validationMessage });
+      setFeedback(adminErrorToast(validationMessage));
       return;
     }
 
@@ -406,9 +430,9 @@ export function FixturesPage() {
         competitionId: createValues.competitionId,
         seasonId: createValues.seasonId,
       });
-      setFeedback({ type: "success", message: "Fixture created." });
+      setFeedback(adminSuccessToast("Fixture created."));
     } catch (error) {
-      setFeedback({ type: "error", message: getErrorMessage(error) });
+      setFeedback(adminErrorToast(getErrorMessage(error)));
     } finally {
       setPendingAction(null);
     }
@@ -429,7 +453,7 @@ export function FixturesPage() {
 
     const validationMessage = getRequiredValidationMessage(editValues);
     if (validationMessage) {
-      setFeedback({ type: "error", message: validationMessage });
+      setFeedback(adminErrorToast(validationMessage));
       return;
     }
 
@@ -438,9 +462,9 @@ export function FixturesPage() {
       await updateFixture(fixture.id, toEditPayload(fixture, editValues));
       await loadFixtures(activeFilters);
       setEditingId(null);
-      setFeedback({ type: "success", message: "Fixture updated." });
+      setFeedback(adminSuccessToast("Fixture updated."));
     } catch (error) {
-      setFeedback({ type: "error", message: getErrorMessage(error) });
+      setFeedback(adminErrorToast(getErrorMessage(error)));
     } finally {
       setPendingAction(null);
     }
@@ -453,9 +477,9 @@ export function FixturesPage() {
     try {
       await transitionFixture(fixture.id, { status: actionValues.nextStatus });
       await loadFixtures(activeFilters);
-      setFeedback({ type: "success", message: "Fixture status updated." });
+      setFeedback(adminSuccessToast("Fixture status updated."));
     } catch (error) {
-      setFeedback({ type: "error", message: getErrorMessage(error) });
+      setFeedback(adminErrorToast(getErrorMessage(error)));
     } finally {
       setPendingAction(null);
     }
@@ -478,7 +502,7 @@ export function FixturesPage() {
       actionValues.awayScore,
     );
     if (validationMessage) {
-      setFeedback({ type: "error", message: validationMessage });
+      setFeedback(adminErrorToast(validationMessage));
       return;
     }
 
@@ -490,9 +514,9 @@ export function FixturesPage() {
         resultSource: toOptionalValue(actionValues.resultSource),
       });
       await loadFixtures(activeFilters);
-      setFeedback({ type: "success", message: "Fixture result entered." });
+      setFeedback(adminSuccessToast("Fixture result entered."));
     } catch (error) {
-      setFeedback({ type: "error", message: getErrorMessage(error) });
+      setFeedback(adminErrorToast(getErrorMessage(error)));
     } finally {
       setPendingAction(null);
     }
@@ -514,12 +538,12 @@ export function FixturesPage() {
       actionValues.correctedAwayScore,
     );
     if (validationMessage) {
-      setFeedback({ type: "error", message: validationMessage });
+      setFeedback(adminErrorToast(validationMessage));
       return;
     }
 
     if (!actionValues.correctionReason.trim()) {
-      setFeedback({ type: "error", message: "Correction reason is required." });
+      setFeedback(adminErrorToast("Correction reason is required."));
       return;
     }
 
@@ -532,9 +556,9 @@ export function FixturesPage() {
       });
       await loadFixtures(activeFilters);
       setCorrectionFixtureId(null);
-      setFeedback({ type: "success", message: "Fixture result corrected." });
+      setFeedback(adminSuccessToast("Fixture result corrected."));
     } catch (error) {
-      setFeedback({ type: "error", message: getErrorMessage(error) });
+      setFeedback(adminErrorToast(getErrorMessage(error)));
     } finally {
       setPendingAction(null);
     }
@@ -834,37 +858,24 @@ export function FixturesPage() {
         </button>
       </form>
 
-      {feedback ? (
-        <div
-          className={
-            feedback.type === "success"
-              ? "feedback-panel success-panel"
-              : "feedback-panel error-panel"
-          }
-          role={feedback.type === "success" ? "status" : "alert"}
-        >
-          {feedback.message}
-        </div>
-      ) : null}
+      <AdminFeedback feedback={feedback} />
 
       {state.status === "loading" ? (
-        <div className="state-panel" role="status">
-          Loading fixtures…
-        </div>
+        <AdminTableLoading message="Loading fixtures…" />
       ) : null}
 
       {state.status === "error" ? (
-        <div className="state-panel error-panel" role="alert">
-          <strong>Unable to load fixtures</strong>
-          <span>{state.message}</span>
-        </div>
+        <AdminTableError
+          title="Unable to load fixtures"
+          message={state.message}
+        />
       ) : null}
 
       {state.status === "success" && state.fixtures.length === 0 ? (
-        <div className="state-panel">
-          <strong>No fixtures found</strong>
-          <span>Fixtures will appear here after they are added.</span>
-        </div>
+        <AdminTableEmpty
+          title="No fixtures found"
+          message="Fixtures will appear here after they are added."
+        />
       ) : null}
 
       {state.status === "success" && state.fixtures.length > 0 ? (
