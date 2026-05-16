@@ -5,6 +5,21 @@ import type {
   RoundListFilters,
   RoundWritePayload,
 } from "../features/rounds/types";
+import {
+  AdminFeedback,
+  adminErrorToast,
+  adminSuccessToast,
+  type AdminFeedbackState,
+} from "../components/admin/AdminFeedback";
+import {
+  AdminTableEmpty,
+  AdminTableError,
+  AdminTableLoading,
+} from "../components/admin/AdminTableState";
+import {
+  mergeStoredObject,
+  usePersistedAdminState,
+} from "../hooks/usePersistedAdminState";
 import { ApiError } from "../lib/apiClient";
 
 type RoundsState =
@@ -29,9 +44,7 @@ type FilterValues = {
   readonly seasonId: string;
 };
 
-type FeedbackState =
-  | { readonly type: "success"; readonly message: string }
-  | { readonly type: "error"; readonly message: string };
+type FeedbackState = AdminFeedbackState;
 
 const defaultSeasonId = "season-current";
 
@@ -123,9 +136,16 @@ function toFormValues(round: AdminRound): FormValues {
 
 export function RoundsPage() {
   const [state, setState] = useState<RoundsState>({ status: "loading" });
-  const [filters, setFilters] = useState<FilterValues>(emptyFilterValues);
-  const [activeFilters, setActiveFilters] =
-    useState<FilterValues>(emptyFilterValues);
+  const [filters, setFilters] = usePersistedAdminState(
+    "sr-admin:rounds:filters",
+    emptyFilterValues,
+    mergeStoredObject(emptyFilterValues),
+  );
+  const [activeFilters, setActiveFilters] = usePersistedAdminState(
+    "sr-admin:rounds:active-filters",
+    emptyFilterValues,
+    mergeStoredObject(emptyFilterValues),
+  );
   const [createValues, setCreateValues] = useState<FormValues>(emptyFormValues);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<FormValues>(emptyFormValues);
@@ -151,7 +171,7 @@ export function RoundsPage() {
   );
 
   useEffect(() => {
-    void loadRounds(emptyFilterValues, { showLoading: true });
+    void loadRounds(activeFilters, { showLoading: true });
   }, [loadRounds]);
 
   async function handleFilterSubmit(event: FormEvent<HTMLFormElement>) {
@@ -160,7 +180,7 @@ export function RoundsPage() {
 
     const validationMessage = getFilterValidationMessage(filters);
     if (validationMessage) {
-      setFeedback({ type: "error", message: validationMessage });
+      setFeedback(adminErrorToast(validationMessage));
       return;
     }
 
@@ -174,7 +194,7 @@ export function RoundsPage() {
 
     const validationMessage = getRequiredValidationMessage(createValues);
     if (validationMessage) {
-      setFeedback({ type: "error", message: validationMessage });
+      setFeedback(adminErrorToast(validationMessage));
       return;
     }
 
@@ -183,9 +203,9 @@ export function RoundsPage() {
       await createRound(toWritePayload(createValues));
       await loadRounds(activeFilters);
       setCreateValues({ ...emptyFormValues, seasonId: createValues.seasonId });
-      setFeedback({ type: "success", message: "Round created." });
+      setFeedback(adminSuccessToast("Round created."));
     } catch (error) {
-      setFeedback({ type: "error", message: getErrorMessage(error) });
+      setFeedback(adminErrorToast(getErrorMessage(error)));
     } finally {
       setPendingAction(null);
     }
@@ -206,7 +226,7 @@ export function RoundsPage() {
 
     const validationMessage = getRequiredValidationMessage(editValues);
     if (validationMessage) {
-      setFeedback({ type: "error", message: validationMessage });
+      setFeedback(adminErrorToast(validationMessage));
       return;
     }
 
@@ -215,9 +235,9 @@ export function RoundsPage() {
       await updateRound(round.id, toWritePayload(editValues));
       await loadRounds(activeFilters);
       setEditingId(null);
-      setFeedback({ type: "success", message: "Round updated." });
+      setFeedback(adminSuccessToast("Round updated."));
     } catch (error) {
-      setFeedback({ type: "error", message: getErrorMessage(error) });
+      setFeedback(adminErrorToast(getErrorMessage(error)));
     } finally {
       setPendingAction(null);
     }
@@ -349,37 +369,24 @@ export function RoundsPage() {
         </button>
       </form>
 
-      {feedback ? (
-        <div
-          className={
-            feedback.type === "success"
-              ? "feedback-panel success-panel"
-              : "feedback-panel error-panel"
-          }
-          role={feedback.type === "success" ? "status" : "alert"}
-        >
-          {feedback.message}
-        </div>
-      ) : null}
+      <AdminFeedback feedback={feedback} />
 
       {state.status === "loading" ? (
-        <div className="state-panel" role="status">
-          Loading rounds…
-        </div>
+        <AdminTableLoading message="Loading rounds…" />
       ) : null}
 
       {state.status === "error" ? (
-        <div className="state-panel error-panel" role="alert">
-          <strong>Unable to load rounds</strong>
-          <span>{state.message}</span>
-        </div>
+        <AdminTableError
+          title="Unable to load rounds"
+          message={state.message}
+        />
       ) : null}
 
       {state.status === "success" && state.rounds.length === 0 ? (
-        <div className="state-panel">
-          <strong>No rounds found</strong>
-          <span>Rounds will appear here after they are added.</span>
-        </div>
+        <AdminTableEmpty
+          title="No rounds found"
+          message="Rounds will appear here after they are added."
+        />
       ) : null}
 
       {state.status === "success" && state.rounds.length > 0 ? (

@@ -12,6 +12,21 @@ import type {
   UserRole,
 } from "../features/users/types";
 import { userRoles } from "../features/users/types";
+import {
+  AdminFeedback,
+  adminErrorToast,
+  adminSuccessToast,
+  type AdminFeedbackState,
+} from "../components/admin/AdminFeedback";
+import {
+  AdminTableEmpty,
+  AdminTableError,
+  AdminTableLoading,
+} from "../components/admin/AdminTableState";
+import {
+  mergeStoredObject,
+  usePersistedAdminState,
+} from "../hooks/usePersistedAdminState";
 import { ApiError } from "../lib/apiClient";
 
 type UsersState =
@@ -28,9 +43,7 @@ type FilterValues = {
   readonly status: string;
 };
 
-type FeedbackState =
-  | { readonly type: "success"; readonly message: string }
-  | { readonly type: "error"; readonly message: string };
+type FeedbackState = AdminFeedbackState;
 
 const emptyFilterValues: FilterValues = {
   search: "",
@@ -70,7 +83,11 @@ function toFilters(values: FilterValues): UserListFilters {
 
 export function UsersPage() {
   const [state, setState] = useState<UsersState>({ status: "loading" });
-  const [filters, setFilters] = useState<FilterValues>(emptyFilterValues);
+  const [filters, setFilters] = usePersistedAdminState(
+    "sr-admin:users:filters",
+    emptyFilterValues,
+    mergeStoredObject(emptyFilterValues),
+  );
   const [roleDrafts, setRoleDrafts] = useState<Record<string, UserRole>>({});
   const [statusDrafts, setStatusDrafts] = useState<Record<string, string>>({});
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);
@@ -107,7 +124,7 @@ export function UsersPage() {
   );
 
   useEffect(() => {
-    void loadUsers(emptyFilterValues, { showLoading: true });
+    void loadUsers(filters, { showLoading: true });
   }, [loadUsers]);
 
   async function handleFilterSubmit(event: FormEvent<HTMLFormElement>) {
@@ -119,7 +136,7 @@ export function UsersPage() {
     const role = roleDrafts[user.id] ?? user.role;
     setFeedback(null);
     if (role === user.role) {
-      setFeedback({ type: "error", message: "Choose a different role first." });
+      setFeedback(adminErrorToast("Choose a different role first."));
       return;
     }
     if (
@@ -134,9 +151,9 @@ export function UsersPage() {
     try {
       await updateUserRole(user.id, role);
       await loadUsers(filters);
-      setFeedback({ type: "success", message: "User role updated." });
+      setFeedback(adminSuccessToast("User role updated."));
     } catch (error) {
-      setFeedback({ type: "error", message: getErrorMessage(error) });
+      setFeedback(adminErrorToast(getErrorMessage(error)));
     } finally {
       setPendingAction(null);
     }
@@ -148,10 +165,7 @@ export function UsersPage() {
     const isActive = status === "active";
     setFeedback(null);
     if (isActive === user.isActive) {
-      setFeedback({
-        type: "error",
-        message: "Choose a different status first.",
-      });
+      setFeedback(adminErrorToast("Choose a different status first."));
       return;
     }
     if (
@@ -166,9 +180,9 @@ export function UsersPage() {
     try {
       await updateUserStatus(user.id, isActive);
       await loadUsers(filters);
-      setFeedback({ type: "success", message: "User status updated." });
+      setFeedback(adminSuccessToast("User status updated."));
     } catch (error) {
-      setFeedback({ type: "error", message: getErrorMessage(error) });
+      setFeedback(adminErrorToast(getErrorMessage(error)));
     } finally {
       setPendingAction(null);
     }
@@ -189,12 +203,13 @@ export function UsersPage() {
         await reactivateUser(user.id);
       }
       await loadUsers(filters);
-      setFeedback({
-        type: "success",
-        message: user.isActive ? "User suspended." : "User reactivated.",
-      });
+      setFeedback(
+        adminSuccessToast(
+          user.isActive ? "User suspended." : "User reactivated.",
+        ),
+      );
     } catch (error) {
-      setFeedback({ type: "error", message: getErrorMessage(error) });
+      setFeedback(adminErrorToast(getErrorMessage(error)));
     } finally {
       setPendingAction(null);
     }
@@ -256,33 +271,21 @@ export function UsersPage() {
         </button>
       </form>
 
-      {feedback ? (
-        <div
-          className={`state-panel ${feedback.type === "error" ? "error-panel" : "success-panel"}`}
-          role={feedback.type === "error" ? "alert" : "status"}
-        >
-          {feedback.message}
-        </div>
-      ) : null}
+      <AdminFeedback feedback={feedback} />
 
       {state.status === "loading" ? (
-        <div className="state-panel" role="status">
-          Loading users…
-        </div>
+        <AdminTableLoading message="Loading users…" />
       ) : null}
 
       {state.status === "error" ? (
-        <div className="state-panel error-panel" role="alert">
-          <strong>Unable to load users</strong>
-          <span>{state.message}</span>
-        </div>
+        <AdminTableError title="Unable to load users" message={state.message} />
       ) : null}
 
       {state.status === "success" && state.users.length === 0 ? (
-        <div className="state-panel">
-          <strong>No users found</strong>
-          <span>Users will appear here after they register.</span>
-        </div>
+        <AdminTableEmpty
+          title="No users found"
+          message="Users will appear here after they register."
+        />
       ) : null}
 
       {state.status === "success" && state.users.length > 0 ? (

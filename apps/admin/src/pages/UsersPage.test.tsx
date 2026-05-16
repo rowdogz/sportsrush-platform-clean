@@ -143,6 +143,31 @@ describe("UsersPage", () => {
     );
   });
 
+  it("restores persisted user filters on page revisit", async () => {
+    window.localStorage.setItem(
+      "sr-admin:users:filters",
+      JSON.stringify({ search: "admin", role: "admin", status: "inactive" }),
+    );
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(userListResponse([user({ role: "admin" })]));
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<UsersPage />);
+
+    expect(
+      await screen.findByRole("cell", { name: "Alice Example" }),
+    ).toBeTruthy();
+    expect(screen.getByLabelText("Search")).toHaveValue("admin");
+    expect(screen.getByLabelText("Role")).toHaveValue("admin");
+    expect(screen.getByLabelText("Status")).toHaveValue("inactive");
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      "/v1/admin/users?page=1&limit=50&search=admin&role=admin&isActive=false",
+      expect.objectContaining({ headers: expect.any(Headers) }),
+    );
+  });
+
   it("updates a user role after confirmation", async () => {
     const fetchMock = vi
       .fn()

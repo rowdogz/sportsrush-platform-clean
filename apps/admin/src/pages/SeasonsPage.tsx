@@ -12,6 +12,21 @@ import type {
   SeasonListFilters,
   SeasonWritePayload,
 } from "../features/seasons/types";
+import {
+  AdminFeedback,
+  adminErrorToast,
+  adminSuccessToast,
+  type AdminFeedbackState,
+} from "../components/admin/AdminFeedback";
+import {
+  AdminTableEmpty,
+  AdminTableError,
+  AdminTableLoading,
+} from "../components/admin/AdminTableState";
+import {
+  mergeStoredObject,
+  usePersistedAdminState,
+} from "../hooks/usePersistedAdminState";
 import { ApiError } from "../lib/apiClient";
 
 type SeasonsState =
@@ -37,9 +52,7 @@ type FilterValues = {
   readonly search: string;
 };
 
-type FeedbackState =
-  | { readonly type: "success"; readonly message: string }
-  | { readonly type: "error"; readonly message: string };
+type FeedbackState = AdminFeedbackState;
 
 const emptyFormValues: FormValues = {
   competitionId: "",
@@ -128,9 +141,16 @@ export function SeasonsPage() {
   const [competitions, setCompetitions] = useState<readonly AdminCompetition[]>(
     [],
   );
-  const [filters, setFilters] = useState<FilterValues>(emptyFilterValues);
-  const [activeFilters, setActiveFilters] =
-    useState<FilterValues>(emptyFilterValues);
+  const [filters, setFilters] = usePersistedAdminState(
+    "sr-admin:seasons:filters",
+    emptyFilterValues,
+    mergeStoredObject(emptyFilterValues),
+  );
+  const [activeFilters, setActiveFilters] = usePersistedAdminState(
+    "sr-admin:seasons:active-filters",
+    emptyFilterValues,
+    mergeStoredObject(emptyFilterValues),
+  );
   const [createValues, setCreateValues] = useState<FormValues>(emptyFormValues);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<FormValues>(emptyFormValues);
@@ -159,7 +179,7 @@ export function SeasonsPage() {
     async function loadInitialData() {
       const [competitionsResponse, seasonsResponse] = await Promise.all([
         listCompetitions(),
-        listSeasons(),
+        listSeasons(toFilters(activeFilters)),
       ]);
       setCompetitions(competitionsResponse.data);
       setState({ status: "success", seasons: seasonsResponse.data });
@@ -184,7 +204,7 @@ export function SeasonsPage() {
 
     const validationMessage = getRequiredValidationMessage(createValues);
     if (validationMessage) {
-      setFeedback({ type: "error", message: validationMessage });
+      setFeedback(adminErrorToast(validationMessage));
       return;
     }
 
@@ -196,9 +216,9 @@ export function SeasonsPage() {
         ...emptyFormValues,
         competitionId: createValues.competitionId,
       });
-      setFeedback({ type: "success", message: "Season created." });
+      setFeedback(adminSuccessToast("Season created."));
     } catch (error) {
-      setFeedback({ type: "error", message: getErrorMessage(error) });
+      setFeedback(adminErrorToast(getErrorMessage(error)));
     } finally {
       setPendingAction(null);
     }
@@ -219,7 +239,7 @@ export function SeasonsPage() {
 
     const validationMessage = getRequiredValidationMessage(editValues);
     if (validationMessage) {
-      setFeedback({ type: "error", message: validationMessage });
+      setFeedback(adminErrorToast(validationMessage));
       return;
     }
 
@@ -228,9 +248,9 @@ export function SeasonsPage() {
       await updateSeason(season.id, toWritePayload(editValues));
       await loadSeasons(activeFilters);
       setEditingId(null);
-      setFeedback({ type: "success", message: "Season updated." });
+      setFeedback(adminSuccessToast("Season updated."));
     } catch (error) {
-      setFeedback({ type: "error", message: getErrorMessage(error) });
+      setFeedback(adminErrorToast(getErrorMessage(error)));
     } finally {
       setPendingAction(null);
     }
@@ -242,9 +262,9 @@ export function SeasonsPage() {
     try {
       await activateSeason(season);
       await loadSeasons(activeFilters);
-      setFeedback({ type: "success", message: "Season activated." });
+      setFeedback(adminSuccessToast("Season activated."));
     } catch (error) {
-      setFeedback({ type: "error", message: getErrorMessage(error) });
+      setFeedback(adminErrorToast(getErrorMessage(error)));
     } finally {
       setPendingAction(null);
     }
@@ -394,37 +414,24 @@ export function SeasonsPage() {
         </button>
       </form>
 
-      {feedback ? (
-        <div
-          className={
-            feedback.type === "success"
-              ? "feedback-panel success-panel"
-              : "feedback-panel error-panel"
-          }
-          role={feedback.type === "success" ? "status" : "alert"}
-        >
-          {feedback.message}
-        </div>
-      ) : null}
+      <AdminFeedback feedback={feedback} />
 
       {state.status === "loading" ? (
-        <div className="state-panel" role="status">
-          Loading seasons…
-        </div>
+        <AdminTableLoading message="Loading seasons…" />
       ) : null}
 
       {state.status === "error" ? (
-        <div className="state-panel error-panel" role="alert">
-          <strong>Unable to load seasons</strong>
-          <span>{state.message}</span>
-        </div>
+        <AdminTableError
+          title="Unable to load seasons"
+          message={state.message}
+        />
       ) : null}
 
       {state.status === "success" && state.seasons.length === 0 ? (
-        <div className="state-panel">
-          <strong>No seasons found</strong>
-          <span>Seasons will appear here after they are added.</span>
-        </div>
+        <AdminTableEmpty
+          title="No seasons found"
+          message="Seasons will appear here after they are added."
+        />
       ) : null}
 
       {state.status === "success" && state.seasons.length > 0 ? (

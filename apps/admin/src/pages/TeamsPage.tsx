@@ -6,6 +6,17 @@ import {
   updateTeam,
 } from "../features/teams/api";
 import type { AdminTeam, TeamWritePayload } from "../features/teams/types";
+import {
+  AdminFeedback,
+  adminErrorToast,
+  adminSuccessToast,
+  type AdminFeedbackState,
+} from "../components/admin/AdminFeedback";
+import {
+  AdminTableEmpty,
+  AdminTableError,
+  AdminTableLoading,
+} from "../components/admin/AdminTableState";
 import { ApiError } from "../lib/apiClient";
 
 type TeamsState =
@@ -26,9 +37,7 @@ type FormValues = {
   readonly legacyId: string;
 };
 
-type FeedbackState =
-  | { readonly type: "success"; readonly message: string }
-  | { readonly type: "error"; readonly message: string };
+type FeedbackState = AdminFeedbackState;
 
 const emptyFormValues: FormValues = {
   sportId: "",
@@ -124,7 +133,7 @@ export function TeamsPage() {
 
     const validationMessage = getRequiredValidationMessage(createValues);
     if (validationMessage) {
-      setFeedback({ type: "error", message: validationMessage });
+      setFeedback(adminErrorToast(validationMessage));
       return;
     }
 
@@ -133,9 +142,9 @@ export function TeamsPage() {
       await createTeam(toWritePayload(createValues));
       await loadTeams();
       setCreateValues(emptyFormValues);
-      setFeedback({ type: "success", message: "Team created." });
+      setFeedback(adminSuccessToast("Team created."));
     } catch (error) {
-      setFeedback({ type: "error", message: getErrorMessage(error) });
+      setFeedback(adminErrorToast(getErrorMessage(error)));
     } finally {
       setPendingAction(null);
     }
@@ -156,7 +165,7 @@ export function TeamsPage() {
 
     const validationMessage = getRequiredValidationMessage(editValues);
     if (validationMessage) {
-      setFeedback({ type: "error", message: validationMessage });
+      setFeedback(adminErrorToast(validationMessage));
       return;
     }
 
@@ -165,9 +174,9 @@ export function TeamsPage() {
       await updateTeam(team.id, toWritePayload(editValues));
       await loadTeams();
       setEditingId(null);
-      setFeedback({ type: "success", message: "Team updated." });
+      setFeedback(adminSuccessToast("Team updated."));
     } catch (error) {
-      setFeedback({ type: "error", message: getErrorMessage(error) });
+      setFeedback(adminErrorToast(getErrorMessage(error)));
     } finally {
       setPendingAction(null);
     }
@@ -183,9 +192,9 @@ export function TeamsPage() {
     try {
       await archiveTeam(team.id);
       await loadTeams();
-      setFeedback({ type: "success", message: "Team archived." });
+      setFeedback(adminSuccessToast("Team archived."));
     } catch (error) {
-      setFeedback({ type: "error", message: getErrorMessage(error) });
+      setFeedback(adminErrorToast(getErrorMessage(error)));
     } finally {
       setPendingAction(null);
     }
@@ -291,37 +300,21 @@ export function TeamsPage() {
         </button>
       </form>
 
-      {feedback ? (
-        <div
-          className={
-            feedback.type === "success"
-              ? "feedback-panel success-panel"
-              : "feedback-panel error-panel"
-          }
-          role={feedback.type === "success" ? "status" : "alert"}
-        >
-          {feedback.message}
-        </div>
-      ) : null}
+      <AdminFeedback feedback={feedback} />
 
       {state.status === "loading" ? (
-        <div className="state-panel" role="status">
-          Loading teams…
-        </div>
+        <AdminTableLoading message="Loading teams…" />
       ) : null}
 
       {state.status === "error" ? (
-        <div className="state-panel error-panel" role="alert">
-          <strong>Unable to load teams</strong>
-          <span>{state.message}</span>
-        </div>
+        <AdminTableError title="Unable to load teams" message={state.message} />
       ) : null}
 
       {state.status === "success" && state.teams.length === 0 ? (
-        <div className="state-panel">
-          <strong>No teams found</strong>
-          <span>Teams will appear here after they are added.</span>
-        </div>
+        <AdminTableEmpty
+          title="No teams found"
+          message="Teams will appear here after they are added."
+        />
       ) : null}
 
       {state.status === "success" && state.teams.length > 0 ? (

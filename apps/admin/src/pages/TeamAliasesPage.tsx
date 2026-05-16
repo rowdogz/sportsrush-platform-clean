@@ -10,6 +10,21 @@ import type {
   TeamAliasListFilters,
   TeamAliasWritePayload,
 } from "../features/team-aliases/types";
+import {
+  AdminFeedback,
+  adminErrorToast,
+  adminSuccessToast,
+  type AdminFeedbackState,
+} from "../components/admin/AdminFeedback";
+import {
+  AdminTableEmpty,
+  AdminTableError,
+  AdminTableLoading,
+} from "../components/admin/AdminTableState";
+import {
+  mergeStoredObject,
+  usePersistedAdminState,
+} from "../hooks/usePersistedAdminState";
 import { ApiError } from "../lib/apiClient";
 
 type TeamAliasesState =
@@ -37,9 +52,7 @@ type FilterValues = {
   readonly alias: string;
 };
 
-type FeedbackState =
-  | { readonly type: "success"; readonly message: string }
-  | { readonly type: "error"; readonly message: string };
+type FeedbackState = AdminFeedbackState;
 
 const defaultSportId = "sport-rugby-league";
 
@@ -131,9 +144,16 @@ export function TeamAliasesPage() {
   const [state, setState] = useState<TeamAliasesState>({
     status: "loading",
   });
-  const [filters, setFilters] = useState<FilterValues>(emptyFilterValues);
-  const [activeFilters, setActiveFilters] =
-    useState<FilterValues>(emptyFilterValues);
+  const [filters, setFilters] = usePersistedAdminState(
+    "sr-admin:team-aliases:filters",
+    emptyFilterValues,
+    mergeStoredObject(emptyFilterValues),
+  );
+  const [activeFilters, setActiveFilters] = usePersistedAdminState(
+    "sr-admin:team-aliases:active-filters",
+    emptyFilterValues,
+    mergeStoredObject(emptyFilterValues),
+  );
   const [createValues, setCreateValues] = useState<FormValues>(emptyFormValues);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<FormValues>(emptyFormValues);
@@ -159,7 +179,7 @@ export function TeamAliasesPage() {
   );
 
   useEffect(() => {
-    void loadAliases(emptyFilterValues, { showLoading: true });
+    void loadAliases(activeFilters, { showLoading: true });
   }, [loadAliases]);
 
   async function handleFilterSubmit(event: FormEvent<HTMLFormElement>) {
@@ -168,7 +188,7 @@ export function TeamAliasesPage() {
 
     const validationMessage = getFilterValidationMessage(filters);
     if (validationMessage) {
-      setFeedback({ type: "error", message: validationMessage });
+      setFeedback(adminErrorToast(validationMessage));
       return;
     }
 
@@ -182,7 +202,7 @@ export function TeamAliasesPage() {
 
     const validationMessage = getRequiredValidationMessage(createValues);
     if (validationMessage) {
-      setFeedback({ type: "error", message: validationMessage });
+      setFeedback(adminErrorToast(validationMessage));
       return;
     }
 
@@ -191,9 +211,9 @@ export function TeamAliasesPage() {
       await createTeamAlias(toWritePayload(createValues));
       await loadAliases(activeFilters);
       setCreateValues({ ...emptyFormValues, sportId: createValues.sportId });
-      setFeedback({ type: "success", message: "Team alias created." });
+      setFeedback(adminSuccessToast("Team alias created."));
     } catch (error) {
-      setFeedback({ type: "error", message: getErrorMessage(error) });
+      setFeedback(adminErrorToast(getErrorMessage(error)));
     } finally {
       setPendingAction(null);
     }
@@ -214,7 +234,7 @@ export function TeamAliasesPage() {
 
     const validationMessage = getRequiredValidationMessage(editValues);
     if (validationMessage) {
-      setFeedback({ type: "error", message: validationMessage });
+      setFeedback(adminErrorToast(validationMessage));
       return;
     }
 
@@ -223,9 +243,9 @@ export function TeamAliasesPage() {
       await updateTeamAlias(alias.id, toWritePayload(editValues));
       await loadAliases(activeFilters);
       setEditingId(null);
-      setFeedback({ type: "success", message: "Team alias updated." });
+      setFeedback(adminSuccessToast("Team alias updated."));
     } catch (error) {
-      setFeedback({ type: "error", message: getErrorMessage(error) });
+      setFeedback(adminErrorToast(getErrorMessage(error)));
     } finally {
       setPendingAction(null);
     }
@@ -241,9 +261,9 @@ export function TeamAliasesPage() {
     try {
       await deleteTeamAlias(alias.id);
       await loadAliases(activeFilters);
-      setFeedback({ type: "success", message: "Team alias deleted." });
+      setFeedback(adminSuccessToast("Team alias deleted."));
     } catch (error) {
-      setFeedback({ type: "error", message: getErrorMessage(error) });
+      setFeedback(adminErrorToast(getErrorMessage(error)));
     } finally {
       setPendingAction(null);
     }
@@ -406,37 +426,24 @@ export function TeamAliasesPage() {
         </button>
       </form>
 
-      {feedback ? (
-        <div
-          className={
-            feedback.type === "success"
-              ? "feedback-panel success-panel"
-              : "feedback-panel error-panel"
-          }
-          role={feedback.type === "success" ? "status" : "alert"}
-        >
-          {feedback.message}
-        </div>
-      ) : null}
+      <AdminFeedback feedback={feedback} />
 
       {state.status === "loading" ? (
-        <div className="state-panel" role="status">
-          Loading team aliases…
-        </div>
+        <AdminTableLoading message="Loading team aliases…" />
       ) : null}
 
       {state.status === "error" ? (
-        <div className="state-panel error-panel" role="alert">
-          <strong>Unable to load team aliases</strong>
-          <span>{state.message}</span>
-        </div>
+        <AdminTableError
+          title="Unable to load team aliases"
+          message={state.message}
+        />
       ) : null}
 
       {state.status === "success" && state.aliases.length === 0 ? (
-        <div className="state-panel">
-          <strong>No team aliases found</strong>
-          <span>Team aliases will appear here after they are added.</span>
-        </div>
+        <AdminTableEmpty
+          title="No team aliases found"
+          message="Team aliases will appear here after they are added."
+        />
       ) : null}
 
       {state.status === "success" && state.aliases.length > 0 ? (
