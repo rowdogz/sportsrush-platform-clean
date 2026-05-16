@@ -241,6 +241,69 @@ describe("UsersPage", () => {
     );
   });
 
+  it("applies table density and column visibility preferences", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValueOnce(userListResponse([user()])),
+    );
+
+    render(<UsersPage />);
+
+    expect(
+      await screen.findByRole("cell", { name: "Alice Example" }),
+    ).toBeTruthy();
+    fireEvent.click(screen.getByText("Table preferences"));
+    fireEvent.click(screen.getByLabelText("Compact"));
+    expect(screen.getByRole("table")).toHaveClass("admin-table-compact");
+
+    fireEvent.click(
+      screen.getByRole("checkbox", { name: "Show Created column" }),
+    );
+    expect(
+      screen.queryByRole("columnheader", { name: "Created" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("restores persisted table preferences", async () => {
+    window.localStorage.setItem(
+      "sr-admin:users:table-preferences",
+      JSON.stringify({ density: "compact", hiddenColumns: ["created"] }),
+    );
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValueOnce(userListResponse([user()])),
+    );
+
+    render(<UsersPage />);
+
+    expect(
+      await screen.findByRole("cell", { name: "Alice Example" }),
+    ).toBeTruthy();
+    expect(screen.getByRole("table")).toHaveClass("admin-table-compact");
+    expect(
+      screen.queryByRole("columnheader", { name: "Created" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("does not offer essential columns as removable", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValueOnce(userListResponse([user()])),
+    );
+
+    render(<UsersPage />);
+
+    expect(
+      await screen.findByRole("cell", { name: "Alice Example" }),
+    ).toBeTruthy();
+    fireEvent.click(screen.getByText("Table preferences"));
+
+    expect(
+      screen.queryByRole("checkbox", { name: "Show Role column" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "Role" })).toBeTruthy();
+  });
+
   it("updates a user role after confirmation", async () => {
     const fetchMock = vi
       .fn()

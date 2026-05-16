@@ -24,6 +24,11 @@ import {
   AdminTableLoading,
 } from "../components/admin/AdminTableState";
 import {
+  AdminTablePreferences,
+  useAdminTablePreferences,
+  type AdminTableColumn,
+} from "../components/admin/AdminTablePreferences";
+import {
   appendStringParam,
   readDateParam,
   readEnumParam,
@@ -71,6 +76,16 @@ const emptyFilterValues: FilterValues = {
   competitionId: "",
   search: "",
 };
+
+const seasonTableColumns: readonly AdminTableColumn[] = [
+  { id: "season", label: "Season" },
+  { id: "competition", label: "Competition" },
+  { id: "slug", label: "Slug", optional: true },
+  { id: "dates", label: "Dates", optional: true },
+  { id: "status", label: "Status" },
+  { id: "legacyId", label: "Legacy ID", optional: true },
+  { id: "actions", label: "Actions" },
+];
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
@@ -174,6 +189,10 @@ export function SeasonsPage() {
   const [editValues, setEditValues] = useState<FormValues>(emptyFormValues);
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
+  const tablePreferences = useAdminTablePreferences(
+    "sr-admin:seasons:table-preferences",
+    seasonTableColumns,
+  );
 
   const loadSeasons = useCallback(
     async (
@@ -453,204 +472,228 @@ export function SeasonsPage() {
       ) : null}
 
       {state.status === "success" && state.seasons.length > 0 ? (
-        <div className="admin-table-wrapper">
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th scope="col">Season</th>
-                <th scope="col">Competition</th>
-                <th scope="col">Slug</th>
-                <th scope="col">Dates</th>
-                <th scope="col">Status</th>
-                <th scope="col">Legacy ID</th>
-                <th scope="col">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {state.seasons.map((season) => (
-                <tr key={season.id}>
-                  {editingId === season.id ? (
-                    <td colSpan={7}>
-                      <form
-                        className="inline-edit-form"
-                        onSubmit={(event) =>
-                          void handleEditSubmit(event, season)
-                        }
-                      >
-                        <label>
-                          Competition
-                          <select
-                            aria-label="Edit competition"
-                            value={editValues.competitionId}
-                            onChange={(event) =>
-                              setEditValues({
-                                ...editValues,
-                                competitionId: event.target.value,
-                              })
-                            }
-                          >
-                            {competitions.map((competition) => (
-                              <option
-                                key={competition.id}
-                                value={competition.id}
-                              >
-                                {competition.name}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
-                        <label>
-                          Slug
-                          <input
-                            aria-label="Edit slug"
-                            value={editValues.slug}
-                            onChange={(event) =>
-                              setEditValues({
-                                ...editValues,
-                                slug: event.target.value,
-                              })
-                            }
-                          />
-                        </label>
-                        <label>
-                          Name
-                          <input
-                            aria-label="Edit name"
-                            value={editValues.name}
-                            onChange={(event) =>
-                              setEditValues({
-                                ...editValues,
-                                name: event.target.value,
-                              })
-                            }
-                          />
-                        </label>
-                        <label>
-                          Starts on
-                          <input
-                            aria-label="Edit starts on"
-                            value={editValues.startsOn}
-                            onChange={(event) =>
-                              setEditValues({
-                                ...editValues,
-                                startsOn: event.target.value,
-                              })
-                            }
-                          />
-                        </label>
-                        <label>
-                          Ends on
-                          <input
-                            aria-label="Edit ends on"
-                            value={editValues.endsOn}
-                            onChange={(event) =>
-                              setEditValues({
-                                ...editValues,
-                                endsOn: event.target.value,
-                              })
-                            }
-                          />
-                        </label>
-                        <label>
-                          Legacy ID
-                          <input
-                            aria-label="Edit legacy ID"
-                            value={editValues.legacyId}
-                            onChange={(event) =>
-                              setEditValues({
-                                ...editValues,
-                                legacyId: event.target.value,
-                              })
-                            }
-                          />
-                        </label>
-                        <label className="checkbox-label">
-                          <input
-                            aria-label="Edit active"
-                            type="checkbox"
-                            checked={editValues.isActive}
-                            onChange={(event) =>
-                              setEditValues({
-                                ...editValues,
-                                isActive: event.target.checked,
-                              })
-                            }
-                          />
-                          Active
-                        </label>
-                        <div className="row-actions">
-                          <button
-                            className="primary-button compact-button"
-                            type="submit"
-                            disabled={pendingAction === `edit:${season.id}`}
-                          >
-                            {pendingAction === `edit:${season.id}`
-                              ? "Saving..."
-                              : "Save"}
-                          </button>
-                          <button
-                            className="secondary-button compact-button"
-                            type="button"
-                            onClick={() => setEditingId(null)}
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </form>
-                    </td>
-                  ) : (
-                    <>
-                      <td>{season.name}</td>
-                      <td>
-                        {getCompetitionName(competitions, season.competitionId)}
-                      </td>
-                      <td>{season.slug}</td>
-                      <td>
-                        {season.startsOn ?? "—"} to {season.endsOn ?? "—"}
-                      </td>
-                      <td>
-                        <span
-                          className={
-                            season.isActive
-                              ? "status-pill status-pill-active"
-                              : "status-pill status-pill-inactive"
+        <>
+          <AdminTablePreferences
+            columns={seasonTableColumns}
+            density={tablePreferences.density}
+            hiddenColumns={tablePreferences.hiddenColumns}
+            onColumnVisibleChange={tablePreferences.setColumnVisible}
+            onDensityChange={tablePreferences.setDensity}
+          />
+          <div className="admin-table-wrapper">
+            <table className={tablePreferences.tableClassName}>
+              <thead>
+                <tr>
+                  <th scope="col">Season</th>
+                  <th scope="col">Competition</th>
+                  {tablePreferences.isColumnVisible("slug") ? (
+                    <th scope="col">Slug</th>
+                  ) : null}
+                  {tablePreferences.isColumnVisible("dates") ? (
+                    <th scope="col">Dates</th>
+                  ) : null}
+                  <th scope="col">Status</th>
+                  {tablePreferences.isColumnVisible("legacyId") ? (
+                    <th scope="col">Legacy ID</th>
+                  ) : null}
+                  <th scope="col">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {state.seasons.map((season) => (
+                  <tr key={season.id}>
+                    {editingId === season.id ? (
+                      <td colSpan={99}>
+                        <form
+                          className="inline-edit-form"
+                          onSubmit={(event) =>
+                            void handleEditSubmit(event, season)
                           }
                         >
-                          {season.isActive ? "active" : "inactive"}
-                        </span>
+                          <label>
+                            Competition
+                            <select
+                              aria-label="Edit competition"
+                              value={editValues.competitionId}
+                              onChange={(event) =>
+                                setEditValues({
+                                  ...editValues,
+                                  competitionId: event.target.value,
+                                })
+                              }
+                            >
+                              {competitions.map((competition) => (
+                                <option
+                                  key={competition.id}
+                                  value={competition.id}
+                                >
+                                  {competition.name}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                          <label>
+                            Slug
+                            <input
+                              aria-label="Edit slug"
+                              value={editValues.slug}
+                              onChange={(event) =>
+                                setEditValues({
+                                  ...editValues,
+                                  slug: event.target.value,
+                                })
+                              }
+                            />
+                          </label>
+                          <label>
+                            Name
+                            <input
+                              aria-label="Edit name"
+                              value={editValues.name}
+                              onChange={(event) =>
+                                setEditValues({
+                                  ...editValues,
+                                  name: event.target.value,
+                                })
+                              }
+                            />
+                          </label>
+                          <label>
+                            Starts on
+                            <input
+                              aria-label="Edit starts on"
+                              value={editValues.startsOn}
+                              onChange={(event) =>
+                                setEditValues({
+                                  ...editValues,
+                                  startsOn: event.target.value,
+                                })
+                              }
+                            />
+                          </label>
+                          <label>
+                            Ends on
+                            <input
+                              aria-label="Edit ends on"
+                              value={editValues.endsOn}
+                              onChange={(event) =>
+                                setEditValues({
+                                  ...editValues,
+                                  endsOn: event.target.value,
+                                })
+                              }
+                            />
+                          </label>
+                          <label>
+                            Legacy ID
+                            <input
+                              aria-label="Edit legacy ID"
+                              value={editValues.legacyId}
+                              onChange={(event) =>
+                                setEditValues({
+                                  ...editValues,
+                                  legacyId: event.target.value,
+                                })
+                              }
+                            />
+                          </label>
+                          <label className="checkbox-label">
+                            <input
+                              aria-label="Edit active"
+                              type="checkbox"
+                              checked={editValues.isActive}
+                              onChange={(event) =>
+                                setEditValues({
+                                  ...editValues,
+                                  isActive: event.target.checked,
+                                })
+                              }
+                            />
+                            Active
+                          </label>
+                          <div className="row-actions">
+                            <button
+                              className="primary-button compact-button"
+                              type="submit"
+                              disabled={pendingAction === `edit:${season.id}`}
+                            >
+                              {pendingAction === `edit:${season.id}`
+                                ? "Saving..."
+                                : "Save"}
+                            </button>
+                            <button
+                              className="secondary-button compact-button"
+                              type="button"
+                              onClick={() => setEditingId(null)}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </form>
                       </td>
-                      <td>{season.legacyId ?? "—"}</td>
-                      <td>
-                        <div className="row-actions">
-                          <button
-                            className="secondary-button compact-button"
-                            type="button"
-                            onClick={() => startEditing(season)}
-                          >
-                            Edit
-                          </button>
-                          <button
-                            className="secondary-button compact-button"
-                            type="button"
-                            disabled={
-                              season.isActive ||
-                              pendingAction === `activate:${season.id}`
+                    ) : (
+                      <>
+                        <td>{season.name}</td>
+                        <td>
+                          {getCompetitionName(
+                            competitions,
+                            season.competitionId,
+                          )}
+                        </td>
+                        {tablePreferences.isColumnVisible("slug") ? (
+                          <td>{season.slug}</td>
+                        ) : null}
+                        {tablePreferences.isColumnVisible("dates") ? (
+                          <td>
+                            {season.startsOn ?? "—"} to {season.endsOn ?? "—"}
+                          </td>
+                        ) : null}
+                        <td>
+                          <span
+                            className={
+                              season.isActive
+                                ? "status-pill status-pill-active"
+                                : "status-pill status-pill-inactive"
                             }
-                            onClick={() => void handleActivate(season)}
                           >
-                            {pendingAction === `activate:${season.id}`
-                              ? "Activating..."
-                              : "Activate"}
-                          </button>
-                        </div>
-                      </td>
-                    </>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                            {season.isActive ? "active" : "inactive"}
+                          </span>
+                        </td>
+                        {tablePreferences.isColumnVisible("legacyId") ? (
+                          <td>{season.legacyId ?? "—"}</td>
+                        ) : null}
+                        <td>
+                          <div className="row-actions">
+                            <button
+                              className="secondary-button compact-button"
+                              type="button"
+                              onClick={() => startEditing(season)}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              className="secondary-button compact-button"
+                              type="button"
+                              disabled={
+                                season.isActive ||
+                                pendingAction === `activate:${season.id}`
+                              }
+                              onClick={() => void handleActivate(season)}
+                            >
+                              {pendingAction === `activate:${season.id}`
+                                ? "Activating..."
+                                : "Activate"}
+                            </button>
+                          </div>
+                        </td>
+                      </>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       ) : null}
     </section>
   );

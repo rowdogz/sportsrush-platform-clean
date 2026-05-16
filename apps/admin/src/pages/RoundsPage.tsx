@@ -17,6 +17,11 @@ import {
   AdminTableLoading,
 } from "../components/admin/AdminTableState";
 import {
+  AdminTablePreferences,
+  useAdminTablePreferences,
+  type AdminTableColumn,
+} from "../components/admin/AdminTablePreferences";
+import {
   appendStringParam,
   readDateParam,
   readEnumParam,
@@ -64,6 +69,17 @@ const emptyFormValues: FormValues = {
 const emptyFilterValues: FilterValues = {
   seasonId: defaultSeasonId,
 };
+
+const roundTableColumns: readonly AdminTableColumn[] = [
+  { id: "round", label: "Round" },
+  { id: "roundName", label: "Round name" },
+  { id: "seasonId", label: "Season ID", optional: true },
+  { id: "displayOrder", label: "Display order", optional: true },
+  { id: "startsAt", label: "Starts at", optional: true },
+  { id: "endsAt", label: "Ends at", optional: true },
+  { id: "legacyId", label: "Legacy ID", optional: true },
+  { id: "actions", label: "Actions" },
+];
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
@@ -158,6 +174,10 @@ export function RoundsPage() {
   const [editValues, setEditValues] = useState<FormValues>(emptyFormValues);
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
+  const tablePreferences = useAdminTablePreferences(
+    "sr-admin:rounds:table-preferences",
+    roundTableColumns,
+  );
 
   const loadRounds = useCallback(
     async (
@@ -397,169 +417,198 @@ export function RoundsPage() {
       ) : null}
 
       {state.status === "success" && state.rounds.length > 0 ? (
-        <div className="admin-table-wrapper">
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th scope="col">Round</th>
-                <th scope="col">Round name</th>
-                <th scope="col">Season ID</th>
-                <th scope="col">Display order</th>
-                <th scope="col">Starts at</th>
-                <th scope="col">Ends at</th>
-                <th scope="col">Legacy ID</th>
-                <th scope="col">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {state.rounds.map((round) => (
-                <tr key={round.id}>
-                  {editingId === round.id ? (
-                    <td colSpan={8}>
-                      <form
-                        className="inline-edit-form"
-                        onSubmit={(event) =>
-                          void handleEditSubmit(event, round)
-                        }
-                      >
-                        <label>
-                          Round
-                          <input
-                            aria-label="Edit round"
-                            value={editValues.round}
-                            onChange={(event) =>
-                              setEditValues({
-                                ...editValues,
-                                round: event.target.value,
-                              })
-                            }
-                          />
-                        </label>
-                        <label>
-                          Round name
-                          <input
-                            aria-label="Edit round name"
-                            value={editValues.roundName}
-                            onChange={(event) =>
-                              setEditValues({
-                                ...editValues,
-                                roundName: event.target.value,
-                              })
-                            }
-                          />
-                        </label>
-                        <label>
-                          Season ID
-                          <input
-                            aria-label="Edit season ID"
-                            value={editValues.seasonId}
-                            onChange={(event) =>
-                              setEditValues({
-                                ...editValues,
-                                seasonId: event.target.value,
-                              })
-                            }
-                          />
-                        </label>
-                        <label>
-                          Display order
-                          <input
-                            aria-label="Edit display order"
-                            value={editValues.displayOrder}
-                            onChange={(event) =>
-                              setEditValues({
-                                ...editValues,
-                                displayOrder: event.target.value,
-                              })
-                            }
-                          />
-                        </label>
-                        <label>
-                          Starts at
-                          <input
-                            aria-label="Edit starts at"
-                            value={editValues.startsAt}
-                            onChange={(event) =>
-                              setEditValues({
-                                ...editValues,
-                                startsAt: event.target.value,
-                              })
-                            }
-                          />
-                        </label>
-                        <label>
-                          Ends at
-                          <input
-                            aria-label="Edit ends at"
-                            value={editValues.endsAt}
-                            onChange={(event) =>
-                              setEditValues({
-                                ...editValues,
-                                endsAt: event.target.value,
-                              })
-                            }
-                          />
-                        </label>
-                        <label>
-                          Legacy ID
-                          <input
-                            aria-label="Edit legacy ID"
-                            value={editValues.legacyId}
-                            onChange={(event) =>
-                              setEditValues({
-                                ...editValues,
-                                legacyId: event.target.value,
-                              })
-                            }
-                          />
-                        </label>
-                        <div className="row-actions">
-                          <button
-                            className="primary-button compact-button"
-                            type="submit"
-                            disabled={pendingAction === `edit:${round.id}`}
-                          >
-                            {pendingAction === `edit:${round.id}`
-                              ? "Saving..."
-                              : "Save"}
-                          </button>
-                          <button
-                            className="secondary-button compact-button"
-                            type="button"
-                            onClick={() => setEditingId(null)}
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </form>
-                    </td>
-                  ) : (
-                    <>
-                      <td>{round.round}</td>
-                      <td>{round.roundName}</td>
-                      <td>{round.seasonId}</td>
-                      <td>{round.displayOrder}</td>
-                      <td>{round.startsAt ?? "—"}</td>
-                      <td>{round.endsAt ?? "—"}</td>
-                      <td>{round.legacyId ?? "—"}</td>
-                      <td>
-                        <div className="row-actions">
-                          <button
-                            className="secondary-button compact-button"
-                            type="button"
-                            onClick={() => startEditing(round)}
-                          >
-                            Edit
-                          </button>
-                        </div>
-                      </td>
-                    </>
-                  )}
+        <>
+          <AdminTablePreferences
+            columns={roundTableColumns}
+            density={tablePreferences.density}
+            hiddenColumns={tablePreferences.hiddenColumns}
+            onColumnVisibleChange={tablePreferences.setColumnVisible}
+            onDensityChange={tablePreferences.setDensity}
+          />
+          <div className="admin-table-wrapper">
+            <table className={tablePreferences.tableClassName}>
+              <thead>
+                <tr>
+                  <th scope="col">Round</th>
+                  <th scope="col">Round name</th>
+                  {tablePreferences.isColumnVisible("seasonId") ? (
+                    <th scope="col">Season ID</th>
+                  ) : null}
+                  {tablePreferences.isColumnVisible("displayOrder") ? (
+                    <th scope="col">Display order</th>
+                  ) : null}
+                  {tablePreferences.isColumnVisible("startsAt") ? (
+                    <th scope="col">Starts at</th>
+                  ) : null}
+                  {tablePreferences.isColumnVisible("endsAt") ? (
+                    <th scope="col">Ends at</th>
+                  ) : null}
+                  {tablePreferences.isColumnVisible("legacyId") ? (
+                    <th scope="col">Legacy ID</th>
+                  ) : null}
+                  <th scope="col">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {state.rounds.map((round) => (
+                  <tr key={round.id}>
+                    {editingId === round.id ? (
+                      <td colSpan={99}>
+                        <form
+                          className="inline-edit-form"
+                          onSubmit={(event) =>
+                            void handleEditSubmit(event, round)
+                          }
+                        >
+                          <label>
+                            Round
+                            <input
+                              aria-label="Edit round"
+                              value={editValues.round}
+                              onChange={(event) =>
+                                setEditValues({
+                                  ...editValues,
+                                  round: event.target.value,
+                                })
+                              }
+                            />
+                          </label>
+                          <label>
+                            Round name
+                            <input
+                              aria-label="Edit round name"
+                              value={editValues.roundName}
+                              onChange={(event) =>
+                                setEditValues({
+                                  ...editValues,
+                                  roundName: event.target.value,
+                                })
+                              }
+                            />
+                          </label>
+                          <label>
+                            Season ID
+                            <input
+                              aria-label="Edit season ID"
+                              value={editValues.seasonId}
+                              onChange={(event) =>
+                                setEditValues({
+                                  ...editValues,
+                                  seasonId: event.target.value,
+                                })
+                              }
+                            />
+                          </label>
+                          <label>
+                            Display order
+                            <input
+                              aria-label="Edit display order"
+                              value={editValues.displayOrder}
+                              onChange={(event) =>
+                                setEditValues({
+                                  ...editValues,
+                                  displayOrder: event.target.value,
+                                })
+                              }
+                            />
+                          </label>
+                          <label>
+                            Starts at
+                            <input
+                              aria-label="Edit starts at"
+                              value={editValues.startsAt}
+                              onChange={(event) =>
+                                setEditValues({
+                                  ...editValues,
+                                  startsAt: event.target.value,
+                                })
+                              }
+                            />
+                          </label>
+                          <label>
+                            Ends at
+                            <input
+                              aria-label="Edit ends at"
+                              value={editValues.endsAt}
+                              onChange={(event) =>
+                                setEditValues({
+                                  ...editValues,
+                                  endsAt: event.target.value,
+                                })
+                              }
+                            />
+                          </label>
+                          <label>
+                            Legacy ID
+                            <input
+                              aria-label="Edit legacy ID"
+                              value={editValues.legacyId}
+                              onChange={(event) =>
+                                setEditValues({
+                                  ...editValues,
+                                  legacyId: event.target.value,
+                                })
+                              }
+                            />
+                          </label>
+                          <div className="row-actions">
+                            <button
+                              className="primary-button compact-button"
+                              type="submit"
+                              disabled={pendingAction === `edit:${round.id}`}
+                            >
+                              {pendingAction === `edit:${round.id}`
+                                ? "Saving..."
+                                : "Save"}
+                            </button>
+                            <button
+                              className="secondary-button compact-button"
+                              type="button"
+                              onClick={() => setEditingId(null)}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </form>
+                      </td>
+                    ) : (
+                      <>
+                        <td>{round.round}</td>
+                        <td>{round.roundName}</td>
+                        {tablePreferences.isColumnVisible("seasonId") ? (
+                          <td>{round.seasonId}</td>
+                        ) : null}
+                        {tablePreferences.isColumnVisible("displayOrder") ? (
+                          <td>{round.displayOrder}</td>
+                        ) : null}
+                        {tablePreferences.isColumnVisible("startsAt") ? (
+                          <td>{round.startsAt ?? "—"}</td>
+                        ) : null}
+                        {tablePreferences.isColumnVisible("endsAt") ? (
+                          <td>{round.endsAt ?? "—"}</td>
+                        ) : null}
+                        {tablePreferences.isColumnVisible("legacyId") ? (
+                          <td>{round.legacyId ?? "—"}</td>
+                        ) : null}
+                        <td>
+                          <div className="row-actions">
+                            <button
+                              className="secondary-button compact-button"
+                              type="button"
+                              onClick={() => startEditing(round)}
+                            >
+                              Edit
+                            </button>
+                          </div>
+                        </td>
+                      </>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       ) : null}
     </section>
   );
