@@ -15,6 +15,13 @@ function accessTokenForRole(role: UserRole): string {
   return `header.${window.btoa(JSON.stringify({ role }))}.signature`;
 }
 
+function emptyPaginatedResponse(): Response {
+  return jsonResponse({
+    data: [],
+    meta: { page: 1, limit: 50, total: 0, hasMore: false },
+  });
+}
+
 describe("Admin app shell", () => {
   afterEach(() => {
     vi.restoreAllMocks();
@@ -26,24 +33,17 @@ describe("Admin app shell", () => {
     render(<App />);
 
     expect(screen.getByRole("heading", { name: "Sign in" })).toBeTruthy();
-    expect(screen.queryByText("No competitions found")).toBeNull();
+    expect(screen.queryByText("No admin data yet")).toBeNull();
   });
 
   it("logs in and renders the SportsRush admin shell", async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce(
-        jsonResponse({
-          accessToken: "access-token-123",
-          refreshToken: "refresh-token-123",
-        }),
-      )
-      .mockResolvedValueOnce(
-        jsonResponse({
-          data: [],
-          meta: { page: 1, limit: 50, total: 0, hasMore: false },
-        }),
-      );
+    const fetchMock = vi.fn(() => Promise.resolve(emptyPaginatedResponse()));
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse({
+        accessToken: "access-token-123",
+        refreshToken: "refresh-token-123",
+      }),
+    );
     vi.stubGlobal("fetch", fetchMock);
 
     render(<App />);
@@ -56,8 +56,10 @@ describe("Admin app shell", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
 
-    expect(await screen.findByText(/SportsRush Admin/i)).toBeTruthy();
-    expect(await screen.findByText("No competitions found")).toBeTruthy();
+    expect(
+      await screen.findByRole("heading", { name: "SportsRush Admin" }),
+    ).toBeTruthy();
+    expect(await screen.findByText("No admin data yet")).toBeTruthy();
     expect(window.localStorage.getItem("sr_admin_access_token")).toBe(
       "access-token-123",
     );
@@ -88,16 +90,15 @@ describe("Admin app shell", () => {
     );
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue(
-        jsonResponse({
-          data: [],
-          meta: { page: 1, limit: 50, total: 0, hasMore: false },
-        }),
-      ),
+      vi
+        .fn()
+        .mockImplementation(() => Promise.resolve(emptyPaginatedResponse())),
     );
     render(<App />);
-    expect(screen.getByText(/SportsRush Admin/i)).toBeTruthy();
-    expect(await screen.findByText("No competitions found")).toBeTruthy();
+    expect(
+      screen.getByRole("heading", { name: "SportsRush Admin" }),
+    ).toBeTruthy();
+    expect(await screen.findByText("No admin data yet")).toBeTruthy();
   });
 
   it("shows admin navigation to authenticated users", async () => {
@@ -107,20 +108,19 @@ describe("Admin app shell", () => {
     );
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue(
-        jsonResponse({
-          data: [],
-          meta: { page: 1, limit: 50, total: 0, hasMore: false },
-        }),
-      ),
+      vi
+        .fn()
+        .mockImplementation(() => Promise.resolve(emptyPaginatedResponse())),
     );
 
     render(<App />);
 
     expect(await screen.findByLabelText("Admin navigation")).toBeTruthy();
-    expect(
-      screen.getByRole("button", { name: "Competitions" }),
-    ).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("button", { name: "Dashboard" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(screen.getByRole("button", { name: "Competitions" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Seasons" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Teams" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Users" })).toBeTruthy();
@@ -130,29 +130,24 @@ describe("Admin app shell", () => {
     expect(screen.getByRole("button", { name: "Rounds" })).toBeTruthy();
   });
 
-  it("renders competitions by default for authenticated users", async () => {
+  it("renders the dashboard by default for authenticated users", async () => {
     window.localStorage.setItem(
       "sr_admin_access_token",
       accessTokenForRole("superadmin"),
     );
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue(
-        jsonResponse({
-          data: [],
-          meta: { page: 1, limit: 50, total: 0, hasMore: false },
-        }),
-      ),
+      vi
+        .fn()
+        .mockImplementation(() => Promise.resolve(emptyPaginatedResponse())),
     );
 
     render(<App />);
 
     expect(
-      await screen.findByRole("heading", { name: "Competitions" }),
+      await screen.findByRole("heading", { name: "Dashboard" }),
     ).toBeTruthy();
-    expect(
-      screen.getByRole("button", { name: "Create competition" }),
-    ).toBeTruthy();
+    expect(screen.getByText("No admin data yet")).toBeTruthy();
   });
 
   it("opens the Seasons page from admin navigation", async () => {
@@ -160,31 +155,16 @@ describe("Admin app shell", () => {
       "sr_admin_access_token",
       accessTokenForRole("superadmin"),
     );
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce(
-        jsonResponse({
-          data: [],
-          meta: { page: 1, limit: 50, total: 0, hasMore: false },
-        }),
-      )
-      .mockResolvedValueOnce(
-        jsonResponse({
-          data: [],
-          meta: { page: 1, limit: 50, total: 0, hasMore: false },
-        }),
-      )
-      .mockResolvedValueOnce(
-        jsonResponse({
-          data: [],
-          meta: { page: 1, limit: 50, total: 0, hasMore: false },
-        }),
-      );
-    vi.stubGlobal("fetch", fetchMock);
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockImplementation(() => Promise.resolve(emptyPaginatedResponse())),
+    );
 
     render(<App />);
 
-    await screen.findByRole("heading", { name: "Competitions" });
+    await screen.findByRole("heading", { name: "Dashboard" });
 
     fireEvent.click(screen.getByRole("button", { name: "Seasons" }));
     expect(
@@ -198,25 +178,16 @@ describe("Admin app shell", () => {
       "sr_admin_access_token",
       accessTokenForRole("superadmin"),
     );
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce(
-        jsonResponse({
-          data: [],
-          meta: { page: 1, limit: 50, total: 0, hasMore: false },
-        }),
-      )
-      .mockResolvedValueOnce(
-        jsonResponse({
-          data: [],
-          meta: { page: 1, limit: 50, total: 0, hasMore: false },
-        }),
-      );
-    vi.stubGlobal("fetch", fetchMock);
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockImplementation(() => Promise.resolve(emptyPaginatedResponse())),
+    );
 
     render(<App />);
 
-    await screen.findByRole("heading", { name: "Competitions" });
+    await screen.findByRole("heading", { name: "Dashboard" });
 
     fireEvent.click(screen.getByRole("button", { name: "Teams" }));
     expect(await screen.findByRole("heading", { name: "Teams" })).toBeTruthy();
@@ -228,25 +199,16 @@ describe("Admin app shell", () => {
       "sr_admin_access_token",
       accessTokenForRole("superadmin"),
     );
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce(
-        jsonResponse({
-          data: [],
-          meta: { page: 1, limit: 50, total: 0, hasMore: false },
-        }),
-      )
-      .mockResolvedValueOnce(
-        jsonResponse({
-          data: [],
-          meta: { page: 1, limit: 50, total: 0, hasMore: false },
-        }),
-      );
-    vi.stubGlobal("fetch", fetchMock);
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockImplementation(() => Promise.resolve(emptyPaginatedResponse())),
+    );
 
     render(<App />);
 
-    await screen.findByRole("heading", { name: "Competitions" });
+    await screen.findByRole("heading", { name: "Dashboard" });
 
     fireEvent.click(screen.getByRole("button", { name: "Users" }));
     expect(await screen.findByRole("heading", { name: "Users" })).toBeTruthy();
@@ -258,25 +220,16 @@ describe("Admin app shell", () => {
       "sr_admin_access_token",
       accessTokenForRole("superadmin"),
     );
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce(
-        jsonResponse({
-          data: [],
-          meta: { page: 1, limit: 50, total: 0, hasMore: false },
-        }),
-      )
-      .mockResolvedValueOnce(
-        jsonResponse({
-          data: [],
-          meta: { page: 1, limit: 50, total: 0, hasMore: false },
-        }),
-      );
-    vi.stubGlobal("fetch", fetchMock);
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockImplementation(() => Promise.resolve(emptyPaginatedResponse())),
+    );
 
     render(<App />);
 
-    await screen.findByRole("heading", { name: "Competitions" });
+    await screen.findByRole("heading", { name: "Dashboard" });
 
     fireEvent.click(screen.getByRole("button", { name: "Audit Log" }));
     expect(
@@ -292,12 +245,9 @@ describe("Admin app shell", () => {
     );
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue(
-        jsonResponse({
-          data: [],
-          meta: { page: 1, limit: 50, total: 0, hasMore: false },
-        }),
-      ),
+      vi
+        .fn()
+        .mockImplementation(() => Promise.resolve(emptyPaginatedResponse())),
     );
 
     render(<App />);
@@ -332,12 +282,9 @@ describe("Admin app shell", () => {
     );
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue(
-        jsonResponse({
-          data: [],
-          meta: { page: 1, limit: 50, total: 0, hasMore: false },
-        }),
-      ),
+      vi
+        .fn()
+        .mockImplementation(() => Promise.resolve(emptyPaginatedResponse())),
     );
 
     render(<App />);
@@ -356,20 +303,16 @@ describe("Admin app shell", () => {
       "sr_admin_access_token",
       accessTokenForRole("superadmin"),
     );
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce(
-        jsonResponse({
-          data: [],
-          meta: { page: 1, limit: 50, total: 0, hasMore: false },
-        }),
-      )
-      .mockResolvedValueOnce(jsonResponse({ data: [] }));
-    vi.stubGlobal("fetch", fetchMock);
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockImplementation(() => Promise.resolve(emptyPaginatedResponse())),
+    );
 
     render(<App />);
 
-    await screen.findByRole("heading", { name: "Competitions" });
+    await screen.findByRole("heading", { name: "Dashboard" });
 
     fireEvent.click(screen.getByRole("button", { name: "Aliases" }));
     expect(
@@ -385,20 +328,16 @@ describe("Admin app shell", () => {
       "sr_admin_access_token",
       accessTokenForRole("superadmin"),
     );
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce(
-        jsonResponse({
-          data: [],
-          meta: { page: 1, limit: 50, total: 0, hasMore: false },
-        }),
-      )
-      .mockResolvedValueOnce(jsonResponse({ data: [] }));
-    vi.stubGlobal("fetch", fetchMock);
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockImplementation(() => Promise.resolve(emptyPaginatedResponse())),
+    );
 
     render(<App />);
 
-    await screen.findByRole("heading", { name: "Competitions" });
+    await screen.findByRole("heading", { name: "Dashboard" });
 
     fireEvent.click(screen.getByRole("button", { name: "Rounds" }));
     expect(await screen.findByRole("heading", { name: "Rounds" })).toBeTruthy();
@@ -410,37 +349,16 @@ describe("Admin app shell", () => {
       "sr_admin_access_token",
       accessTokenForRole("superadmin"),
     );
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce(
-        jsonResponse({
-          data: [],
-          meta: { page: 1, limit: 50, total: 0, hasMore: false },
-        }),
-      )
-      .mockResolvedValueOnce(
-        jsonResponse({
-          data: [],
-          meta: { page: 1, limit: 50, total: 0, hasMore: false },
-        }),
-      )
-      .mockResolvedValueOnce(
-        jsonResponse({
-          data: [],
-          meta: { page: 1, limit: 50, total: 0, hasMore: false },
-        }),
-      )
-      .mockResolvedValueOnce(
-        jsonResponse({
-          data: [],
-          meta: { page: 1, limit: 50, total: 0, hasMore: false },
-        }),
-      );
-    vi.stubGlobal("fetch", fetchMock);
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockImplementation(() => Promise.resolve(emptyPaginatedResponse())),
+    );
 
     render(<App />);
 
-    await screen.findByRole("heading", { name: "Competitions" });
+    await screen.findByRole("heading", { name: "Dashboard" });
 
     fireEvent.click(screen.getByRole("button", { name: "Fixtures" }));
     expect(
@@ -460,12 +378,9 @@ describe("Admin app shell", () => {
     );
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue(
-        jsonResponse({
-          data: [],
-          meta: { page: 1, limit: 50, total: 0, hasMore: false },
-        }),
-      ),
+      vi
+        .fn()
+        .mockImplementation(() => Promise.resolve(emptyPaginatedResponse())),
     );
 
     render(<App />);

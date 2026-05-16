@@ -640,3 +640,49 @@ a {
   background: #edf1f6;
   color: #52627a;
 }
+
+.dashboard-sections {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.dashboard-sections h3 {
+  margin: 0 0 1rem;
+  font-size: 1.15rem;
+}
+
+.dashboard-card-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+}
+
+.dashboard-card {
+  border: 1px solid #d9e2ef;
+  border-radius: 0.75rem;
+  background: #ffffff;
+  padding: 1.25rem;
+}
+
+.dashboard-card span {
+  color: #52627a;
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.6rem;
+  text-transform: uppercase;
+}
+
+.dashboard-card strong {
+  color: #152033;
+  display: block;
+  font-size: 2rem;
+  line-height: 1;
+  margin-bottom: 0.6rem;
+}
+
+.dashboard-card p {
+  color: #52627a;
+  margin: 0;
+}

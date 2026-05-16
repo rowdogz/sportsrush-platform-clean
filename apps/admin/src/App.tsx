@@ -6,6 +6,7 @@ import type {
 } from "./components/layout/AdminLayout";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { CompetitionsPage } from "./pages/CompetitionsPage";
+import { DashboardPage } from "./pages/DashboardPage";
 import { FixturesPage } from "./pages/FixturesPage";
 import { RoundsPage } from "./pages/RoundsPage";
 import { SeasonsPage } from "./pages/SeasonsPage";
@@ -20,6 +21,7 @@ import { canViewAuditLog } from "./lib/adminPermissions";
 import { AdminTableError } from "./components/admin/AdminTableState";
 
 const adminNavItems: readonly AdminNavItem[] = [
+  { id: "dashboard", label: "Dashboard" },
   { id: "competitions", label: "Competitions" },
   { id: "seasons", label: "Seasons" },
   { id: "teams", label: "Teams" },
@@ -31,6 +33,7 @@ const adminNavItems: readonly AdminNavItem[] = [
 ];
 
 const screenPaths: Partial<Record<AdminScreen, string>> = {
+  dashboard: "/",
   audit: "/audit",
 };
 
@@ -39,7 +42,7 @@ function getInitialScreen(): AdminScreen {
   const matchingEntry = Object.entries(screenPaths).find(
     ([, path]) => path === pathname,
   );
-  return (matchingEntry?.[0] as AdminScreen | undefined) ?? "competitions";
+  return (matchingEntry?.[0] as AdminScreen | undefined) ?? "dashboard";
 }
 
 function renderForbiddenScreen() {
@@ -53,6 +56,8 @@ function renderForbiddenScreen() {
 
 function renderScreen(screen: AdminScreen) {
   switch (screen) {
+    case "dashboard":
+      return <DashboardPage />;
     case "competitions":
       return <CompetitionsPage />;
     case "seasons":
