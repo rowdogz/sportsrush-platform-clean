@@ -14,6 +14,7 @@ describe("Admin app shell", () => {
   afterEach(() => {
     vi.restoreAllMocks();
     window.localStorage.clear();
+    window.history.replaceState(null, "", "/");
   });
 
   it("shows the login page when no admin session is stored", () => {
@@ -112,6 +113,7 @@ describe("Admin app shell", () => {
     expect(screen.getByRole("button", { name: "Seasons" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Teams" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Users" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Audit Log" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Fixtures" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Aliases" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Rounds" })).toBeTruthy();
@@ -226,6 +228,59 @@ describe("Admin app shell", () => {
     fireEvent.click(screen.getByRole("button", { name: "Users" }));
     expect(await screen.findByRole("heading", { name: "Users" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Apply filters" })).toBeTruthy();
+  });
+
+  it("opens the Audit Log page from admin navigation", async () => {
+    window.localStorage.setItem("sr_admin_access_token", "stored-access-token");
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        jsonResponse({
+          data: [],
+          meta: { page: 1, limit: 50, total: 0, hasMore: false },
+        }),
+      )
+      .mockResolvedValueOnce(
+        jsonResponse({
+          data: [],
+          meta: { page: 1, limit: 50, total: 0, hasMore: false },
+        }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<App />);
+
+    await screen.findByRole("heading", { name: "Competitions" });
+
+    fireEvent.click(screen.getByRole("button", { name: "Audit Log" }));
+    expect(
+      await screen.findByRole("heading", { name: "Audit Log" }),
+    ).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Apply filters" })).toBeTruthy();
+  });
+
+  it("renders the Audit Log page for the /audit route", async () => {
+    window.history.replaceState(null, "", "/audit");
+    window.localStorage.setItem("sr_admin_access_token", "stored-access-token");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse({
+          data: [],
+          meta: { page: 1, limit: 50, total: 0, hasMore: false },
+        }),
+      ),
+    );
+
+    render(<App />);
+
+    expect(
+      await screen.findByRole("heading", { name: "Audit Log" }),
+    ).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Audit Log" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
   });
 
   it("opens the Team Aliases page from admin navigation", async () => {

@@ -314,6 +314,12 @@ a {
   white-space: nowrap;
 }
 
+.admin-table td small {
+  color: #5e6a7d;
+  display: block;
+  margin-top: 0.25rem;
+}
+
 .admin-table th,
 .competitions-table th {
   background: #eef3f9;
@@ -332,6 +338,25 @@ a {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+}
+
+.metadata-grid {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  min-width: 20rem;
+}
+
+.metadata-grid pre {
+  background: #f7f9fc;
+  border: 1px solid #d9e2ef;
+  border-radius: 0.5rem;
+  color: #24344d;
+  margin: 0.35rem 0 0;
+  max-width: 34rem;
+  overflow-x: auto;
+  padding: 0.75rem;
+  white-space: pre-wrap;
 }
 
 .form-help {

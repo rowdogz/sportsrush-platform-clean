@@ -37,6 +37,7 @@ import {
   deleteAliasService,
   enterFixtureResultService,
   getAllowedFixtureTransitions,
+  listAdminAuditEventsService,
   reactivateAdminUserService,
   suspendAdminUserService,
   transitionFixtureService,
@@ -275,6 +276,43 @@ async function expectDomainFailure(promise: Promise<unknown>) {
 }
 
 describe("admin service fixture transitions", () => {
+  it("lists audit events with summaries and changes", async () => {
+    const { context, sqlDb } = await createContext();
+    seedUser(sqlDb, { id: "user-1" });
+    await updateAdminUserRoleService(context, "user-1", "admin");
+
+    const result = await listAdminAuditEventsService(
+      context,
+      { page: 1, limit: 10 },
+      { entityType: "user", action: "user.role.update" },
+    );
+
+    expect(result.total).toBe(1);
+    expect(result.rows[0]?.summary).toContain(
+      "user.role.update on user user-1",
+    );
+    expect(result.rows[0]?.changes.role).toEqual({
+      before: "user",
+      after: "admin",
+    });
+    expect(result.rows[0]?.actorDisplayName).toBe("admin-user-1");
+  });
+
+  it("rejects invalid audit date ranges in the service layer", async () => {
+    const { context } = await createContext();
+
+    await expectDomainFailure(
+      listAdminAuditEventsService(
+        context,
+        { page: 1, limit: 10 },
+        {
+          dateFrom: "2026-05-15T00:00:00.000Z",
+          dateTo: "2026-05-14T00:00:00.000Z",
+        },
+      ),
+    );
+  });
+
   it("writes audit events for admin mutation areas", async () => {
     const { context, sqlDb } = await createContext();
     seedUser(sqlDb, { id: "user-1" });

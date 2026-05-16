@@ -16,6 +16,7 @@ import {
   findFixtureById,
   insertResultCorrection,
   listAliasesBySource,
+  listAdminAuditEvents,
   listAuditEvents,
   listCompetitions,
   listFixtures,
@@ -239,6 +240,58 @@ describe("admin repository layer", () => {
     const events = await listAuditEvents(db);
     expect(events).toHaveLength(1);
     expect(events[0]?.id).toBe("audit-1");
+  });
+
+  it("lists admin audit events newest first with filters and actor details", async () => {
+    const { db, sqlDb } = await createRepositoryDb();
+    seedUser(sqlDb);
+    await createAuditEvent(
+      db,
+      "audit-old",
+      {
+        actorUserId: "user-1",
+        action: "team.update",
+        targetType: "team",
+        targetId: "team-1",
+        before: { name: "Old" },
+        after: { name: "New" },
+      },
+      "2026-05-14T12:00:00.000Z",
+    );
+    await createAuditEvent(
+      db,
+      "audit-new",
+      {
+        actorUserId: "user-1",
+        action: "user.role.update",
+        targetType: "user",
+        targetId: "user-1",
+        before: { role: "user" },
+        after: { role: "admin" },
+      },
+      "2026-05-14T13:00:00.000Z",
+    );
+
+    const list = await listAdminAuditEvents(db, { page: 1, limit: 10 }, {});
+    expect(list.total).toBe(2);
+    expect(list.rows[0]?.id).toBe("audit-new");
+    expect(list.rows[0]?.actor_email).toBe("alice@example.test");
+    expect(list.rows[0]?.actor_display_name).toBe("Alice Example");
+
+    const filtered = await listAdminAuditEvents(
+      db,
+      { page: 1, limit: 10 },
+      {
+        actorUserId: "user-1",
+        entityType: "team",
+        entityId: "team-1",
+        action: "team.update",
+        dateFrom: "2026-05-14T11:00:00.000Z",
+        dateTo: "2026-05-14T12:30:00.000Z",
+      },
+    );
+    expect(filtered.total).toBe(1);
+    expect(filtered.rows[0]?.id).toBe("audit-old");
   });
 
   it("finds and updates admin user role and status", async () => {

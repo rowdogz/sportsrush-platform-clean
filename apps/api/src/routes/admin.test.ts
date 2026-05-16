@@ -279,6 +279,51 @@ describe("admin route slice 1 auth", () => {
 });
 
 describe("admin route slice 1 users", () => {
+  it("lists, filters, and paginates audit events", async () => {
+    const { request, sqlDb } = await createTestHarness();
+    seedUser(sqlDb, {
+      id: "user-1",
+      email: "alice@example.test",
+      displayName: "Alice Example",
+    });
+    sqlDb.run(
+      `INSERT INTO audit_events
+         (id, actor_user_id, action, target_type, target_id, before_metadata, after_metadata, created_at)
+       VALUES
+         ('audit-1', 'user-1', 'team.update', 'team', 'team-1', '{"name":"Old"}', '{"name":"New"}', '2026-05-14T12:00:00.000Z'),
+         ('audit-2', 'admin-user', 'user.role.update', 'user', 'user-1', '{"role":"user"}', '{"role":"admin"}', '2026-05-14T13:00:00.000Z')`,
+    );
+
+    const listResponse = await request("/v1/admin/audit-events?page=1&limit=1");
+    expect(listResponse.status).toBe(200);
+    const list = (await listResponse.json()) as any;
+    expect(list.data).toHaveLength(1);
+    expect(list.data[0]).toMatchObject({
+      id: "audit-2",
+      actorUserId: "admin-user",
+      actorEmail: "actor-admin@example.test",
+      actorDisplayName: "Admin User",
+      action: "user.role.update",
+      entityType: "user",
+      entityId: "user-1",
+      summary: "user.role.update on user user-1",
+      correlationId: null,
+    });
+    expect(list.data[0].changes.role).toEqual({
+      before: "user",
+      after: "admin",
+    });
+    expect(list.meta).toEqual({ page: 1, limit: 1, total: 2, hasMore: true });
+
+    const filteredResponse = await request(
+      "/v1/admin/audit-events?actorUserId=user-1&entityType=team&entityId=team-1&action=team.update&dateFrom=2026-05-14T11%3A00%3A00.000Z&dateTo=2026-05-14T12%3A30%3A00.000Z",
+    );
+    expect(filteredResponse.status).toBe(200);
+    const filtered = (await filteredResponse.json()) as any;
+    expect(filtered.data).toHaveLength(1);
+    expect(filtered.data[0].id).toBe("audit-1");
+  });
+
   it("lists and filters admin users", async () => {
     const { request, sqlDb } = await createTestHarness();
     seedUser(sqlDb, {
