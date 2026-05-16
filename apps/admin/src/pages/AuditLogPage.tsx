@@ -12,6 +12,11 @@ import {
   AdminTableError,
   AdminTableLoading,
 } from "../components/admin/AdminTableState";
+import {
+  AdminTablePreferences,
+  useAdminTablePreferences,
+  type AdminTableColumn,
+} from "../components/admin/AdminTablePreferences";
 import { AuditDiff } from "../features/audit-events/AuditDiff";
 import type {
   AdminAuditEvent,
@@ -67,6 +72,15 @@ const emptyPaginationValues: PaginationValues = {
   page: 1,
   pageSize: 50,
 };
+
+const auditTableColumns: readonly AdminTableColumn[] = [
+  { id: "created", label: "Created", optional: true },
+  { id: "actor", label: "Actor" },
+  { id: "action", label: "Action" },
+  { id: "entity", label: "Entity", optional: true },
+  { id: "summary", label: "Summary", optional: true },
+  { id: "details", label: "Details" },
+];
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
@@ -170,6 +184,10 @@ export function AuditLogPage() {
     | { readonly status: "exporting" }
     | { readonly status: "error"; readonly message: string }
   >({ status: "idle" });
+  const tablePreferences = useAdminTablePreferences(
+    "sr-admin:audit-log:table-preferences",
+    auditTableColumns,
+  );
 
   const loadAuditEvents = useCallback(
     async (
@@ -380,21 +398,38 @@ export function AuditLogPage() {
             onPageChange={handlePageChange}
             onPageSizeChange={handlePageSizeChange}
           />
+          <AdminTablePreferences
+            columns={auditTableColumns}
+            density={tablePreferences.density}
+            hiddenColumns={tablePreferences.hiddenColumns}
+            onColumnVisibleChange={tablePreferences.setColumnVisible}
+            onDensityChange={tablePreferences.setDensity}
+          />
           <div className="admin-table-wrapper">
-            <table className="admin-table audit-table">
+            <table className={`${tablePreferences.tableClassName} audit-table`}>
               <thead>
                 <tr>
-                  <th scope="col">Created</th>
+                  {tablePreferences.isColumnVisible("created") ? (
+                    <th scope="col">Created</th>
+                  ) : null}
                   <th scope="col">Actor</th>
                   <th scope="col">Action</th>
-                  <th scope="col">Entity</th>
-                  <th scope="col">Summary</th>
+                  {tablePreferences.isColumnVisible("entity") ? (
+                    <th scope="col">Entity</th>
+                  ) : null}
+                  {tablePreferences.isColumnVisible("summary") ? (
+                    <th scope="col">Summary</th>
+                  ) : null}
                   <th scope="col">Details</th>
                 </tr>
               </thead>
               <tbody>
                 {state.events.map((event) => (
-                  <AuditEventRow key={event.id} event={event} />
+                  <AuditEventRow
+                    key={event.id}
+                    event={event}
+                    isColumnVisible={tablePreferences.isColumnVisible}
+                  />
                 ))}
               </tbody>
             </table>
@@ -412,20 +447,28 @@ export function AuditLogPage() {
   );
 }
 
-function AuditEventRow({ event }: { readonly event: AdminAuditEvent }) {
+function AuditEventRow({
+  event,
+  isColumnVisible,
+}: {
+  readonly event: AdminAuditEvent;
+  readonly isColumnVisible: (columnId: string) => boolean;
+}) {
   return (
     <tr>
-      <td>{event.createdAt}</td>
+      {isColumnVisible("created") ? <td>{event.createdAt}</td> : null}
       <td>
         <span>{getActorLabel(event)}</span>
         {event.actorEmail ? <small>{event.actorEmail}</small> : null}
       </td>
       <td>{event.action}</td>
-      <td>
-        <span>{event.entityType}</span>
-        <small>{event.entityId ?? "—"}</small>
-      </td>
-      <td>{event.summary}</td>
+      {isColumnVisible("entity") ? (
+        <td>
+          <span>{event.entityType}</span>
+          <small>{event.entityId ?? "—"}</small>
+        </td>
+      ) : null}
+      {isColumnVisible("summary") ? <td>{event.summary}</td> : null}
       <td>
         <details>
           <summary>View event details</summary>

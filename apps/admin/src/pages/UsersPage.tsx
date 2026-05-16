@@ -24,6 +24,11 @@ import {
   AdminTableLoading,
 } from "../components/admin/AdminTableState";
 import {
+  AdminTablePreferences,
+  useAdminTablePreferences,
+  type AdminTableColumn,
+} from "../components/admin/AdminTablePreferences";
+import {
   appendStringParam,
   readEnumParam,
   readStringParam,
@@ -52,6 +57,18 @@ const emptyFilterValues: FilterValues = {
   role: "",
   status: "",
 };
+
+const userTableColumns: readonly AdminTableColumn[] = [
+  { id: "user", label: "User" },
+  { id: "verification", label: "Verification", optional: true },
+  { id: "role", label: "Role" },
+  { id: "status", label: "Status" },
+  { id: "email", label: "Email", optional: true },
+  { id: "created", label: "Created", optional: true },
+  { id: "updated", label: "Updated", optional: true },
+  { id: "legacy", label: "Legacy", optional: true },
+  { id: "actions", label: "Actions" },
+];
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
@@ -110,6 +127,10 @@ export function UsersPage() {
   const [statusDrafts, setStatusDrafts] = useState<Record<string, string>>({});
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
+  const tablePreferences = useAdminTablePreferences(
+    "sr-admin:users:table-preferences",
+    userTableColumns,
+  );
 
   const loadUsers = useCallback(
     async (
@@ -307,113 +328,144 @@ export function UsersPage() {
       ) : null}
 
       {state.status === "success" && state.users.length > 0 ? (
-        <div className="admin-table-wrapper">
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th scope="col">User</th>
-                <th scope="col">Verification</th>
-                <th scope="col">Role</th>
-                <th scope="col">Status</th>
-                <th scope="col">Email</th>
-                <th scope="col">Created</th>
-                <th scope="col">Updated</th>
-                <th scope="col">Legacy</th>
-                <th scope="col">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {state.users.map((user) => (
-                <tr key={user.id}>
-                  <td>{user.displayName ?? "—"}</td>
-                  <td>{user.email}</td>
-                  <td>{user.role}</td>
-                  <td>
-                    <span
-                      className={
-                        user.isActive
-                          ? "status-pill status-pill-active"
-                          : "status-pill status-pill-inactive"
-                      }
-                    >
-                      {user.isActive ? "active" : "inactive"}
-                    </span>
-                  </td>
-                  <td>{user.emailVerifiedAt ? "verified" : "unverified"}</td>
-                  <td>{user.createdAt}</td>
-                  <td>{user.profileUpdatedAt ?? user.updatedAt}</td>
-                  <td>{user.legacyWpUserId ?? "—"}</td>
-                  <td>
-                    <div className="row-actions">
-                      <label>
-                        <select
-                          aria-label={`Role for ${user.email}`}
-                          value={roleDrafts[user.id] ?? user.role}
-                          onChange={(event) =>
-                            setRoleDrafts({
-                              ...roleDrafts,
-                              [user.id]: event.target.value as UserRole,
-                            })
-                          }
-                        >
-                          {userRoles.map((role) => (
-                            <option key={role} value={role}>
-                              {role}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                      <button
-                        className="secondary-button"
-                        type="button"
-                        disabled={pendingAction === `role:${user.id}`}
-                        onClick={() => void handleRoleUpdate(user)}
-                      >
-                        Update role
-                      </button>
-                      <label>
-                        <select
-                          aria-label={`Status for ${user.email}`}
-                          value={
-                            statusDrafts[user.id] ??
-                            (user.isActive ? "active" : "inactive")
-                          }
-                          onChange={(event) =>
-                            setStatusDrafts({
-                              ...statusDrafts,
-                              [user.id]: event.target.value,
-                            })
-                          }
-                        >
-                          <option value="active">active</option>
-                          <option value="inactive">inactive</option>
-                        </select>
-                      </label>
-                      <button
-                        className="secondary-button"
-                        type="button"
-                        disabled={pendingAction === `status:${user.id}`}
-                        onClick={() => void handleStatusUpdate(user)}
-                      >
-                        Update status
-                      </button>
-                      <button
-                        className={
-                          user.isActive ? "danger-button" : "secondary-button"
-                        }
-                        type="button"
-                        disabled={pendingAction === `suspend:${user.id}`}
-                        onClick={() => void handleSuspendToggle(user)}
-                      >
-                        {user.isActive ? "Suspend" : "Reactivate"}
-                      </button>
-                    </div>
-                  </td>
+        <>
+          <AdminTablePreferences
+            columns={userTableColumns}
+            density={tablePreferences.density}
+            hiddenColumns={tablePreferences.hiddenColumns}
+            onColumnVisibleChange={tablePreferences.setColumnVisible}
+            onDensityChange={tablePreferences.setDensity}
+          />
+          <div className="admin-table-wrapper">
+            <table className={tablePreferences.tableClassName}>
+              <thead>
+                <tr>
+                  <th scope="col">User</th>
+                  {tablePreferences.isColumnVisible("verification") ? (
+                    <th scope="col">Verification</th>
+                  ) : null}
+                  <th scope="col">Role</th>
+                  <th scope="col">Status</th>
+                  {tablePreferences.isColumnVisible("email") ? (
+                    <th scope="col">Email</th>
+                  ) : null}
+                  {tablePreferences.isColumnVisible("created") ? (
+                    <th scope="col">Created</th>
+                  ) : null}
+                  {tablePreferences.isColumnVisible("updated") ? (
+                    <th scope="col">Updated</th>
+                  ) : null}
+                  {tablePreferences.isColumnVisible("legacy") ? (
+                    <th scope="col">Legacy</th>
+                  ) : null}
+                  <th scope="col">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {state.users.map((user) => (
+                  <tr key={user.id}>
+                    <td>{user.displayName ?? "—"}</td>
+                    {tablePreferences.isColumnVisible("verification") ? (
+                      <td>{user.email}</td>
+                    ) : null}
+                    <td>{user.role}</td>
+                    <td>
+                      <span
+                        className={
+                          user.isActive
+                            ? "status-pill status-pill-active"
+                            : "status-pill status-pill-inactive"
+                        }
+                      >
+                        {user.isActive ? "active" : "inactive"}
+                      </span>
+                    </td>
+                    {tablePreferences.isColumnVisible("email") ? (
+                      <td>
+                        {user.emailVerifiedAt ? "verified" : "unverified"}
+                      </td>
+                    ) : null}
+                    {tablePreferences.isColumnVisible("created") ? (
+                      <td>{user.createdAt}</td>
+                    ) : null}
+                    {tablePreferences.isColumnVisible("updated") ? (
+                      <td>{user.profileUpdatedAt ?? user.updatedAt}</td>
+                    ) : null}
+                    {tablePreferences.isColumnVisible("legacy") ? (
+                      <td>{user.legacyWpUserId ?? "—"}</td>
+                    ) : null}
+                    <td>
+                      <div className="row-actions">
+                        <label>
+                          <select
+                            aria-label={`Role for ${user.email}`}
+                            value={roleDrafts[user.id] ?? user.role}
+                            onChange={(event) =>
+                              setRoleDrafts({
+                                ...roleDrafts,
+                                [user.id]: event.target.value as UserRole,
+                              })
+                            }
+                          >
+                            {userRoles.map((role) => (
+                              <option key={role} value={role}>
+                                {role}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <button
+                          className="secondary-button"
+                          type="button"
+                          disabled={pendingAction === `role:${user.id}`}
+                          onClick={() => void handleRoleUpdate(user)}
+                        >
+                          Update role
+                        </button>
+                        <label>
+                          <select
+                            aria-label={`Status for ${user.email}`}
+                            value={
+                              statusDrafts[user.id] ??
+                              (user.isActive ? "active" : "inactive")
+                            }
+                            onChange={(event) =>
+                              setStatusDrafts({
+                                ...statusDrafts,
+                                [user.id]: event.target.value,
+                              })
+                            }
+                          >
+                            <option value="active">active</option>
+                            <option value="inactive">inactive</option>
+                          </select>
+                        </label>
+                        <button
+                          className="secondary-button"
+                          type="button"
+                          disabled={pendingAction === `status:${user.id}`}
+                          onClick={() => void handleStatusUpdate(user)}
+                        >
+                          Update status
+                        </button>
+                        <button
+                          className={
+                            user.isActive ? "danger-button" : "secondary-button"
+                          }
+                          type="button"
+                          disabled={pendingAction === `suspend:${user.id}`}
+                          onClick={() => void handleSuspendToggle(user)}
+                        >
+                          {user.isActive ? "Suspend" : "Reactivate"}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       ) : null}
     </section>
   );

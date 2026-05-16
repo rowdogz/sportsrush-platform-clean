@@ -22,6 +22,11 @@ import {
   AdminTableLoading,
 } from "../components/admin/AdminTableState";
 import {
+  AdminTablePreferences,
+  useAdminTablePreferences,
+  type AdminTableColumn,
+} from "../components/admin/AdminTablePreferences";
+import {
   appendStringParam,
   readDateParam,
   readEnumParam,
@@ -75,6 +80,18 @@ const emptyFilterValues: FilterValues = {
   source: "",
   alias: "",
 };
+
+const teamAliasTableColumns: readonly AdminTableColumn[] = [
+  { id: "alias", label: "Alias" },
+  { id: "normalizedAlias", label: "Normalized alias", optional: true },
+  { id: "source", label: "Source" },
+  { id: "teamId", label: "Team ID", optional: true },
+  { id: "sportId", label: "Sport ID", optional: true },
+  { id: "priority", label: "Priority", optional: true },
+  { id: "legacyId", label: "Legacy ID", optional: true },
+  { id: "status", label: "Status" },
+  { id: "actions", label: "Actions" },
+];
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
@@ -170,6 +187,10 @@ export function TeamAliasesPage() {
   const [editValues, setEditValues] = useState<FormValues>(emptyFormValues);
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
+  const tablePreferences = useAdminTablePreferences(
+    "sr-admin:team-aliases:table-preferences",
+    teamAliasTableColumns,
+  );
 
   const loadAliases = useCallback(
     async (
@@ -458,205 +479,234 @@ export function TeamAliasesPage() {
       ) : null}
 
       {state.status === "success" && state.aliases.length > 0 ? (
-        <div className="admin-table-wrapper">
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th scope="col">Alias</th>
-                <th scope="col">Normalized alias</th>
-                <th scope="col">Source</th>
-                <th scope="col">Team ID</th>
-                <th scope="col">Sport ID</th>
-                <th scope="col">Priority</th>
-                <th scope="col">Legacy ID</th>
-                <th scope="col">Status</th>
-                <th scope="col">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {state.aliases.map((alias) => (
-                <tr key={alias.id}>
-                  {editingId === alias.id ? (
-                    <td colSpan={9}>
-                      <form
-                        className="inline-edit-form"
-                        onSubmit={(event) =>
-                          void handleEditSubmit(event, alias)
-                        }
-                      >
-                        <label>
-                          Alias
-                          <input
-                            aria-label="Edit alias"
-                            value={editValues.alias}
-                            onChange={(event) =>
-                              setEditValues({
-                                ...editValues,
-                                alias: event.target.value,
-                              })
-                            }
-                          />
-                        </label>
-                        <label>
-                          Normalized alias
-                          <input
-                            aria-label="Edit normalized alias"
-                            value={editValues.normalizedAlias}
-                            onChange={(event) =>
-                              setEditValues({
-                                ...editValues,
-                                normalizedAlias: event.target.value,
-                              })
-                            }
-                          />
-                        </label>
-                        <label>
-                          Source
-                          <input
-                            aria-label="Edit source"
-                            value={editValues.source}
-                            onChange={(event) =>
-                              setEditValues({
-                                ...editValues,
-                                source: event.target.value,
-                              })
-                            }
-                          />
-                        </label>
-                        <label>
-                          Team ID
-                          <input
-                            aria-label="Edit team ID"
-                            value={editValues.teamId}
-                            onChange={(event) =>
-                              setEditValues({
-                                ...editValues,
-                                teamId: event.target.value,
-                              })
-                            }
-                          />
-                        </label>
-                        <label>
-                          Sport ID
-                          <input
-                            aria-label="Edit sport ID"
-                            value={editValues.sportId}
-                            onChange={(event) =>
-                              setEditValues({
-                                ...editValues,
-                                sportId: event.target.value,
-                              })
-                            }
-                          />
-                        </label>
-                        <label>
-                          Priority
-                          <input
-                            aria-label="Edit priority"
-                            value={editValues.priority}
-                            onChange={(event) =>
-                              setEditValues({
-                                ...editValues,
-                                priority: event.target.value,
-                              })
-                            }
-                          />
-                        </label>
-                        <label>
-                          Legacy ID
-                          <input
-                            aria-label="Edit legacy ID"
-                            value={editValues.legacyId}
-                            onChange={(event) =>
-                              setEditValues({
-                                ...editValues,
-                                legacyId: event.target.value,
-                              })
-                            }
-                          />
-                        </label>
-                        <label>
-                          Active
-                          <input
-                            aria-label="Edit active"
-                            type="checkbox"
-                            checked={editValues.isActive}
-                            onChange={(event) =>
-                              setEditValues({
-                                ...editValues,
-                                isActive: event.target.checked,
-                              })
-                            }
-                          />
-                        </label>
-                        <div className="row-actions">
-                          <button
-                            className="primary-button compact-button"
-                            type="submit"
-                            disabled={pendingAction === `edit:${alias.id}`}
-                          >
-                            {pendingAction === `edit:${alias.id}`
-                              ? "Saving..."
-                              : "Save"}
-                          </button>
-                          <button
-                            className="secondary-button compact-button"
-                            type="button"
-                            onClick={() => setEditingId(null)}
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </form>
-                    </td>
-                  ) : (
-                    <>
-                      <td>{alias.alias}</td>
-                      <td>{alias.normalizedAlias || "—"}</td>
-                      <td>{alias.source}</td>
-                      <td>{alias.teamId}</td>
-                      <td>{alias.sportId}</td>
-                      <td>{alias.priority}</td>
-                      <td>{alias.legacyId ?? "—"}</td>
-                      <td>
-                        <span
-                          className={
-                            alias.isActive
-                              ? "status-pill status-pill-active"
-                              : "status-pill status-pill-inactive"
+        <>
+          <AdminTablePreferences
+            columns={teamAliasTableColumns}
+            density={tablePreferences.density}
+            hiddenColumns={tablePreferences.hiddenColumns}
+            onColumnVisibleChange={tablePreferences.setColumnVisible}
+            onDensityChange={tablePreferences.setDensity}
+          />
+          <div className="admin-table-wrapper">
+            <table className={tablePreferences.tableClassName}>
+              <thead>
+                <tr>
+                  <th scope="col">Alias</th>
+                  {tablePreferences.isColumnVisible("normalizedAlias") ? (
+                    <th scope="col">Normalized alias</th>
+                  ) : null}
+                  <th scope="col">Source</th>
+                  {tablePreferences.isColumnVisible("teamId") ? (
+                    <th scope="col">Team ID</th>
+                  ) : null}
+                  {tablePreferences.isColumnVisible("sportId") ? (
+                    <th scope="col">Sport ID</th>
+                  ) : null}
+                  {tablePreferences.isColumnVisible("priority") ? (
+                    <th scope="col">Priority</th>
+                  ) : null}
+                  {tablePreferences.isColumnVisible("legacyId") ? (
+                    <th scope="col">Legacy ID</th>
+                  ) : null}
+                  <th scope="col">Status</th>
+                  <th scope="col">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {state.aliases.map((alias) => (
+                  <tr key={alias.id}>
+                    {editingId === alias.id ? (
+                      <td colSpan={99}>
+                        <form
+                          className="inline-edit-form"
+                          onSubmit={(event) =>
+                            void handleEditSubmit(event, alias)
                           }
                         >
-                          {alias.isActive ? "Active" : "Inactive"}
-                        </span>
+                          <label>
+                            Alias
+                            <input
+                              aria-label="Edit alias"
+                              value={editValues.alias}
+                              onChange={(event) =>
+                                setEditValues({
+                                  ...editValues,
+                                  alias: event.target.value,
+                                })
+                              }
+                            />
+                          </label>
+                          <label>
+                            Normalized alias
+                            <input
+                              aria-label="Edit normalized alias"
+                              value={editValues.normalizedAlias}
+                              onChange={(event) =>
+                                setEditValues({
+                                  ...editValues,
+                                  normalizedAlias: event.target.value,
+                                })
+                              }
+                            />
+                          </label>
+                          <label>
+                            Source
+                            <input
+                              aria-label="Edit source"
+                              value={editValues.source}
+                              onChange={(event) =>
+                                setEditValues({
+                                  ...editValues,
+                                  source: event.target.value,
+                                })
+                              }
+                            />
+                          </label>
+                          <label>
+                            Team ID
+                            <input
+                              aria-label="Edit team ID"
+                              value={editValues.teamId}
+                              onChange={(event) =>
+                                setEditValues({
+                                  ...editValues,
+                                  teamId: event.target.value,
+                                })
+                              }
+                            />
+                          </label>
+                          <label>
+                            Sport ID
+                            <input
+                              aria-label="Edit sport ID"
+                              value={editValues.sportId}
+                              onChange={(event) =>
+                                setEditValues({
+                                  ...editValues,
+                                  sportId: event.target.value,
+                                })
+                              }
+                            />
+                          </label>
+                          <label>
+                            Priority
+                            <input
+                              aria-label="Edit priority"
+                              value={editValues.priority}
+                              onChange={(event) =>
+                                setEditValues({
+                                  ...editValues,
+                                  priority: event.target.value,
+                                })
+                              }
+                            />
+                          </label>
+                          <label>
+                            Legacy ID
+                            <input
+                              aria-label="Edit legacy ID"
+                              value={editValues.legacyId}
+                              onChange={(event) =>
+                                setEditValues({
+                                  ...editValues,
+                                  legacyId: event.target.value,
+                                })
+                              }
+                            />
+                          </label>
+                          <label>
+                            Active
+                            <input
+                              aria-label="Edit active"
+                              type="checkbox"
+                              checked={editValues.isActive}
+                              onChange={(event) =>
+                                setEditValues({
+                                  ...editValues,
+                                  isActive: event.target.checked,
+                                })
+                              }
+                            />
+                          </label>
+                          <div className="row-actions">
+                            <button
+                              className="primary-button compact-button"
+                              type="submit"
+                              disabled={pendingAction === `edit:${alias.id}`}
+                            >
+                              {pendingAction === `edit:${alias.id}`
+                                ? "Saving..."
+                                : "Save"}
+                            </button>
+                            <button
+                              className="secondary-button compact-button"
+                              type="button"
+                              onClick={() => setEditingId(null)}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </form>
                       </td>
-                      <td>
-                        <div className="row-actions">
-                          <button
-                            className="secondary-button compact-button"
-                            type="button"
-                            onClick={() => startEditing(alias)}
+                    ) : (
+                      <>
+                        <td>{alias.alias}</td>
+                        {tablePreferences.isColumnVisible("normalizedAlias") ? (
+                          <td>{alias.normalizedAlias || "—"}</td>
+                        ) : null}
+                        <td>{alias.source}</td>
+                        {tablePreferences.isColumnVisible("teamId") ? (
+                          <td>{alias.teamId}</td>
+                        ) : null}
+                        {tablePreferences.isColumnVisible("sportId") ? (
+                          <td>{alias.sportId}</td>
+                        ) : null}
+                        {tablePreferences.isColumnVisible("priority") ? (
+                          <td>{alias.priority}</td>
+                        ) : null}
+                        {tablePreferences.isColumnVisible("legacyId") ? (
+                          <td>{alias.legacyId ?? "—"}</td>
+                        ) : null}
+                        <td>
+                          <span
+                            className={
+                              alias.isActive
+                                ? "status-pill status-pill-active"
+                                : "status-pill status-pill-inactive"
+                            }
                           >
-                            Edit
-                          </button>
-                          <button
-                            className="secondary-button compact-button danger-button"
-                            type="button"
-                            disabled={pendingAction === `delete:${alias.id}`}
-                            onClick={() => void handleDelete(alias)}
-                          >
-                            {pendingAction === `delete:${alias.id}`
-                              ? "Deleting..."
-                              : "Delete"}
-                          </button>
-                        </div>
-                      </td>
-                    </>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                            {alias.isActive ? "Active" : "Inactive"}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="row-actions">
+                            <button
+                              className="secondary-button compact-button"
+                              type="button"
+                              onClick={() => startEditing(alias)}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              className="secondary-button compact-button danger-button"
+                              type="button"
+                              disabled={pendingAction === `delete:${alias.id}`}
+                              onClick={() => void handleDelete(alias)}
+                            >
+                              {pendingAction === `delete:${alias.id}`
+                                ? "Deleting..."
+                                : "Delete"}
+                            </button>
+                          </div>
+                        </td>
+                      </>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       ) : null}
     </section>
   );
