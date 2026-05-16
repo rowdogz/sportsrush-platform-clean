@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { useAuthSession } from "../../contexts/AuthSessionProvider";
 
 export type AdminScreen =
+  | "dashboard"
   | "competitions"
   | "seasons"
   | "teams"
