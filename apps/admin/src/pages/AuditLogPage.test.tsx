@@ -69,6 +69,7 @@ describe("AuditLogPage", () => {
     vi.restoreAllMocks();
     setAccessTokenProvider(() => null);
     window.localStorage.clear();
+    window.history.replaceState(null, "", "/");
   });
 
   it("shows loading and then renders audit events", async () => {
@@ -426,17 +427,9 @@ describe("AuditLogPage", () => {
       }),
     );
     window.localStorage.setItem(
-      "sr-admin:audit-log:applied-filters",
-      JSON.stringify({
-        actorUserId: "admin-user",
-        entityType: "fixture",
-        entityId: "",
-        action: "",
-        dateFrom: "",
-        dateTo: "",
-      }),
+      "sr-admin:audit-log:pagination",
+      JSON.stringify({ page: 1, pageSize: 100 }),
     );
-    window.localStorage.setItem("sr-admin:audit-log:page-size", "100");
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(auditListResponse([auditEvent()]));
@@ -457,7 +450,10 @@ describe("AuditLogPage", () => {
   });
 
   it("resets invalid persisted audit page size", async () => {
-    window.localStorage.setItem("sr-admin:audit-log:page-size", "999");
+    window.localStorage.setItem(
+      "sr-admin:audit-log:pagination",
+      JSON.stringify({ page: 1, pageSize: 999 }),
+    );
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(auditListResponse([auditEvent()]));
@@ -473,9 +469,11 @@ describe("AuditLogPage", () => {
       "/v1/admin/audit-events?page=1&limit=50",
       expect.objectContaining({ headers: expect.any(Headers) }),
     );
-    expect(window.localStorage.getItem("sr-admin:audit-log:page-size")).toBe(
-      "50",
-    );
+    expect(
+      JSON.parse(
+        window.localStorage.getItem("sr-admin:audit-log:pagination") ?? "{}",
+      ).pageSize,
+    ).toBe(50);
   });
 
   it("exports CSV with current filters", async () => {

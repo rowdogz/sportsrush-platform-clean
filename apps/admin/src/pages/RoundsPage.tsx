@@ -17,9 +17,12 @@ import {
   AdminTableLoading,
 } from "../components/admin/AdminTableState";
 import {
-  mergeStoredObject,
-  usePersistedAdminState,
-} from "../hooks/usePersistedAdminState";
+  appendStringParam,
+  readDateParam,
+  readEnumParam,
+  readStringParam,
+  useAdminSearchParams,
+} from "../hooks/useAdminSearchParams";
 import { ApiError } from "../lib/apiClient";
 
 type RoundsState =
@@ -136,16 +139,20 @@ function toFormValues(round: AdminRound): FormValues {
 
 export function RoundsPage() {
   const [state, setState] = useState<RoundsState>({ status: "loading" });
-  const [filters, setFilters] = usePersistedAdminState(
-    "sr-admin:rounds:filters",
-    emptyFilterValues,
-    mergeStoredObject(emptyFilterValues),
-  );
-  const [activeFilters, setActiveFilters] = usePersistedAdminState(
-    "sr-admin:rounds:active-filters",
-    emptyFilterValues,
-    mergeStoredObject(emptyFilterValues),
-  );
+  const [filters, setFilters] = useAdminSearchParams({
+    storageKey: "sr-admin:rounds:filters",
+    defaults: emptyFilterValues,
+    paramKeys: ["seasonId"],
+    parse: (params, fallback) => ({
+      seasonId: readStringParam(params, "seasonId", fallback.seasonId),
+    }),
+    serialize: (value, defaults) => {
+      const params = new URLSearchParams();
+      appendStringParam(params, "seasonId", value.seasonId, defaults.seasonId);
+      return params;
+    },
+  });
+  const [activeFilters, setActiveFilters] = useState<FilterValues>(filters);
   const [createValues, setCreateValues] = useState<FormValues>(emptyFormValues);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<FormValues>(emptyFormValues);

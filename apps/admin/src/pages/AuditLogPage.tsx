@@ -19,10 +19,14 @@ import type {
   AuditEventListMeta,
 } from "../features/audit-events/types";
 import {
-  mergeStoredObject,
-  persistedPositiveNumber,
-  usePersistedAdminState,
-} from "../hooks/usePersistedAdminState";
+  appendNumberParam,
+  appendStringParam,
+  readDateParam,
+  readPageSizeParam,
+  readPositiveIntParam,
+  readStringParam,
+  useAdminSearchParams,
+} from "../hooks/useAdminSearchParams";
 import { ApiError } from "../lib/apiClient";
 
 type AuditLogState =
@@ -53,6 +57,16 @@ const emptyFilterValues: FilterValues = {
 };
 
 const storageKeyPrefix = "sr-admin:audit-log";
+
+type PaginationValues = {
+  readonly page: number;
+  readonly pageSize: number;
+};
+
+const emptyPaginationValues: PaginationValues = {
+  page: 1,
+  pageSize: 50,
+};
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
@@ -93,21 +107,64 @@ function getActorLabel(event: AdminAuditEvent): string {
 
 export function AuditLogPage() {
   const [state, setState] = useState<AuditLogState>({ status: "loading" });
-  const [filters, setFilters] = usePersistedAdminState(
-    `${storageKeyPrefix}:filters`,
-    emptyFilterValues,
-    mergeStoredObject(emptyFilterValues),
-  );
-  const [appliedFilters, setAppliedFilters] = usePersistedAdminState(
-    `${storageKeyPrefix}:applied-filters`,
-    emptyFilterValues,
-    mergeStoredObject(emptyFilterValues),
-  );
-  const [pageSize, setPageSize] = usePersistedAdminState(
-    `${storageKeyPrefix}:page-size`,
-    50,
-    (value) => normalizeAdminPageSize(persistedPositiveNumber(50)(value)),
-  );
+  const [filters, setFilters] = useAdminSearchParams({
+    storageKey: `${storageKeyPrefix}:filters`,
+    defaults: emptyFilterValues,
+    paramKeys: [
+      "actor",
+      "entityType",
+      "entityId",
+      "action",
+      "dateFrom",
+      "dateTo",
+    ],
+    parse: (params, fallback) => ({
+      actorUserId: readStringParam(params, "actor", fallback.actorUserId),
+      entityType: readStringParam(params, "entityType", fallback.entityType),
+      entityId: readStringParam(params, "entityId", fallback.entityId),
+      action: readStringParam(params, "action", fallback.action),
+      dateFrom: readDateParam(params, "dateFrom", fallback.dateFrom),
+      dateTo: readDateParam(params, "dateTo", fallback.dateTo),
+    }),
+    serialize: (value, defaults) => {
+      const params = new URLSearchParams();
+      appendStringParam(
+        params,
+        "actor",
+        value.actorUserId,
+        defaults.actorUserId,
+      );
+      appendStringParam(
+        params,
+        "entityType",
+        value.entityType,
+        defaults.entityType,
+      );
+      appendStringParam(params, "entityId", value.entityId, defaults.entityId);
+      appendStringParam(params, "action", value.action, defaults.action);
+      appendStringParam(params, "dateFrom", value.dateFrom, defaults.dateFrom);
+      appendStringParam(params, "dateTo", value.dateTo, defaults.dateTo);
+      return params;
+    },
+  });
+  const [appliedFilters, setAppliedFilters] = useState<FilterValues>(filters);
+  const [pagination, setPagination] = useAdminSearchParams({
+    storageKey: `${storageKeyPrefix}:pagination`,
+    defaults: emptyPaginationValues,
+    paramKeys: ["page", "pageSize"],
+    parse: (params, fallback) => ({
+      page: readPositiveIntParam(params, "page", fallback.page),
+      pageSize: normalizeAdminPageSize(
+        readPageSizeParam(params, "pageSize", fallback.pageSize, [25, 50, 100]),
+      ),
+    }),
+    serialize: (value, defaults) => {
+      const params = new URLSearchParams();
+      appendNumberParam(params, "page", value.page, defaults.page);
+      appendNumberParam(params, "pageSize", value.pageSize, defaults.pageSize);
+      return params;
+    },
+  });
   const [exportState, setExportState] = useState<
     | { readonly status: "idle" }
     | { readonly status: "exporting" }
@@ -119,7 +176,7 @@ export function AuditLogPage() {
       nextFilters: FilterValues,
       {
         page = 1,
-        limit = pageSize,
+        limit = pagination.pageSize,
         showLoading = false,
       }: {
         readonly page?: number;
@@ -145,13 +202,13 @@ export function AuditLogPage() {
         setState({ status: "error", message: getErrorMessage(error) });
       }
     },
-    [pageSize],
+    [pagination.pageSize],
   );
 
   useEffect(() => {
     void loadAuditEvents(appliedFilters, {
-      page: 1,
-      limit: pageSize,
+      page: pagination.page,
+      limit: pagination.pageSize,
       showLoading: true,
     });
   }, [loadAuditEvents]);
@@ -159,23 +216,25 @@ export function AuditLogPage() {
   async function handleFilterSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setAppliedFilters(filters);
+    setPagination({ ...pagination, page: 1 });
     await loadAuditEvents(filters, {
       page: 1,
-      limit: pageSize,
+      limit: pagination.pageSize,
       showLoading: true,
     });
   }
 
   async function handlePageChange(page: number) {
+    setPagination({ ...pagination, page });
     await loadAuditEvents(appliedFilters, {
       page,
-      limit: pageSize,
+      limit: pagination.pageSize,
       showLoading: true,
     });
   }
 
   async function handlePageSizeChange(nextPageSize: number) {
-    setPageSize(nextPageSize);
+    setPagination({ page: 1, pageSize: nextPageSize });
     await loadAuditEvents(appliedFilters, {
       page: 1,
       limit: nextPageSize,
@@ -317,7 +376,7 @@ export function AuditLogPage() {
           <AdminPagination
             label="Audit event pagination"
             meta={state.meta}
-            pageSize={pageSize}
+            pageSize={pagination.pageSize}
             onPageChange={handlePageChange}
             onPageSizeChange={handlePageSizeChange}
           />
@@ -343,7 +402,7 @@ export function AuditLogPage() {
           <AdminPagination
             label="Audit event pagination"
             meta={state.meta}
-            pageSize={pageSize}
+            pageSize={pagination.pageSize}
             onPageChange={handlePageChange}
             onPageSizeChange={handlePageSizeChange}
           />
