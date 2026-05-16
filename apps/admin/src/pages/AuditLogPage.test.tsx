@@ -11,10 +11,13 @@ function jsonResponse(body: unknown, status = 200): Response {
   });
 }
 
-function auditListResponse(data: readonly Record<string, unknown>[]): Response {
+function auditListResponse(
+  data: readonly Record<string, unknown>[],
+  meta: Record<string, unknown> = {},
+): Response {
   return jsonResponse({
     data,
-    meta: { page: 1, limit: 50, total: data.length, hasMore: false },
+    meta: { page: 1, limit: 50, total: data.length, hasMore: false, ...meta },
   });
 }
 
@@ -83,18 +86,35 @@ describe("AuditLogPage", () => {
     );
   });
 
-  it("renders expandable metadata details", async () => {
+  it("renders expandable event details", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValueOnce(auditListResponse([auditEvent()])),
+      vi.fn().mockResolvedValueOnce(
+        auditListResponse([
+          auditEvent({
+            correlationId: "correlation-1",
+            beforeMetadata: { profile: { role: "user" } },
+            afterMetadata: { profile: { role: "admin" } },
+            changes: {
+              profile: {
+                before: { role: "user" },
+                after: { role: "admin" },
+              },
+            },
+          }),
+        ]),
+      ),
     );
 
     render(<AuditLogPage />);
 
-    fireEvent.click(await screen.findByText("View metadata"));
+    fireEvent.click(await screen.findByText("View event details"));
+    expect(screen.getByText("Timestamp")).toBeTruthy();
+    expect(screen.getAllByText("Actor").length).toBeGreaterThan(1);
+    expect(screen.getByText("Correlation ID")).toBeTruthy();
+    expect(screen.getByText("correlation-1")).toBeTruthy();
     expect(screen.getAllByText(/"role":/).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/"before": "user"/).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/"after": "admin"/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/"profile":/).length).toBeGreaterThan(0);
   });
 
   it("renders an empty state", async () => {
@@ -183,6 +203,143 @@ describe("AuditLogPage", () => {
     expect(fetchMock).toHaveBeenNthCalledWith(
       2,
       "/v1/admin/audit-events?page=1&limit=50&actorUserId=admin-user&entityType=team&entityId=team-1&action=team.update&dateFrom=2026-05-14T12%3A00&dateTo=2026-05-15T12%3A00",
+      expect.any(Object),
+    );
+  });
+
+  it("pages through audit events while preserving filters", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        auditListResponse([auditEvent()], {
+          page: 1,
+          limit: 50,
+          total: 75,
+          hasMore: true,
+        }),
+      )
+      .mockResolvedValueOnce(
+        auditListResponse(
+          [
+            auditEvent({
+              id: "audit-2",
+              action: "team.update",
+              entityType: "team",
+              entityId: "team-1",
+              summary: "team.update on team team-1",
+            }),
+          ],
+          { page: 1, limit: 50, total: 75, hasMore: true },
+        ),
+      )
+      .mockResolvedValueOnce(
+        auditListResponse(
+          [
+            auditEvent({
+              id: "audit-3",
+              action: "team.archive",
+              entityType: "team",
+              entityId: "team-1",
+              summary: "team.archive on team team-1",
+            }),
+          ],
+          { page: 2, limit: 50, total: 75, hasMore: false },
+        ),
+      )
+      .mockResolvedValueOnce(
+        auditListResponse(
+          [
+            auditEvent({
+              id: "audit-4",
+              action: "team.update",
+              entityType: "team",
+              entityId: "team-1",
+              summary: "team.update on team team-1",
+            }),
+          ],
+          { page: 1, limit: 50, total: 75, hasMore: true },
+        ),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<AuditLogPage />);
+
+    expect(await screen.findAllByText("Page 1")).toHaveLength(2);
+    expect(
+      screen.getAllByRole("button", { name: "Previous" })[0]!,
+    ).toBeDisabled();
+    expect(screen.getAllByRole("button", { name: "Next" })[0]!).toBeEnabled();
+
+    fireEvent.change(screen.getByLabelText("Entity type"), {
+      target: { value: "team" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Apply filters" }));
+    expect(
+      await screen.findByRole("cell", { name: "team.update" }),
+    ).toBeTruthy();
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Next" })[0]!);
+    expect(
+      await screen.findByRole("cell", { name: "team.archive" }),
+    ).toBeTruthy();
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      "/v1/admin/audit-events?page=2&limit=50&entityType=team",
+      expect.any(Object),
+    );
+    expect(screen.getAllByRole("button", { name: "Next" })[0]!).toBeDisabled();
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Previous" })[0]!);
+    expect(
+      await screen.findByRole("cell", { name: "team.update" }),
+    ).toBeTruthy();
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      4,
+      "/v1/admin/audit-events?page=1&limit=50&entityType=team",
+      expect.any(Object),
+    );
+  });
+
+  it("changes page size and reloads from page one", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        auditListResponse([auditEvent()], {
+          page: 1,
+          limit: 50,
+          total: 125,
+          hasMore: true,
+        }),
+      )
+      .mockResolvedValueOnce(
+        auditListResponse(
+          [
+            auditEvent({
+              id: "audit-2",
+              action: "fixture.update",
+              entityType: "fixture",
+              entityId: "fixture-1",
+              summary: "fixture.update on fixture fixture-1",
+            }),
+          ],
+          { page: 1, limit: 100, total: 125, hasMore: true },
+        ),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<AuditLogPage />);
+
+    expect(await screen.findAllByText("Page 1")).toHaveLength(2);
+    fireEvent.change(screen.getAllByLabelText("Page size")[0]!, {
+      target: { value: "100" },
+    });
+
+    expect(
+      await screen.findByRole("cell", { name: "fixture.update" }),
+    ).toBeTruthy();
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "/v1/admin/audit-events?page=1&limit=100",
       expect.any(Object),
     );
   });

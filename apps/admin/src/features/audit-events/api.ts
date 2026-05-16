@@ -2,6 +2,7 @@ import { apiRequest, apiTextRequest } from "../../lib/apiClient";
 import type {
   AdminAuditEvent,
   AuditEventListFilters,
+  AuditEventListOptions,
   AuditEventListResponse,
 } from "./types";
 
@@ -86,12 +87,12 @@ function normalizeAuditEvent(event: RawAuditEvent): AdminAuditEvent {
 
 function buildAuditEventParams(
   filters: AuditEventListFilters,
-  options: { readonly includePagination: boolean },
+  options: AuditEventListOptions & { readonly includePagination: boolean },
 ): URLSearchParams {
   const params = new URLSearchParams();
   if (options.includePagination) {
-    params.set("page", "1");
-    params.set("limit", "50");
+    params.set("page", String(options.page ?? 1));
+    params.set("limit", String(options.limit ?? 50));
   }
   appendOptionalParam(params, "actorUserId", filters.actorUserId);
   appendOptionalParam(params, "entityType", filters.entityType);
@@ -109,8 +110,12 @@ function filenameFromDisposition(value: string | null): string {
 
 export async function listAuditEvents(
   filters: AuditEventListFilters = {},
+  options: AuditEventListOptions = {},
 ): Promise<AuditEventListResponse> {
-  const params = buildAuditEventParams(filters, { includePagination: true });
+  const params = buildAuditEventParams(filters, {
+    ...options,
+    includePagination: true,
+  });
 
   const response = await apiRequest<RawAuditEventListResponse>(
     `/v1/admin/audit-events?${params.toString()}`,

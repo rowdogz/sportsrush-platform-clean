@@ -28,6 +28,11 @@ export type AuditEventListFilters = {
   readonly dateTo?: string | null;
 };
 
+export type AuditEventListOptions = {
+  readonly page?: number;
+  readonly limit?: number;
+};
+
 export type AuditEventListMeta = {
   readonly page: number;
   readonly limit: number;

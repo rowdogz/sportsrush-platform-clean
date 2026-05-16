@@ -346,6 +346,78 @@ a {
   gap: 0.5rem;
 }
 
+.pagination-bar {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #d9e2ef;
+  border-radius: 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+  margin: 1rem 0;
+  padding: 0.9rem 1rem;
+}
+
+.pagination-bar > div:first-child {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.pagination-bar span {
+  color: #5e6a7d;
+  font-size: 0.85rem;
+}
+
+.pagination-bar label {
+  align-items: center;
+  color: #3d4c63;
+  display: flex;
+  font-weight: 700;
+  gap: 0.5rem;
+}
+
+.pagination-bar select {
+  border: 1px solid #c9d4e5;
+  border-radius: 0.5rem;
+  padding: 0.45rem 0.55rem;
+}
+
+.audit-table td {
+  vertical-align: top;
+}
+
+.audit-detail-panel {
+  display: grid;
+  gap: 1rem;
+  margin-top: 0.75rem;
+  min-width: 28rem;
+}
+
+.audit-detail-list {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.audit-detail-list div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.audit-detail-list dt {
+  color: #5e6a7d;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.audit-detail-list dd {
+  margin: 0;
+  white-space: normal;
+}
+
 .metadata-grid {
   display: grid;
   gap: 0.75rem;

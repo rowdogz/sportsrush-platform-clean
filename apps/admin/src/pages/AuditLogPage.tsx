@@ -6,6 +6,7 @@ import {
 import type {
   AdminAuditEvent,
   AuditEventListFilters,
+  AuditEventListMeta,
 } from "../features/audit-events/types";
 import { ApiError } from "../lib/apiClient";
 
@@ -14,6 +15,7 @@ type AuditLogState =
   | {
       readonly status: "success";
       readonly events: readonly AdminAuditEvent[];
+      readonly meta: AuditEventListMeta;
     }
   | { readonly status: "error"; readonly message: string };
 
@@ -34,6 +36,8 @@ const emptyFilterValues: FilterValues = {
   dateFrom: "",
   dateTo: "",
 };
+
+const pageSizeOptions = [25, 50, 100] as const;
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
@@ -79,6 +83,9 @@ function formatJson(value: unknown): string {
 export function AuditLogPage() {
   const [state, setState] = useState<AuditLogState>({ status: "loading" });
   const [filters, setFilters] = useState<FilterValues>(emptyFilterValues);
+  const [appliedFilters, setAppliedFilters] =
+    useState<FilterValues>(emptyFilterValues);
+  const [pageSize, setPageSize] = useState(50);
   const [exportState, setExportState] = useState<
     | { readonly status: "idle" }
     | { readonly status: "exporting" }
@@ -88,15 +95,30 @@ export function AuditLogPage() {
   const loadAuditEvents = useCallback(
     async (
       nextFilters: FilterValues,
-      { showLoading = false }: { readonly showLoading?: boolean } = {},
+      {
+        page = 1,
+        limit = 50,
+        showLoading = false,
+      }: {
+        readonly page?: number;
+        readonly limit?: number;
+        readonly showLoading?: boolean;
+      } = {},
     ) => {
       if (showLoading) {
         setState({ status: "loading" });
       }
 
       try {
-        const response = await listAuditEvents(toFilters(nextFilters));
-        setState({ status: "success", events: response.data });
+        const response = await listAuditEvents(toFilters(nextFilters), {
+          page,
+          limit,
+        });
+        setState({
+          status: "success",
+          events: response.data,
+          meta: response.meta,
+        });
       } catch (error) {
         setState({ status: "error", message: getErrorMessage(error) });
       }
@@ -110,7 +132,29 @@ export function AuditLogPage() {
 
   async function handleFilterSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    await loadAuditEvents(filters, { showLoading: true });
+    setAppliedFilters(filters);
+    await loadAuditEvents(filters, {
+      page: 1,
+      limit: pageSize,
+      showLoading: true,
+    });
+  }
+
+  async function handlePageChange(page: number) {
+    await loadAuditEvents(appliedFilters, {
+      page,
+      limit: pageSize,
+      showLoading: true,
+    });
+  }
+
+  async function handlePageSizeChange(nextPageSize: number) {
+    setPageSize(nextPageSize);
+    await loadAuditEvents(appliedFilters, {
+      page: 1,
+      limit: nextPageSize,
+      showLoading: true,
+    });
   }
 
   async function handleExport() {
@@ -245,65 +289,163 @@ export function AuditLogPage() {
       ) : null}
 
       {state.status === "success" && state.events.length > 0 ? (
-        <div className="admin-table-wrapper">
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th scope="col">Created</th>
-                <th scope="col">Actor</th>
-                <th scope="col">Action</th>
-                <th scope="col">Entity</th>
-                <th scope="col">Summary</th>
-                <th scope="col">Details</th>
-              </tr>
-            </thead>
-            <tbody>
-              {state.events.map((event) => (
-                <tr key={event.id}>
-                  <td>{event.createdAt}</td>
-                  <td>
-                    <span>{getActorLabel(event)}</span>
-                    {event.actorEmail ? (
-                      <small>{event.actorEmail}</small>
-                    ) : null}
-                  </td>
-                  <td>{event.action}</td>
-                  <td>
-                    <span>{event.entityType}</span>
-                    <small>{event.entityId ?? "—"}</small>
-                  </td>
-                  <td>{event.summary}</td>
-                  <td>
-                    <details>
-                      <summary>View metadata</summary>
-                      <div className="metadata-grid">
-                        <div>
-                          <strong>Changes</strong>
-                          <pre>{formatJson(event.changes)}</pre>
-                        </div>
-                        <div>
-                          <strong>Before</strong>
-                          <pre>{formatJson(event.beforeMetadata)}</pre>
-                        </div>
-                        <div>
-                          <strong>After</strong>
-                          <pre>{formatJson(event.afterMetadata)}</pre>
-                        </div>
-                        {event.correlationId ? (
-                          <div>
-                            <strong>Correlation ID</strong>
-                            <pre>{event.correlationId}</pre>
-                          </div>
-                        ) : null}
-                      </div>
-                    </details>
-                  </td>
+        <>
+          <AuditPagination
+            meta={state.meta}
+            pageSize={pageSize}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+          />
+          <div className="admin-table-wrapper">
+            <table className="admin-table audit-table">
+              <thead>
+                <tr>
+                  <th scope="col">Created</th>
+                  <th scope="col">Actor</th>
+                  <th scope="col">Action</th>
+                  <th scope="col">Entity</th>
+                  <th scope="col">Summary</th>
+                  <th scope="col">Details</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {state.events.map((event) => (
+                  <AuditEventRow key={event.id} event={event} />
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <AuditPagination
+            meta={state.meta}
+            pageSize={pageSize}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+          />
+        </>
       ) : null}
     </section>
+  );
+}
+
+function AuditPagination({
+  meta,
+  pageSize,
+  onPageChange,
+  onPageSizeChange,
+}: {
+  readonly meta: AuditEventListMeta;
+  readonly pageSize: number;
+  readonly onPageChange: (page: number) => void;
+  readonly onPageSizeChange: (pageSize: number) => void;
+}) {
+  const firstItem = meta.total === 0 ? 0 : (meta.page - 1) * meta.limit + 1;
+  const lastItem = Math.min(meta.page * meta.limit, meta.total);
+
+  return (
+    <div className="pagination-bar" aria-label="Audit event pagination">
+      <div>
+        <strong>Page {meta.page}</strong>
+        <span>
+          Showing {firstItem}–{lastItem} of {meta.total}
+        </span>
+      </div>
+      <label>
+        Page size
+        <select
+          value={pageSize}
+          onChange={(event) => onPageSizeChange(Number(event.target.value))}
+        >
+          {pageSizeOptions.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+      </label>
+      <div className="row-actions">
+        <button
+          className="secondary-button"
+          type="button"
+          onClick={() => onPageChange(meta.page - 1)}
+          disabled={meta.page <= 1}
+        >
+          Previous
+        </button>
+        <button
+          className="secondary-button"
+          type="button"
+          onClick={() => onPageChange(meta.page + 1)}
+          disabled={!meta.hasMore}
+        >
+          Next
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function AuditEventRow({ event }: { readonly event: AdminAuditEvent }) {
+  return (
+    <tr>
+      <td>{event.createdAt}</td>
+      <td>
+        <span>{getActorLabel(event)}</span>
+        {event.actorEmail ? <small>{event.actorEmail}</small> : null}
+      </td>
+      <td>{event.action}</td>
+      <td>
+        <span>{event.entityType}</span>
+        <small>{event.entityId ?? "—"}</small>
+      </td>
+      <td>{event.summary}</td>
+      <td>
+        <details>
+          <summary>View event details</summary>
+          <div className="audit-detail-panel">
+            <dl className="audit-detail-list">
+              <div>
+                <dt>Timestamp</dt>
+                <dd>{event.createdAt}</dd>
+              </div>
+              <div>
+                <dt>Actor</dt>
+                <dd>
+                  {getActorLabel(event)}
+                  {event.actorUserId ? ` (${event.actorUserId})` : ""}
+                </dd>
+              </div>
+              <div>
+                <dt>Action</dt>
+                <dd>{event.action}</dd>
+              </div>
+              <div>
+                <dt>Entity</dt>
+                <dd>
+                  {event.entityType} {event.entityId ?? "—"}
+                </dd>
+              </div>
+              <div>
+                <dt>Correlation ID</dt>
+                <dd>{event.correlationId ?? "—"}</dd>
+              </div>
+            </dl>
+            <div className="metadata-grid">
+              <div>
+                <strong>Changes</strong>
+                <pre>{formatJson(event.changes)}</pre>
+              </div>
+              <div>
+                <strong>Before</strong>
+                <pre>{formatJson(event.beforeMetadata)}</pre>
+              </div>
+              <div>
+                <strong>After</strong>
+                <pre>{formatJson(event.afterMetadata)}</pre>
+              </div>
+            </div>
+          </div>
+        </details>
+      </td>
+    </tr>
   );
 }
