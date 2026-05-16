@@ -9,6 +9,7 @@ import {
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { setAccessTokenProvider } from "../lib/apiClient";
 import { UsersPage } from "./UsersPage";
+import type { UserRole } from "../features/users/types";
 
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -38,6 +39,17 @@ function user(overrides: Record<string, unknown> = {}) {
     legacy_wp_user_id: null,
     ...overrides,
   };
+}
+
+function accessTokenForRole(role: UserRole): string {
+  return `header.${window.btoa(JSON.stringify({ role }))}.signature`;
+}
+
+function setAdminRole(role: UserRole): void {
+  window.localStorage.setItem(
+    "sr_admin_access_token",
+    accessTokenForRole(role),
+  );
 }
 
 describe("UsersPage", () => {
@@ -304,7 +316,31 @@ describe("UsersPage", () => {
     expect(screen.getByRole("columnheader", { name: "Role" })).toBeTruthy();
   });
 
+  it("hides user management controls for non-superadmin admins", async () => {
+    setAdminRole("admin");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValueOnce(userListResponse([user()])),
+    );
+
+    render(<UsersPage />);
+
+    expect(
+      await screen.findByRole("cell", { name: "Alice Example" }),
+    ).toBeTruthy();
+    expect(
+      screen.getByText(
+        "User role and status changes require the superadmin role.",
+      ),
+    ).toBeTruthy();
+    expect(
+      screen.queryByRole("button", { name: "Update role" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText("Superadmin required")).toBeTruthy();
+  });
+
   it("updates a user role after confirmation", async () => {
+    setAdminRole("superadmin");
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(userListResponse([user()]))
@@ -333,6 +369,7 @@ describe("UsersPage", () => {
   });
 
   it("updates a user status after confirmation", async () => {
+    setAdminRole("superadmin");
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(userListResponse([user()]))
@@ -361,6 +398,7 @@ describe("UsersPage", () => {
   });
 
   it("suspends a user after confirmation", async () => {
+    setAdminRole("superadmin");
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(userListResponse([user()]))
@@ -383,6 +421,7 @@ describe("UsersPage", () => {
   });
 
   it("does not suspend a user when confirmation is cancelled", async () => {
+    setAdminRole("superadmin");
     const fetchMock = vi.fn().mockResolvedValueOnce(userListResponse([user()]));
     vi.stubGlobal("fetch", fetchMock);
     vi.spyOn(window, "confirm").mockReturnValue(false);
@@ -396,6 +435,7 @@ describe("UsersPage", () => {
   });
 
   it("shows validation feedback when role is unchanged", async () => {
+    setAdminRole("superadmin");
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValueOnce(userListResponse([user()])),
@@ -412,6 +452,7 @@ describe("UsersPage", () => {
   });
 
   it("shows API errors from user actions", async () => {
+    setAdminRole("superadmin");
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(userListResponse([user()]))

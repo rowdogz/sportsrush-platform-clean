@@ -15,6 +15,9 @@ import { UsersPage } from "./pages/UsersPage";
 import { AuditLogPage } from "./pages/AuditLogPage";
 import { ToastProvider } from "./components/primitives/Toast";
 import { AuthSessionProvider } from "./contexts/AuthSessionProvider";
+import { useAuthSession } from "./contexts/AuthSessionProvider";
+import { canViewAuditLog } from "./lib/adminPermissions";
+import { AdminTableError } from "./components/admin/AdminTableState";
 
 const adminNavItems: readonly AdminNavItem[] = [
   { id: "competitions", label: "Competitions" },
@@ -39,6 +42,15 @@ function getInitialScreen(): AdminScreen {
   return (matchingEntry?.[0] as AdminScreen | undefined) ?? "competitions";
 }
 
+function renderForbiddenScreen() {
+  return (
+    <AdminTableError
+      title="Forbidden"
+      message="Your admin role is not permitted to view this screen."
+    />
+  );
+}
+
 function renderScreen(screen: AdminScreen) {
   switch (screen) {
     case "competitions":
@@ -60,21 +72,35 @@ function renderScreen(screen: AdminScreen) {
   }
 }
 
-export function App() {
+function AdminAppShell() {
+  const { userRole } = useAuthSession();
   const [activeScreen, setActiveScreen] =
     useState<AdminScreen>(getInitialScreen);
+  const navItems = adminNavItems.filter(
+    (item) => item.id !== "audit" || canViewAuditLog(userRole),
+  );
+  const activeScreenIsAllowed =
+    activeScreen !== "audit" || canViewAuditLog(userRole);
 
+  return (
+    <AdminLayout
+      activeScreen={activeScreen}
+      navItems={navItems}
+      onNavigate={setActiveScreen}
+    >
+      {activeScreenIsAllowed
+        ? renderScreen(activeScreen)
+        : renderForbiddenScreen()}
+    </AdminLayout>
+  );
+}
+
+export function App() {
   return (
     <ToastProvider>
       <AuthSessionProvider>
         <ProtectedRoute>
-          <AdminLayout
-            activeScreen={activeScreen}
-            navItems={adminNavItems}
-            onNavigate={setActiveScreen}
-          >
-            {renderScreen(activeScreen)}
-          </AdminLayout>
+          <AdminAppShell />
         </ProtectedRoute>
       </AuthSessionProvider>
     </ToastProvider>

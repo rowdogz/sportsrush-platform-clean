@@ -166,6 +166,7 @@ async function makeServiceContext(
     now: new Date().toISOString(),
     correlationId: c.var.correlationId ?? "unknown",
     actorUserId: user.userId,
+    actorRole: user.role,
   };
 }
 
@@ -216,26 +217,30 @@ function parseAuditEventFilters(raw: {
   return filters;
 }
 
-adminRoutes.get("/audit-events/export", async (c) => {
-  const filters = parseAuditEventFilters({
-    actorUserId: c.req.query("actorUserId"),
-    entityType: c.req.query("entityType"),
-    entityId: c.req.query("entityId"),
-    action: c.req.query("action"),
-    dateFrom: c.req.query("dateFrom"),
-    dateTo: c.req.query("dateTo"),
-  });
-  const context = await makeServiceContext(c);
-  const exportFile = await exportAdminAuditEventsService(context, filters);
-  c.header("Content-Type", exportFile.contentType);
-  c.header(
-    "Content-Disposition",
-    `attachment; filename="${exportFile.filename}"`,
-  );
-  return c.body(exportFile.csv);
-});
+adminRoutes.get(
+  "/audit-events/export",
+  requireRole("superadmin"),
+  async (c) => {
+    const filters = parseAuditEventFilters({
+      actorUserId: c.req.query("actorUserId"),
+      entityType: c.req.query("entityType"),
+      entityId: c.req.query("entityId"),
+      action: c.req.query("action"),
+      dateFrom: c.req.query("dateFrom"),
+      dateTo: c.req.query("dateTo"),
+    });
+    const context = await makeServiceContext(c);
+    const exportFile = await exportAdminAuditEventsService(context, filters);
+    c.header("Content-Type", exportFile.contentType);
+    c.header(
+      "Content-Disposition",
+      `attachment; filename="${exportFile.filename}"`,
+    );
+    return c.body(exportFile.csv);
+  },
+);
 
-adminRoutes.get("/audit-events", async (c) => {
+adminRoutes.get("/audit-events", requireRole("superadmin"), async (c) => {
   const pagination = parsePagination({
     page: c.req.query("page"),
     limit: c.req.query("limit"),
@@ -261,7 +266,7 @@ adminRoutes.get("/audit-events", async (c) => {
   );
 });
 
-adminRoutes.patch("/users/:id/role", async (c) => {
+adminRoutes.patch("/users/:id/role", requireRole("superadmin"), async (c) => {
   const input = parseBody(UpdateUserRoleSchema, await c.req.json());
   const context = await makeServiceContext(c);
   return ok(
@@ -270,7 +275,7 @@ adminRoutes.patch("/users/:id/role", async (c) => {
   );
 });
 
-adminRoutes.patch("/users/:id/status", async (c) => {
+adminRoutes.patch("/users/:id/status", requireRole("superadmin"), async (c) => {
   const input = parseBody(UpdateUserStatusSchema, await c.req.json());
   const context = await makeServiceContext(c);
   return ok(
@@ -283,15 +288,19 @@ adminRoutes.patch("/users/:id/status", async (c) => {
   );
 });
 
-adminRoutes.post("/users/:id/suspend", async (c) => {
+adminRoutes.post("/users/:id/suspend", requireRole("superadmin"), async (c) => {
   const context = await makeServiceContext(c);
   return ok(c, await suspendAdminUserService(context, c.req.param("id")));
 });
 
-adminRoutes.post("/users/:id/reactivate", async (c) => {
-  const context = await makeServiceContext(c);
-  return ok(c, await reactivateAdminUserService(context, c.req.param("id")));
-});
+adminRoutes.post(
+  "/users/:id/reactivate",
+  requireRole("superadmin"),
+  async (c) => {
+    const context = await makeServiceContext(c);
+    return ok(c, await reactivateAdminUserService(context, c.req.param("id")));
+  },
+);
 
 adminRoutes.get("/competitions", async (c) => {
   const pagination = parsePagination({

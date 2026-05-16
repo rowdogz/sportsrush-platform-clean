@@ -161,6 +161,7 @@ async function createContext() {
     now: NOW,
     correlationId: CORRELATION_ID,
     actorUserId: "admin-user-1",
+    actorRole: "superadmin",
     actorDisplayName: "Admin User",
   };
 
@@ -508,6 +509,20 @@ describe("admin service fixture transitions", () => {
       updateAdminUserRoleService(context, "admin-user-1", "user"),
     );
     await expectDomainFailure(suspendAdminUserService(context, "admin-user-1"));
+  });
+
+  it("requires superadmin role for sensitive user and audit services", async () => {
+    const { context, sqlDb } = await createContext();
+    const adminContext: ServiceContext = { ...context, actorRole: "admin" };
+    seedUser(sqlDb, { id: "user-1" });
+
+    await expectDomainFailure(
+      updateAdminUserRoleService(adminContext, "user-1", "admin"),
+    );
+    await expectDomainFailure(suspendAdminUserService(adminContext, "user-1"));
+    await expectDomainFailure(
+      listAdminAuditEventsService(adminContext, { page: 1, limit: 25 }, {}),
+    );
   });
 
   it("returns the canonical transition matrix", () => {

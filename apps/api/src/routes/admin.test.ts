@@ -157,6 +157,10 @@ async function createTestHarness() {
     { userId: "admin-user", role: "admin", sessionId: "session-admin" },
     JWT_SECRET,
   );
+  const superadminToken = await createAccessToken(
+    { userId: "admin-user", role: "superadmin", sessionId: "session-admin" },
+    JWT_SECRET,
+  );
   const userToken = await createAccessToken(
     { userId: "normal-user", role: "user", sessionId: "session-user" },
     JWT_SECRET,
@@ -175,7 +179,7 @@ async function createTestHarness() {
     return app.request(path, { ...init, headers }, env);
   }
 
-  return { app, env, request, adminToken, userToken, sqlDb };
+  return { app, env, request, adminToken, superadminToken, userToken, sqlDb };
 }
 
 async function createCompetition(
@@ -286,11 +290,26 @@ describe("admin route slice 1 auth", () => {
     );
     expect(response.status).toBe(403);
   });
+
+  it("requires superadmin for sensitive admin routes", async () => {
+    const { request } = await createTestHarness();
+
+    const auditResponse = await request("/v1/admin/audit-events", {
+      method: "GET",
+    });
+    expect(auditResponse.status).toBe(403);
+
+    const roleResponse = await request("/v1/admin/users/user-1/role", {
+      method: "PATCH",
+      body: JSON.stringify({ role: "admin" }),
+    });
+    expect(roleResponse.status).toBe(403);
+  });
 });
 
 describe("admin route slice 1 users", () => {
   it("lists, filters, and paginates audit events", async () => {
-    const { request, sqlDb } = await createTestHarness();
+    const { request, sqlDb, superadminToken } = await createTestHarness();
     seedUser(sqlDb, {
       id: "user-1",
       email: "alice@example.test",
@@ -304,7 +323,11 @@ describe("admin route slice 1 users", () => {
          ('audit-2', 'admin-user', 'user.role.update', 'user', 'user-1', '{"role":"user"}', '{"role":"admin"}', '2026-05-14T13:00:00.000Z')`,
     );
 
-    const listResponse = await request("/v1/admin/audit-events?page=1&limit=1");
+    const listResponse = await request(
+      "/v1/admin/audit-events?page=1&limit=1",
+      {},
+      superadminToken,
+    );
     expect(listResponse.status).toBe(200);
     const list = (await listResponse.json()) as any;
     expect(list.data).toHaveLength(1);
@@ -327,6 +350,8 @@ describe("admin route slice 1 users", () => {
 
     const filteredResponse = await request(
       "/v1/admin/audit-events?actorUserId=user-1&entityType=team&entityId=team-1&action=team.update&dateFrom=2026-05-14T11%3A00%3A00.000Z&dateTo=2026-05-14T12%3A30%3A00.000Z",
+      {},
+      superadminToken,
     );
     expect(filteredResponse.status).toBe(200);
     const filtered = (await filteredResponse.json()) as any;
@@ -335,7 +360,7 @@ describe("admin route slice 1 users", () => {
   });
 
   it("exports filtered audit events as CSV", async () => {
-    const { request, sqlDb } = await createTestHarness();
+    const { request, sqlDb, superadminToken } = await createTestHarness();
     seedUser(sqlDb, {
       id: "user-1",
       email: "alice@example.test",
@@ -351,6 +376,8 @@ describe("admin route slice 1 users", () => {
 
     const response = await request(
       "/v1/admin/audit-events/export?actorUserId=user-1&entityType=team&entityId=team-1&action=team.update&dateFrom=2026-05-14T11%3A00%3A00.000Z&dateTo=2026-05-14T12%3A30%3A00.000Z",
+      {},
+      superadminToken,
     );
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toContain("text/csv");
@@ -400,7 +427,7 @@ describe("admin route slice 1 users", () => {
   });
 
   it("updates user role and status", async () => {
-    const { request, sqlDb } = await createTestHarness();
+    const { request, sqlDb, superadminToken } = await createTestHarness();
     seedUser(sqlDb, {
       id: "user-1",
       email: "alice@example.test",
@@ -408,34 +435,46 @@ describe("admin route slice 1 users", () => {
       role: "user",
     });
 
-    const roleResponse = await request("/v1/admin/users/user-1/role", {
-      method: "PATCH",
-      body: JSON.stringify({ role: "admin" }),
-    });
+    const roleResponse = await request(
+      "/v1/admin/users/user-1/role",
+      {
+        method: "PATCH",
+        body: JSON.stringify({ role: "admin" }),
+      },
+      superadminToken,
+    );
     expect(roleResponse.status).toBe(200);
     const roleBody = (await roleResponse.json()) as any;
     expect(roleBody.data.role).toBe("admin");
 
-    const statusResponse = await request("/v1/admin/users/user-1/status", {
-      method: "PATCH",
-      body: JSON.stringify({ isActive: false }),
-    });
+    const statusResponse = await request(
+      "/v1/admin/users/user-1/status",
+      {
+        method: "PATCH",
+        body: JSON.stringify({ isActive: false }),
+      },
+      superadminToken,
+    );
     expect(statusResponse.status).toBe(200);
     const statusBody = (await statusResponse.json()) as any;
     expect(statusBody.data.is_active).toBe(0);
   });
 
   it("suspends and reactivates users", async () => {
-    const { request, sqlDb } = await createTestHarness();
+    const { request, sqlDb, superadminToken } = await createTestHarness();
     seedUser(sqlDb, {
       id: "user-1",
       email: "alice@example.test",
       displayName: "Alice Example",
     });
 
-    const suspendResponse = await request("/v1/admin/users/user-1/suspend", {
-      method: "POST",
-    });
+    const suspendResponse = await request(
+      "/v1/admin/users/user-1/suspend",
+      {
+        method: "POST",
+      },
+      superadminToken,
+    );
     expect(suspendResponse.status).toBe(200);
     const suspended = (await suspendResponse.json()) as any;
     expect(suspended.data.is_active).toBe(0);
@@ -445,6 +484,7 @@ describe("admin route slice 1 users", () => {
       {
         method: "POST",
       },
+      superadminToken,
     );
     expect(reactivateResponse.status).toBe(200);
     const reactivated = (await reactivateResponse.json()) as any;
@@ -452,24 +492,28 @@ describe("admin route slice 1 users", () => {
   });
 
   it("rejects invalid user role payloads", async () => {
-    const { request, sqlDb } = await createTestHarness();
+    const { request, sqlDb, superadminToken } = await createTestHarness();
     seedUser(sqlDb, {
       id: "user-1",
       email: "alice@example.test",
       displayName: "Alice Example",
     });
 
-    const response = await request("/v1/admin/users/user-1/role", {
-      method: "PATCH",
-      body: JSON.stringify({ role: "owner" }),
-    });
+    const response = await request(
+      "/v1/admin/users/user-1/role",
+      {
+        method: "PATCH",
+        body: JSON.stringify({ role: "owner" }),
+      },
+      superadminToken,
+    );
     expect(response.status).toBe(400);
     const body = (await response.json()) as any;
     expect(body.error.code).toBe("VALIDATION_ERROR");
   });
 
   it("prevents admins from removing their own access", async () => {
-    const { request, sqlDb } = await createTestHarness();
+    const { request, sqlDb, superadminToken } = await createTestHarness();
     seedUser(sqlDb, {
       id: "admin-user",
       email: "admin@example.test",
@@ -477,10 +521,14 @@ describe("admin route slice 1 users", () => {
       role: "admin",
     });
 
-    const roleResponse = await request("/v1/admin/users/admin-user/role", {
-      method: "PATCH",
-      body: JSON.stringify({ role: "user" }),
-    });
+    const roleResponse = await request(
+      "/v1/admin/users/admin-user/role",
+      {
+        method: "PATCH",
+        body: JSON.stringify({ role: "user" }),
+      },
+      superadminToken,
+    );
     expect(roleResponse.status).toBe(422);
     const roleBody = (await roleResponse.json()) as any;
     expect(roleBody.error.message).toBe(
@@ -490,6 +538,7 @@ describe("admin route slice 1 users", () => {
     const suspendResponse = await request(
       "/v1/admin/users/admin-user/suspend",
       { method: "POST" },
+      superadminToken,
     );
     expect(suspendResponse.status).toBe(422);
     const suspendBody = (await suspendResponse.json()) as any;

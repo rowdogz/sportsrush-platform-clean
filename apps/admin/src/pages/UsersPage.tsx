@@ -35,6 +35,12 @@ import {
   useAdminSearchParams,
 } from "../hooks/useAdminSearchParams";
 import { ApiError } from "../lib/apiClient";
+import {
+  canManageAdminUsers,
+  getRoleFromAccessToken,
+} from "../lib/adminPermissions";
+
+const ACCESS_TOKEN_STORAGE_KEY = "sr_admin_access_token";
 
 type UsersState =
   | { readonly status: "loading" }
@@ -130,6 +136,13 @@ export function UsersPage() {
   const tablePreferences = useAdminTablePreferences(
     "sr-admin:users:table-preferences",
     userTableColumns,
+  );
+  const canManageUsers = canManageAdminUsers(
+    getRoleFromAccessToken(
+      typeof window === "undefined"
+        ? null
+        : window.localStorage.getItem(ACCESS_TOKEN_STORAGE_KEY),
+    ),
   );
 
   const loadUsers = useCallback(
@@ -312,6 +325,12 @@ export function UsersPage() {
 
       <AdminFeedback feedback={feedback} />
 
+      {!canManageUsers ? (
+        <div className="state-panel">
+          User role and status changes require the superadmin role.
+        </div>
+      ) : null}
+
       {state.status === "loading" ? (
         <AdminTableLoading message="Loading users…" />
       ) : null}
@@ -395,70 +414,76 @@ export function UsersPage() {
                       <td>{user.legacyWpUserId ?? "—"}</td>
                     ) : null}
                     <td>
-                      <div className="row-actions">
-                        <label>
-                          <select
-                            aria-label={`Role for ${user.email}`}
-                            value={roleDrafts[user.id] ?? user.role}
-                            onChange={(event) =>
-                              setRoleDrafts({
-                                ...roleDrafts,
-                                [user.id]: event.target.value as UserRole,
-                              })
-                            }
+                      {canManageUsers ? (
+                        <div className="row-actions">
+                          <label>
+                            <select
+                              aria-label={`Role for ${user.email}`}
+                              value={roleDrafts[user.id] ?? user.role}
+                              onChange={(event) =>
+                                setRoleDrafts({
+                                  ...roleDrafts,
+                                  [user.id]: event.target.value as UserRole,
+                                })
+                              }
+                            >
+                              {userRoles.map((role) => (
+                                <option key={role} value={role}>
+                                  {role}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                          <button
+                            className="secondary-button"
+                            type="button"
+                            disabled={pendingAction === `role:${user.id}`}
+                            onClick={() => void handleRoleUpdate(user)}
                           >
-                            {userRoles.map((role) => (
-                              <option key={role} value={role}>
-                                {role}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
-                        <button
-                          className="secondary-button"
-                          type="button"
-                          disabled={pendingAction === `role:${user.id}`}
-                          onClick={() => void handleRoleUpdate(user)}
-                        >
-                          Update role
-                        </button>
-                        <label>
-                          <select
-                            aria-label={`Status for ${user.email}`}
-                            value={
-                              statusDrafts[user.id] ??
-                              (user.isActive ? "active" : "inactive")
-                            }
-                            onChange={(event) =>
-                              setStatusDrafts({
-                                ...statusDrafts,
-                                [user.id]: event.target.value,
-                              })
-                            }
+                            Update role
+                          </button>
+                          <label>
+                            <select
+                              aria-label={`Status for ${user.email}`}
+                              value={
+                                statusDrafts[user.id] ??
+                                (user.isActive ? "active" : "inactive")
+                              }
+                              onChange={(event) =>
+                                setStatusDrafts({
+                                  ...statusDrafts,
+                                  [user.id]: event.target.value,
+                                })
+                              }
+                            >
+                              <option value="active">active</option>
+                              <option value="inactive">inactive</option>
+                            </select>
+                          </label>
+                          <button
+                            className="secondary-button"
+                            type="button"
+                            disabled={pendingAction === `status:${user.id}`}
+                            onClick={() => void handleStatusUpdate(user)}
                           >
-                            <option value="active">active</option>
-                            <option value="inactive">inactive</option>
-                          </select>
-                        </label>
-                        <button
-                          className="secondary-button"
-                          type="button"
-                          disabled={pendingAction === `status:${user.id}`}
-                          onClick={() => void handleStatusUpdate(user)}
-                        >
-                          Update status
-                        </button>
-                        <button
-                          className={
-                            user.isActive ? "danger-button" : "secondary-button"
-                          }
-                          type="button"
-                          disabled={pendingAction === `suspend:${user.id}`}
-                          onClick={() => void handleSuspendToggle(user)}
-                        >
-                          {user.isActive ? "Suspend" : "Reactivate"}
-                        </button>
-                      </div>
+                            Update status
+                          </button>
+                          <button
+                            className={
+                              user.isActive
+                                ? "danger-button"
+                                : "secondary-button"
+                            }
+                            type="button"
+                            disabled={pendingAction === `suspend:${user.id}`}
+                            onClick={() => void handleSuspendToggle(user)}
+                          >
+                            {user.isActive ? "Suspend" : "Reactivate"}
+                          </button>
+                        </div>
+                      ) : (
+                        <span>Superadmin required</span>
+                      )}
                     </td>
                   </tr>
                 ))}

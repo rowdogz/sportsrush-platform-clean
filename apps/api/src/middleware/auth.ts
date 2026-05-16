@@ -80,8 +80,7 @@ export function requireAuth(): MiddlewareHandler<HonoEnv> {
  */
 export function requireRole(minimumRole: Role): MiddlewareHandler<HonoEnv> {
   return async (c, next) => {
-    // Re-use the requireAuth logic by calling it inline.
-    await requireAuth()(c, async () => {
+    const checkRole = async () => {
       const user = c.var.user;
       if (!user) {
         // Should never reach here if requireAuth() ran, but satisfies strict checks.
@@ -93,6 +92,14 @@ export function requireRole(minimumRole: Role): MiddlewareHandler<HonoEnv> {
         );
       }
       await next();
-    });
+    };
+
+    if (c.var.user) {
+      await checkRole();
+      return;
+    }
+
+    // Re-use the requireAuth logic by calling it inline.
+    await requireAuth()(c, checkRole);
   };
 }

@@ -1,4 +1,6 @@
 import { randomUUID } from "node:crypto";
+import { hasRole } from "@sr/auth";
+import type { Role, TokenPayload } from "@sr/types";
 import { AppError } from "../lib/errors";
 
 type FixtureStatus =
@@ -103,6 +105,7 @@ export type ServiceContext = {
   readonly now: string;
   readonly correlationId: string;
   readonly actorUserId: string;
+  readonly actorRole: Role;
   readonly actorDisplayName?: string;
 };
 
@@ -290,6 +293,23 @@ function assert(
   }
 }
 
+function assertActorRole(context: ServiceContext, minimumRole: Role) {
+  assert(
+    hasRole(
+      {
+        userId: context.actorUserId,
+        role: context.actorRole,
+        sessionId: "admin-service-context",
+        exp: 0,
+        iat: 0,
+      } as TokenPayload,
+      minimumRole,
+    ),
+    `This action requires the '${minimumRole}' role or higher.`,
+    context.correlationId,
+  );
+}
+
 export function getAllowedFixtureTransitions(
   status: FixtureStatus,
 ): readonly FixtureStatus[] {
@@ -300,6 +320,7 @@ export async function createCompetitionService(
   context: ServiceContext,
   input: CreateCompetitionInput,
 ) {
+  assertActorRole(context, "admin");
   const competition = await createCompetition(
     context.db,
     randomUUID(),
@@ -322,6 +343,7 @@ export async function updateCompetitionService(
   id: string,
   input: UpdateCompetitionInput,
 ) {
+  assertActorRole(context, "admin");
   const before = await findCompetitionById(context.db, id);
   const competition = await updateCompetition(
     context.db,
@@ -347,6 +369,7 @@ export async function archiveCompetitionService(
   context: ServiceContext,
   id: string,
 ) {
+  assertActorRole(context, "admin");
   const before = await findCompetitionById(context.db, id);
   const competition = await updateCompetition(
     context.db,
@@ -385,6 +408,7 @@ export async function listAdminAuditEventsService(
   pagination: Pagination,
   filters: AuditEventListFilters,
 ) {
+  assertActorRole(context, "superadmin");
   assertAuditFilters(filters, context.correlationId);
   const result = await listAdminAuditEvents(context.db, pagination, filters);
   return {
@@ -397,6 +421,7 @@ export async function exportAdminAuditEventsService(
   context: ServiceContext,
   filters: AuditEventListFilters,
 ): Promise<AdminAuditEventExport> {
+  assertActorRole(context, "superadmin");
   assertAuditFilters(filters, context.correlationId);
   const rows = await exportAdminAuditEvents(context.db, filters);
   const events = rows.map(toAdminAuditEvent);
@@ -466,6 +491,7 @@ export async function updateAdminUserRoleService(
   userId: string,
   role: string,
 ) {
+  assertActorRole(context, "superadmin");
   assertAdminUserRole(role, context.correlationId);
   const before = await assertAdminUserExists(context, userId);
   assertNotRemovingOwnAdminAccess(context, userId, role);
@@ -487,6 +513,7 @@ export async function updateAdminUserStatusService(
   isActive: boolean,
   action = "user.status.update",
 ) {
+  assertActorRole(context, "superadmin");
   const before = await assertAdminUserExists(context, userId);
   if (!isActive) {
     assertNotDisablingSelf(context, userId);
@@ -519,6 +546,7 @@ export async function createSeasonService(
   context: ServiceContext,
   input: CreateSeasonInput,
 ) {
+  assertActorRole(context, "admin");
   const season = await createSeason(
     context.db,
     randomUUID(),
@@ -549,6 +577,7 @@ export async function updateSeasonService(
   id: string,
   input: UpdateSeasonInput,
 ) {
+  assertActorRole(context, "admin");
   const before = await findSeasonById(context.db, id);
   const season = await updateSeason(context.db, id, input, context.now);
   await writeAuditEvent(context, "season.update", "season", id, before, season);
@@ -560,6 +589,7 @@ export async function activateSeasonService(
   seasonId: string,
   competitionId: string,
 ) {
+  assertActorRole(context, "admin");
   const before = await findSeasonById(context.db, seasonId);
   const season = await markActiveSeason(
     context.db,
@@ -582,6 +612,7 @@ export async function createTeamService(
   context: ServiceContext,
   input: CreateTeamInput,
 ) {
+  assertActorRole(context, "admin");
   const team = await createTeam(
     context.db,
     randomUUID(),
@@ -597,6 +628,7 @@ export async function updateTeamService(
   id: string,
   input: UpdateTeamInput,
 ) {
+  assertActorRole(context, "admin");
   const before = await findTeamById(context.db, id);
   const team = await updateTeam(
     context.db,
@@ -612,6 +644,7 @@ export async function updateTeamService(
 }
 
 export async function archiveTeamService(context: ServiceContext, id: string) {
+  assertActorRole(context, "admin");
   const before = await findTeamById(context.db, id);
   const team = await updateTeam(
     context.db,
@@ -641,6 +674,7 @@ export async function createAliasService(
   context: ServiceContext,
   input: CreateTeamAliasInput,
 ) {
+  assertActorRole(context, "admin");
   const normalizedAlias = normalizeAlias(input.normalizedAlias ?? input.alias);
   const normalizedSource = normalizeSource(input.source);
   const existing = await listAliasesBySource(
@@ -678,6 +712,7 @@ export async function updateAliasService(
   id: string,
   input: UpdateTeamAliasInput,
 ) {
+  assertActorRole(context, "admin");
   const before = await findTeamAliasById(context.db, id);
   const normalizedAlias =
     input.alias === undefined && input.normalizedAlias === undefined
@@ -705,6 +740,7 @@ export async function updateAliasService(
 }
 
 export async function deleteAliasService(context: ServiceContext, id: string) {
+  assertActorRole(context, "admin");
   const before = await findTeamAliasById(context.db, id);
   await deleteTeamAlias(context.db, id);
   await writeAuditEvent(
@@ -749,6 +785,7 @@ export async function createRoundService(
   context: ServiceContext,
   input: CreateRoundInput,
 ) {
+  assertActorRole(context, "admin");
   const round = await createRound(context.db, randomUUID(), input, context.now);
   await writeAuditEvent(
     context,
@@ -766,6 +803,7 @@ export async function updateRoundService(
   id: string,
   input: UpdateRoundInput,
 ) {
+  assertActorRole(context, "admin");
   const before = await findRoundById(context.db, id);
   const round = await updateRound(context.db, id, input, context.now);
   await writeAuditEvent(context, "round.update", "round", id, before, round);
@@ -790,6 +828,7 @@ export async function createFixtureService(
   context: ServiceContext,
   input: CreateFixtureInput,
 ) {
+  assertActorRole(context, "admin");
   const fixture = await createFixture(
     context.db,
     randomUUID(),
@@ -812,6 +851,7 @@ export async function updateFixtureService(
   id: string,
   input: UpdateFixtureInput,
 ) {
+  assertActorRole(context, "admin");
   const before = await findFixtureById(context.db, id);
   const fixture = await updateFixture(context.db, id, input, context.now);
   await writeAuditEvent(
@@ -839,6 +879,7 @@ export async function transitionFixtureService(
   nextStatus: FixtureStatus,
   options: TransitionOptions = {},
 ): Promise<FixtureRow> {
+  assertActorRole(context, "admin");
   const fixture = await findFixtureById(context.db, fixtureId);
   assert(fixture !== null, "Fixture not found", context.correlationId);
   const allowed = TRANSITIONS[fixture.status] ?? [];
@@ -903,6 +944,7 @@ export async function enterFixtureResultService(
   awayScore: number,
   resultSource?: string,
 ): Promise<FixtureRow> {
+  assertActorRole(context, "admin");
   const fixture = await findFixtureById(context.db, fixtureId);
   assert(fixture !== null, "Fixture not found", context.correlationId);
   if (fixture.status === "completed") {
@@ -946,6 +988,7 @@ export async function correctFixtureResultService(
   correctedAwayScore: number,
   reason: string,
 ): Promise<FixtureRow> {
+  assertActorRole(context, "admin");
   const fixture = await findFixtureById(context.db, fixtureId);
   assert(fixture !== null, "Fixture not found", context.correlationId);
   assert(

@@ -2,12 +2,17 @@ import "@testing-library/jest-dom/vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { App } from "./App";
+import type { UserRole } from "./features/users/types";
 
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
     headers: { "Content-Type": "application/json" },
   });
+}
+
+function accessTokenForRole(role: UserRole): string {
+  return `header.${window.btoa(JSON.stringify({ role }))}.signature`;
 }
 
 describe("Admin app shell", () => {
@@ -73,7 +78,10 @@ describe("Admin app shell", () => {
   });
 
   it("renders the admin shell from stored session tokens", async () => {
-    window.localStorage.setItem("sr_admin_access_token", "stored-access-token");
+    window.localStorage.setItem(
+      "sr_admin_access_token",
+      accessTokenForRole("superadmin"),
+    );
     window.localStorage.setItem(
       "sr_admin_refresh_token",
       "stored-refresh-token",
@@ -93,7 +101,10 @@ describe("Admin app shell", () => {
   });
 
   it("shows admin navigation to authenticated users", async () => {
-    window.localStorage.setItem("sr_admin_access_token", "stored-access-token");
+    window.localStorage.setItem(
+      "sr_admin_access_token",
+      accessTokenForRole("superadmin"),
+    );
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(
@@ -120,7 +131,10 @@ describe("Admin app shell", () => {
   });
 
   it("renders competitions by default for authenticated users", async () => {
-    window.localStorage.setItem("sr_admin_access_token", "stored-access-token");
+    window.localStorage.setItem(
+      "sr_admin_access_token",
+      accessTokenForRole("superadmin"),
+    );
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(
@@ -142,7 +156,10 @@ describe("Admin app shell", () => {
   });
 
   it("opens the Seasons page from admin navigation", async () => {
-    window.localStorage.setItem("sr_admin_access_token", "stored-access-token");
+    window.localStorage.setItem(
+      "sr_admin_access_token",
+      accessTokenForRole("superadmin"),
+    );
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(
@@ -177,7 +194,10 @@ describe("Admin app shell", () => {
   });
 
   it("opens the Teams page from admin navigation", async () => {
-    window.localStorage.setItem("sr_admin_access_token", "stored-access-token");
+    window.localStorage.setItem(
+      "sr_admin_access_token",
+      accessTokenForRole("superadmin"),
+    );
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(
@@ -204,7 +224,10 @@ describe("Admin app shell", () => {
   });
 
   it("opens the Users page from admin navigation", async () => {
-    window.localStorage.setItem("sr_admin_access_token", "stored-access-token");
+    window.localStorage.setItem(
+      "sr_admin_access_token",
+      accessTokenForRole("superadmin"),
+    );
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(
@@ -231,7 +254,10 @@ describe("Admin app shell", () => {
   });
 
   it("opens the Audit Log page from admin navigation", async () => {
-    window.localStorage.setItem("sr_admin_access_token", "stored-access-token");
+    window.localStorage.setItem(
+      "sr_admin_access_token",
+      accessTokenForRole("superadmin"),
+    );
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(
@@ -259,9 +285,51 @@ describe("Admin app shell", () => {
     expect(screen.getByRole("button", { name: "Apply filters" })).toBeTruthy();
   });
 
+  it("hides the Audit Log screen from non-superadmin admins", async () => {
+    window.localStorage.setItem(
+      "sr_admin_access_token",
+      accessTokenForRole("admin"),
+    );
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse({
+          data: [],
+          meta: { page: 1, limit: 50, total: 0, hasMore: false },
+        }),
+      ),
+    );
+
+    render(<App />);
+
+    expect(await screen.findByLabelText("Admin navigation")).toBeTruthy();
+    expect(
+      screen.queryByRole("button", { name: "Audit Log" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows a forbidden state for direct audit access without superadmin", async () => {
+    window.history.replaceState(null, "", "/audit");
+    window.localStorage.setItem(
+      "sr_admin_access_token",
+      accessTokenForRole("admin"),
+    );
+    vi.stubGlobal("fetch", vi.fn());
+
+    render(<App />);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Forbidden");
+    expect(
+      screen.getByText("Your admin role is not permitted to view this screen."),
+    ).toBeTruthy();
+  });
+
   it("renders the Audit Log page for the /audit route", async () => {
     window.history.replaceState(null, "", "/audit");
-    window.localStorage.setItem("sr_admin_access_token", "stored-access-token");
+    window.localStorage.setItem(
+      "sr_admin_access_token",
+      accessTokenForRole("superadmin"),
+    );
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(
@@ -284,7 +352,10 @@ describe("Admin app shell", () => {
   });
 
   it("opens the Team Aliases page from admin navigation", async () => {
-    window.localStorage.setItem("sr_admin_access_token", "stored-access-token");
+    window.localStorage.setItem(
+      "sr_admin_access_token",
+      accessTokenForRole("superadmin"),
+    );
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(
@@ -310,7 +381,10 @@ describe("Admin app shell", () => {
   });
 
   it("opens the Rounds page from admin navigation", async () => {
-    window.localStorage.setItem("sr_admin_access_token", "stored-access-token");
+    window.localStorage.setItem(
+      "sr_admin_access_token",
+      accessTokenForRole("superadmin"),
+    );
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(
@@ -332,7 +406,10 @@ describe("Admin app shell", () => {
   });
 
   it("opens the Fixtures page from admin navigation", async () => {
-    window.localStorage.setItem("sr_admin_access_token", "stored-access-token");
+    window.localStorage.setItem(
+      "sr_admin_access_token",
+      accessTokenForRole("superadmin"),
+    );
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(
@@ -373,7 +450,10 @@ describe("Admin app shell", () => {
   });
 
   it("logs out and clears stored session tokens", async () => {
-    window.localStorage.setItem("sr_admin_access_token", "stored-access-token");
+    window.localStorage.setItem(
+      "sr_admin_access_token",
+      accessTokenForRole("superadmin"),
+    );
     window.localStorage.setItem(
       "sr_admin_refresh_token",
       "stored-refresh-token",

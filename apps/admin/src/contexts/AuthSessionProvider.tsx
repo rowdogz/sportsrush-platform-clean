@@ -10,6 +10,8 @@ import {
 import { loginAdmin } from "../features/auth/api";
 import type { AdminLoginRequest } from "../features/auth/types";
 import { setAccessTokenProvider } from "../lib/apiClient";
+import { getRoleFromAccessToken } from "../lib/adminPermissions";
+import type { UserRole } from "../features/users/types";
 
 const ACCESS_TOKEN_STORAGE_KEY = "sr_admin_access_token";
 const REFRESH_TOKEN_STORAGE_KEY = "sr_admin_refresh_token";
@@ -17,11 +19,13 @@ const REFRESH_TOKEN_STORAGE_KEY = "sr_admin_refresh_token";
 type AuthSession = {
   readonly accessToken: string | null;
   readonly refreshToken: string | null;
+  readonly role: UserRole | null;
 };
 
 type AuthSessionContextValue = {
   readonly isAuthenticated: boolean;
   readonly accessToken: string | null;
+  readonly userRole: UserRole | null;
   readonly login: (request: AdminLoginRequest) => Promise<void>;
   readonly logout: () => void;
 };
@@ -32,12 +36,14 @@ const AuthSessionContext = createContext<AuthSessionContextValue | undefined>(
 
 function getStoredSession(): AuthSession {
   if (typeof window === "undefined") {
-    return { accessToken: null, refreshToken: null };
+    return { accessToken: null, refreshToken: null, role: null };
   }
 
+  const accessToken = window.localStorage.getItem(ACCESS_TOKEN_STORAGE_KEY);
   return {
-    accessToken: window.localStorage.getItem(ACCESS_TOKEN_STORAGE_KEY),
+    accessToken,
     refreshToken: window.localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY),
+    role: getRoleFromAccessToken(accessToken),
   };
 }
 
@@ -80,13 +86,14 @@ export function AuthSessionProvider({ children }: AuthSessionProviderProps) {
     const nextSession = {
       accessToken: response.accessToken,
       refreshToken: response.refreshToken,
+      role: response.user?.role ?? getRoleFromAccessToken(response.accessToken),
     };
     persistSession(nextSession);
     setSession(nextSession);
   }, []);
 
   const logout = useCallback(() => {
-    const nextSession = { accessToken: null, refreshToken: null };
+    const nextSession = { accessToken: null, refreshToken: null, role: null };
     persistSession(nextSession);
     setSession(nextSession);
   }, []);
@@ -95,10 +102,11 @@ export function AuthSessionProvider({ children }: AuthSessionProviderProps) {
     () => ({
       isAuthenticated: Boolean(session.accessToken),
       accessToken: session.accessToken,
+      userRole: session.role,
       login,
       logout,
     }),
-    [login, logout, session.accessToken],
+    [login, logout, session.accessToken, session.role],
   );
 
   return (
