@@ -39,6 +39,7 @@ import {
   enterFixtureResultService,
   getFixtureService,
   listAdminUsersService,
+  listAdminAuditEventsService,
   listAliasesService,
   listCompetitionsService,
   listFixturesService,
@@ -91,6 +92,15 @@ const UserListQuerySchema = z.object({
   search: z.string().min(1).optional(),
   role: z.enum(["user", "admin", "superadmin"]).optional(),
   isActive: z.enum(["true", "false"]).optional(),
+});
+
+const AuditEventListQuerySchema = z.object({
+  actorUserId: z.string().min(1).optional(),
+  entityType: z.string().min(1).optional(),
+  entityId: z.string().min(1).optional(),
+  action: z.string().min(1).optional(),
+  dateFrom: z.string().min(1).optional(),
+  dateTo: z.string().min(1).optional(),
 });
 
 const UpdateUserRoleSchema = z.object({
@@ -179,6 +189,32 @@ adminRoutes.get("/users", async (c) => {
     isActive:
       query.isActive === undefined ? undefined : query.isActive === "true",
   });
+  return paginated(
+    c,
+    result.rows,
+    paginationMeta(pagination.page, pagination.limit, result.total),
+  );
+});
+
+adminRoutes.get("/audit-events", async (c) => {
+  const pagination = parsePagination({
+    page: c.req.query("page"),
+    limit: c.req.query("limit"),
+  });
+  const filters = parseQuery(AuditEventListQuerySchema, {
+    actorUserId: c.req.query("actorUserId"),
+    entityType: c.req.query("entityType"),
+    entityId: c.req.query("entityId"),
+    action: c.req.query("action"),
+    dateFrom: c.req.query("dateFrom"),
+    dateTo: c.req.query("dateTo"),
+  });
+  const context = await makeServiceContext(c);
+  const result = await listAdminAuditEventsService(
+    context,
+    pagination,
+    filters,
+  );
   return paginated(
     c,
     result.rows,

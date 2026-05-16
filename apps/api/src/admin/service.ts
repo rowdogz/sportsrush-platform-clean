@@ -29,6 +29,7 @@ import {
   insertResultCorrection,
   listAliasesBySource,
   listAdminUsers,
+  listAdminAuditEvents,
   listCompetitions,
   listFixtures,
   listSeasons,
@@ -46,6 +47,7 @@ import {
   type FixtureRow,
   type Pagination,
   type SeasonListFilters,
+  type AuditEventListFilters,
   type AdminUserRole,
   type UserListFilters,
 } from "./repository";
@@ -109,6 +111,22 @@ export type TransitionOptions = {
   readonly partialAwayScore?: number;
 };
 
+export type AdminAuditEvent = {
+  readonly id: string;
+  readonly actorUserId: string | null;
+  readonly actorEmail: string | null;
+  readonly actorDisplayName: string | null;
+  readonly action: string;
+  readonly entityType: string;
+  readonly entityId: string | null;
+  readonly summary: string;
+  readonly beforeMetadata: unknown;
+  readonly afterMetadata: unknown;
+  readonly changes: Record<string, { before: unknown; after: unknown }>;
+  readonly createdAt: string;
+  readonly correlationId: string | null;
+};
+
 async function writeAuditEvent(
   context: ServiceContext,
   action: string,
@@ -135,6 +153,60 @@ async function writeAuditEvent(
 function toAuditMetadata(value: unknown): unknown {
   if (value === null || value === undefined) return null;
   return JSON.parse(JSON.stringify(value)) as unknown;
+}
+
+function parseAuditMetadata(value: string | null): unknown {
+  if (value === null) return null;
+  try {
+    return JSON.parse(value) as unknown;
+  } catch {
+    return null;
+  }
+}
+
+function objectRecord(value: unknown): Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+function getAuditChanges(
+  beforeMetadata: unknown,
+  afterMetadata: unknown,
+): Record<string, { before: unknown; after: unknown }> {
+  const before = objectRecord(beforeMetadata);
+  const after = objectRecord(afterMetadata);
+  const keys = new Set([...Object.keys(before), ...Object.keys(after)]);
+  const changes: Record<string, { before: unknown; after: unknown }> = {};
+
+  keys.forEach((key) => {
+    if (JSON.stringify(before[key]) !== JSON.stringify(after[key])) {
+      changes[key] = { before: before[key] ?? null, after: after[key] ?? null };
+    }
+  });
+
+  return changes;
+}
+
+function getAuditSummary(
+  action: string,
+  entityType: string,
+  entityId: string | null,
+): string {
+  return `${action} on ${entityType}${entityId ? ` ${entityId}` : ""}`;
+}
+
+function assertAuditFilters(
+  filters: AuditEventListFilters,
+  correlationId: string,
+) {
+  if (filters.dateFrom && filters.dateTo) {
+    assert(
+      filters.dateFrom <= filters.dateTo,
+      "dateFrom must be before or equal to dateTo.",
+      correlationId,
+    );
+  }
 }
 
 function logCorrelation(correlationId: string, message: string): void {
@@ -240,6 +312,37 @@ export async function listAdminUsersService(
   filters: UserListFilters,
 ) {
   return listAdminUsers(context.db, pagination, filters);
+}
+
+export async function listAdminAuditEventsService(
+  context: ServiceContext,
+  pagination: Pagination,
+  filters: AuditEventListFilters,
+) {
+  assertAuditFilters(filters, context.correlationId);
+  const result = await listAdminAuditEvents(context.db, pagination, filters);
+  return {
+    rows: result.rows.map((row): AdminAuditEvent => {
+      const beforeMetadata = parseAuditMetadata(row.before_metadata);
+      const afterMetadata = parseAuditMetadata(row.after_metadata);
+      return {
+        id: row.id,
+        actorUserId: row.actor_user_id,
+        actorEmail: row.actor_email,
+        actorDisplayName: row.actor_display_name,
+        action: row.action,
+        entityType: row.target_type,
+        entityId: row.target_id,
+        summary: getAuditSummary(row.action, row.target_type, row.target_id),
+        beforeMetadata,
+        afterMetadata,
+        changes: getAuditChanges(beforeMetadata, afterMetadata),
+        createdAt: row.created_at,
+        correlationId: null,
+      };
+    }),
+    total: result.total,
+  };
 }
 
 function assertAdminUserRole(

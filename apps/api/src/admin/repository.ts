@@ -48,6 +48,20 @@ export type AuditEventRow = {
   readonly created_at: string;
 };
 
+export type AuditEventListFilters = {
+  readonly actorUserId?: string | undefined;
+  readonly entityType?: string | undefined;
+  readonly entityId?: string | undefined;
+  readonly action?: string | undefined;
+  readonly dateFrom?: string | undefined;
+  readonly dateTo?: string | undefined;
+};
+
+export type AdminAuditEventRow = AuditEventRow & {
+  readonly actor_email: string | null;
+  readonly actor_display_name: string | null;
+};
+
 export type SeasonListFilters = {
   readonly competitionId?: string | undefined;
   readonly search?: string | undefined;
@@ -252,6 +266,72 @@ export async function listAuditEvents(
   return db.queryAll<AuditEventRow>(
     "SELECT * FROM audit_events ORDER BY created_at ASC, id ASC",
   );
+}
+
+export async function listAdminAuditEvents(
+  db: DbClient,
+  pagination: Pagination,
+  filters: AuditEventListFilters = {},
+): Promise<ListResult<AdminAuditEventRow>> {
+  const where: string[] = [];
+  const params: unknown[] = [];
+
+  if (filters.actorUserId) {
+    where.push("ae.actor_user_id = ?");
+    params.push(filters.actorUserId);
+  }
+
+  if (filters.entityType) {
+    where.push("ae.target_type = ?");
+    params.push(filters.entityType);
+  }
+
+  if (filters.entityId) {
+    where.push("ae.target_id = ?");
+    params.push(filters.entityId);
+  }
+
+  if (filters.action) {
+    where.push("ae.action = ?");
+    params.push(filters.action);
+  }
+
+  if (filters.dateFrom) {
+    where.push("ae.created_at >= ?");
+    params.push(filters.dateFrom);
+  }
+
+  if (filters.dateTo) {
+    where.push("ae.created_at <= ?");
+    params.push(filters.dateTo);
+  }
+
+  const whereSql = where.length > 0 ? ` WHERE ${where.join(" AND ")}` : "";
+  const fromSql = `FROM audit_events ae
+    LEFT JOIN users u ON u.id = ae.actor_user_id
+    LEFT JOIN user_profiles p ON p.user_id = ae.actor_user_id${whereSql}`;
+
+  const rows = await db.queryAll<AdminAuditEventRow>(
+    `SELECT ae.id,
+            ae.actor_user_id,
+            u.email AS actor_email,
+            p.display_name AS actor_display_name,
+            ae.action,
+            ae.target_type,
+            ae.target_id,
+            ae.before_metadata,
+            ae.after_metadata,
+            ae.created_at
+       ${fromSql}
+      ORDER BY ae.created_at DESC, ae.id DESC
+      LIMIT ? OFFSET ?`,
+    [...params, pagination.limit, offset(pagination)],
+  );
+  const total = await db.queryOne<{ count: number }>(
+    `SELECT COUNT(*) AS count ${fromSql}`,
+    params,
+  );
+  return { rows, total: total?.count ?? 0 };
 }
 
 export async function createCompetition(

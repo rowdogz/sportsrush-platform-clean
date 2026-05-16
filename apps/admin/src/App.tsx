@@ -12,6 +12,7 @@ import { SeasonsPage } from "./pages/SeasonsPage";
 import { TeamAliasesPage } from "./pages/TeamAliasesPage";
 import { TeamsPage } from "./pages/TeamsPage";
 import { UsersPage } from "./pages/UsersPage";
+import { AuditLogPage } from "./pages/AuditLogPage";
 import { ToastProvider } from "./components/primitives/Toast";
 import { AuthSessionProvider } from "./contexts/AuthSessionProvider";
 
@@ -20,10 +21,23 @@ const adminNavItems: readonly AdminNavItem[] = [
   { id: "seasons", label: "Seasons" },
   { id: "teams", label: "Teams" },
   { id: "users", label: "Users" },
+  { id: "audit", label: "Audit Log" },
   { id: "fixtures", label: "Fixtures" },
   { id: "aliases", label: "Aliases" },
   { id: "rounds", label: "Rounds" },
 ];
+
+const screenPaths: Partial<Record<AdminScreen, string>> = {
+  audit: "/audit",
+};
+
+function getInitialScreen(): AdminScreen {
+  const pathname = window.location.pathname;
+  const matchingEntry = Object.entries(screenPaths).find(
+    ([, path]) => path === pathname,
+  );
+  return (matchingEntry?.[0] as AdminScreen | undefined) ?? "competitions";
+}
 
 function renderScreen(screen: AdminScreen) {
   switch (screen) {
@@ -35,6 +49,8 @@ function renderScreen(screen: AdminScreen) {
       return <TeamsPage />;
     case "users":
       return <UsersPage />;
+    case "audit":
+      return <AuditLogPage />;
     case "fixtures":
       return <FixturesPage />;
     case "aliases":
@@ -45,7 +61,8 @@ function renderScreen(screen: AdminScreen) {
 }
 
 export function App() {
-  const [activeScreen, setActiveScreen] = useState<AdminScreen>("competitions");
+  const [activeScreen, setActiveScreen] =
+    useState<AdminScreen>(getInitialScreen);
 
   return (
     <ToastProvider>
