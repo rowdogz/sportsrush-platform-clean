@@ -68,6 +68,39 @@ const lockedFixture = {
   },
 };
 
+const completedFixture = {
+  id: "fixture-3",
+  kickoffTime: "2026-01-10T15:00:00.000Z",
+  venue: "Results Arena",
+  status: "completed",
+  homeScore: 2,
+  awayScore: 1,
+  homeTeam: {
+    id: "team-results-home",
+    name: "Results Home FC",
+    shortName: "RHF",
+    displayName: "Results Home FC",
+    logoUrl: null,
+    badgeUrl: null,
+  },
+  awayTeam: {
+    id: "team-results-away",
+    name: "Results Away FC",
+    shortName: "RAF",
+    displayName: "Results Away FC",
+    logoUrl: null,
+    badgeUrl: null,
+  },
+  round: { id: "round-1", round: "1", name: "Round 1", displayOrder: 1 },
+  season: { id: "season-1", slug: "2026", name: "2026" },
+  competition: {
+    id: "competition-1",
+    slug: "super-league",
+    name: "Super League",
+    shortName: "SL",
+  },
+};
+
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
@@ -190,6 +223,9 @@ function stubFetch({
       );
     }
     if (url.includes("/v1/public/fixtures")) {
+      if (url.includes("status=completed")) {
+        return Promise.resolve(jsonResponse(paginated([completedFixture])));
+      }
       if (url.includes("roundId=round-2")) {
         return Promise.resolve(jsonResponse(paginated([lockedFixture])));
       }
@@ -219,6 +255,15 @@ function stubFetch({
               awayScore: 0,
               createdAt: "2026-01-01T00:00:00.000Z",
               updatedAt: "2026-01-01T00:00:00.000Z",
+            },
+            {
+              id: "prediction-results",
+              userId: "user-1",
+              fixtureId: "fixture-3",
+              homeScore: 2,
+              awayScore: 1,
+              createdAt: "2026-01-10T00:00:00.000Z",
+              updatedAt: "2026-01-10T16:00:00.000Z",
             },
           ]),
         ),
@@ -456,5 +501,38 @@ describe("SportsRush web app", () => {
         screen.getByText(/password reset link has been sent/i),
       ).toBeTruthy();
     });
+  });
+
+  it("renders redesigned results with prediction comparison and points deferral", async () => {
+    stubFetch();
+    render(<App />);
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Login" }).at(-1)!);
+    fireEvent.change(screen.getByLabelText("Email"), {
+      target: { value: "fan@sportsrush.test" },
+    });
+    fireEvent.change(screen.getByLabelText("Password"), {
+      target: { value: "Password123!" },
+    });
+    fireEvent.click(screen.getAllByRole("button", { name: "Login" }).at(-1)!);
+    await screen.findByRole("heading", { name: "Fixtures" });
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Results" }).at(-1)!);
+
+    expect(
+      await screen.findByRole("heading", { name: "Results" }),
+    ).toBeTruthy();
+    expect(screen.getByLabelText("Results competition")).toBeTruthy();
+    expect(screen.getByLabelText("Results season")).toBeTruthy();
+    expect(screen.getByLabelText("Results round")).toBeTruthy();
+    expect(await screen.findByText("Results Home FC")).toBeTruthy();
+    expect(await screen.findByText("Your prediction: 2 - 1")).toBeTruthy();
+    expect(await screen.findByText("Exact score")).toBeTruthy();
+    expect(await screen.findByText("Points unavailable")).toBeTruthy();
+    expect(
+      screen.getByText(
+        /scoring points are not yet exposed by the current api/i,
+      ),
+    ).toBeTruthy();
   });
 });

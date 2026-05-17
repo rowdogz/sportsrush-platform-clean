@@ -31,6 +31,7 @@ import { type AsyncState, errorMessage, useAsyncData } from "./lib/asyncData";
 import { trackEvent } from "./lib/commercial";
 import { useLiveRefresh } from "./lib/liveRefresh";
 import { PredictionsPage } from "./pages/PredictionsPage";
+import { ResultsPage } from "./pages/ResultsPage";
 
 export type Screen =
   | "home"
@@ -227,22 +228,6 @@ function FixturesPage() {
         state={state}
         retry={reload}
         empty="No fixtures match those filters."
-      />
-    </Page>
-  );
-}
-
-function ResultsPage() {
-  const [state, reload] = useAsyncData(
-    () => listFixtures({ status: "completed" }),
-    [],
-  );
-  return (
-    <Page title="Results" subtitle="Completed SportsRush fixture results.">
-      <FixtureList
-        state={state}
-        retry={reload}
-        empty="No results are available yet."
       />
     </Page>
   );
