@@ -40,8 +40,22 @@ describe("Admin app shell", () => {
     const fetchMock = vi.fn(() => Promise.resolve(emptyPaginatedResponse()));
     fetchMock.mockResolvedValueOnce(
       jsonResponse({
-        accessToken: "access-token-123",
-        refreshToken: "refresh-token-123",
+        data: {
+          accessToken: "access-token-123",
+          refreshToken: "refresh-token-123",
+          user: {
+            id: "admin-user-1",
+            email: "admin@sportsrush.test",
+            role: "admin",
+          },
+          profile: {
+            displayName: "Admin User",
+          },
+          session: {
+            id: "session-1",
+            expiresAt: "2026-01-01T00:00:00.000Z",
+          },
+        },
       }),
     );
     vi.stubGlobal("fetch", fetchMock);
@@ -68,7 +82,7 @@ describe("Admin app shell", () => {
     );
     expect(fetchMock).toHaveBeenNthCalledWith(
       1,
-      "/v1/auth/login",
+      expect.stringContaining("/v1/auth/login"),
       expect.objectContaining({
         method: "POST",
         body: JSON.stringify({
