@@ -145,7 +145,10 @@ cp apps/api/.dev.vars.example apps/api/.dev.vars
 cd apps/api
 wrangler d1 migrations apply sportsrush-dev --local
 
-# 3. Start the local dev server
+# 3. Optional: seed realistic dev admin data
+pnpm db:seed:dev
+
+# 4. Start the local dev server
 wrangler dev --local
 # Or: pnpm --filter @sr/api dev
 ```
@@ -154,6 +157,9 @@ The local D1 database file is created at:
 `.wrangler/state/v3/d1/<database_id>/db.sqlite`
 
 This file is gitignored (`.wrangler/` is in the root `.gitignore`).
+
+For the seeded admin dataset and local login credentials, see
+[`DEV_SEEDING.md`](./DEV_SEEDING.md).
 
 ---
 

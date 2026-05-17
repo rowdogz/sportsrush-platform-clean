@@ -10,7 +10,9 @@
     "lint": "eslint src --ext .ts",
     "test": "vitest run",
     "test:watch": "vitest",
-    "cf-typegen": "wrangler types"
+    "cf-typegen": "wrangler types",
+    "db:migrate:local": "wrangler d1 migrations apply sportsrush-dev --local",
+    "db:seed:dev": "wrangler d1 execute sportsrush-dev --local --file seeds/dev-sportsrush.sql"
   },
   "dependencies": {
     "@sr/auth": "workspace:*",
