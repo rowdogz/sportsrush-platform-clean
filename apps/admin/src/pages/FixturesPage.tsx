@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type FormEvent,
+} from "react";
 import {
   createFixture,
   correctFixtureResult,
@@ -101,6 +107,13 @@ type RowActionValues = {
   readonly correctionReason: string;
 };
 
+type BulkActionValues = {
+  readonly status: Exclude<FixtureStatus, "completed">;
+  readonly roundId: string;
+  readonly round: string;
+  readonly roundName: string;
+};
+
 type FeedbackState = AdminFeedbackState;
 
 const defaultSportId = "sport-rugby-league";
@@ -135,6 +148,17 @@ const emptyFilterValues: FilterValues = {
   dateFrom: "",
   dateTo: "",
 };
+
+const emptyBulkActionValues: BulkActionValues = {
+  status: "postponed",
+  roundId: "",
+  round: "",
+  roundName: "",
+};
+
+const bulkTransitionStatuses = fixtureStatuses.filter(
+  (status): status is BulkActionValues["status"] => status !== "completed",
+);
 
 const fixtureTableColumns: readonly AdminTableColumn[] = [
   { id: "fixture", label: "Fixture" },
@@ -323,6 +347,10 @@ function canCorrectResult(fixture: AdminFixture): boolean {
   return fixture.status === "completed";
 }
 
+function pluralizeFixture(count: number): string {
+  return count === 1 ? "fixture" : "fixtures";
+}
+
 export function FixturesPage() {
   const [state, setState] = useState<FixturesState>({ status: "loading" });
   const [references, setReferences] = useState<ReferenceState>({
@@ -382,12 +410,32 @@ export function FixturesPage() {
   const [rowActions, setRowActions] = useState<
     Readonly<Record<string, RowActionValues>>
   >({});
+  const [selectedFixtureIds, setSelectedFixtureIds] = useState<
+    readonly string[]
+  >([]);
+  const [bulkValues, setBulkValues] = useState<BulkActionValues>(
+    emptyBulkActionValues,
+  );
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const tablePreferences = useAdminTablePreferences(
     "sr-admin:fixtures:table-preferences",
     fixtureTableColumns,
   );
+  const visibleFixtures = useMemo(
+    () => (state.status === "success" ? state.fixtures : []),
+    [state],
+  );
+  const selectedFixtures = useMemo(
+    () =>
+      visibleFixtures.filter((fixture) =>
+        selectedFixtureIds.includes(fixture.id),
+      ),
+    [selectedFixtureIds, visibleFixtures],
+  );
+  const allVisibleSelected =
+    visibleFixtures.length > 0 &&
+    visibleFixtures.every((fixture) => selectedFixtureIds.includes(fixture.id));
 
   const loadFixtures = useCallback(
     async (
@@ -400,6 +448,12 @@ export function FixturesPage() {
       try {
         const response = await listFixtures(toFilters(nextFilters));
         setState({ status: "success", fixtures: response.data });
+        setSelectedFixtureIds((current) => {
+          const visibleIds = new Set(
+            response.data.map((fixture) => fixture.id),
+          );
+          return current.filter((id) => visibleIds.has(id));
+        });
         setRowActions(
           Object.fromEntries(
             response.data.map((fixture) => [
@@ -429,6 +483,12 @@ export function FixturesPage() {
         rounds: [],
       });
       setState({ status: "success", fixtures: fixturesResponse.data });
+      setSelectedFixtureIds((current) => {
+        const visibleIds = new Set(
+          fixturesResponse.data.map((fixture) => fixture.id),
+        );
+        return current.filter((id) => visibleIds.has(id));
+      });
       setRowActions(
         Object.fromEntries(
           fixturesResponse.data.map((fixture) => [
@@ -632,6 +692,158 @@ export function FixturesPage() {
         ...values,
       },
     }));
+  }
+
+  function toggleFixtureSelection(fixtureId: string) {
+    setSelectedFixtureIds((current) =>
+      current.includes(fixtureId)
+        ? current.filter((id) => id !== fixtureId)
+        : [...current, fixtureId],
+    );
+  }
+
+  function toggleAllVisibleFixtures() {
+    if (allVisibleSelected) {
+      setSelectedFixtureIds((current) =>
+        current.filter(
+          (id) => !visibleFixtures.some((fixture) => fixture.id === id),
+        ),
+      );
+      return;
+    }
+
+    setSelectedFixtureIds((current) =>
+      Array.from(
+        new Set([...current, ...visibleFixtures.map((fixture) => fixture.id)]),
+      ),
+    );
+  }
+
+  function clearSelection() {
+    setSelectedFixtureIds([]);
+  }
+
+  async function applyBulkStatus() {
+    setFeedback(null);
+    if (selectedFixtures.length === 0) {
+      setFeedback(
+        adminErrorToast("Select fixtures before applying a bulk action."),
+      );
+      return;
+    }
+
+    if (
+      !window.confirm(
+        `Update status for ${selectedFixtures.length} selected ${pluralizeFixture(
+          selectedFixtures.length,
+        )}?`,
+      )
+    ) {
+      return;
+    }
+
+    setPendingAction("bulk-status");
+    const results = await Promise.all(
+      selectedFixtures.map(async (fixture) => {
+        try {
+          await transitionFixture(fixture.id, { status: bulkValues.status });
+          return { ok: true };
+        } catch (error) {
+          return { ok: false, message: getErrorMessage(error) };
+        }
+      }),
+    );
+
+    await loadFixtures(activeFilters);
+    const failedCount = results.filter((result) => !result.ok).length;
+    const succeededCount = results.length - failedCount;
+    if (failedCount === 0) {
+      clearSelection();
+      setFeedback(
+        adminSuccessToast(
+          `Updated status for ${succeededCount} ${pluralizeFixture(
+            succeededCount,
+          )}.`,
+        ),
+      );
+    } else {
+      setFeedback(
+        adminErrorToast(
+          `Updated status for ${succeededCount} ${pluralizeFixture(
+            succeededCount,
+          )}; ${failedCount} failed.`,
+        ),
+      );
+    }
+    setPendingAction(null);
+  }
+
+  async function applyBulkRound() {
+    setFeedback(null);
+    if (selectedFixtures.length === 0) {
+      setFeedback(
+        adminErrorToast("Select fixtures before applying a bulk action."),
+      );
+      return;
+    }
+    if (!bulkValues.round.trim() || !bulkValues.roundName.trim()) {
+      setFeedback(adminErrorToast("Round and round name are required."));
+      return;
+    }
+
+    if (
+      !window.confirm(
+        `Change round for ${selectedFixtures.length} selected ${pluralizeFixture(
+          selectedFixtures.length,
+        )}?`,
+      )
+    ) {
+      return;
+    }
+
+    setPendingAction("bulk-round");
+    const results = await Promise.all(
+      selectedFixtures.map(async (fixture) => {
+        try {
+          await updateFixture(
+            fixture.id,
+            toEditPayload(fixture, {
+              ...toFormValues(fixture),
+              roundId: bulkValues.roundId,
+              round: bulkValues.round,
+              roundName: bulkValues.roundName,
+            }),
+          );
+          return { ok: true };
+        } catch (error) {
+          return { ok: false, message: getErrorMessage(error) };
+        }
+      }),
+    );
+
+    await loadFixtures(activeFilters);
+    const failedCount = results.filter((result) => !result.ok).length;
+    const succeededCount = results.length - failedCount;
+    if (failedCount === 0) {
+      clearSelection();
+      setFeedback(
+        adminSuccessToast(
+          `Changed round for ${succeededCount} ${pluralizeFixture(
+            succeededCount,
+          )}.`,
+        ),
+      );
+      setBulkValues(emptyBulkActionValues);
+    } else {
+      setFeedback(
+        adminErrorToast(
+          `Changed round for ${succeededCount} ${pluralizeFixture(
+            succeededCount,
+          )}; ${failedCount} failed.`,
+        ),
+      );
+    }
+    setPendingAction(null);
   }
 
   function updateCreateSeasonId(seasonId: string) {
@@ -944,10 +1156,121 @@ export function FixturesPage() {
             onColumnVisibleChange={tablePreferences.setColumnVisible}
             onDensityChange={tablePreferences.setDensity}
           />
+          <div className="bulk-actions-panel" aria-label="Fixture bulk actions">
+            <div>
+              <strong>
+                {selectedFixtures.length} selected{" "}
+                {pluralizeFixture(selectedFixtures.length)}
+              </strong>
+              <span>
+                Select visible fixtures, then apply a safe bulk update.
+              </span>
+            </div>
+            <div className="bulk-actions-grid">
+              <label>
+                Bulk status
+                <select
+                  value={bulkValues.status}
+                  onChange={(event) =>
+                    setBulkValues({
+                      ...bulkValues,
+                      status: event.target.value as BulkActionValues["status"],
+                    })
+                  }
+                  disabled={selectedFixtures.length === 0}
+                >
+                  {bulkTransitionStatuses.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button
+                className="secondary-button compact-button"
+                type="button"
+                disabled={
+                  selectedFixtures.length === 0 ||
+                  pendingAction === "bulk-status"
+                }
+                onClick={() => void applyBulkStatus()}
+              >
+                {pendingAction === "bulk-status"
+                  ? "Updating..."
+                  : "Apply status"}
+              </button>
+              <label>
+                Bulk round ID
+                <input
+                  value={bulkValues.roundId}
+                  onChange={(event) =>
+                    setBulkValues({
+                      ...bulkValues,
+                      roundId: event.target.value,
+                    })
+                  }
+                  disabled={selectedFixtures.length === 0}
+                />
+              </label>
+              <label>
+                Bulk round
+                <input
+                  value={bulkValues.round}
+                  onChange={(event) =>
+                    setBulkValues({
+                      ...bulkValues,
+                      round: event.target.value,
+                    })
+                  }
+                  disabled={selectedFixtures.length === 0}
+                />
+              </label>
+              <label>
+                Bulk round name
+                <input
+                  value={bulkValues.roundName}
+                  onChange={(event) =>
+                    setBulkValues({
+                      ...bulkValues,
+                      roundName: event.target.value,
+                    })
+                  }
+                  disabled={selectedFixtures.length === 0}
+                />
+              </label>
+              <button
+                className="secondary-button compact-button"
+                type="button"
+                disabled={
+                  selectedFixtures.length === 0 ||
+                  pendingAction === "bulk-round"
+                }
+                onClick={() => void applyBulkRound()}
+              >
+                {pendingAction === "bulk-round" ? "Changing..." : "Apply round"}
+              </button>
+              <button
+                className="secondary-button compact-button"
+                type="button"
+                disabled={selectedFixtures.length === 0}
+                onClick={clearSelection}
+              >
+                Clear selection
+              </button>
+            </div>
+          </div>
           <div className="admin-table-wrapper">
             <table className={tablePreferences.tableClassName}>
               <thead>
                 <tr>
+                  <th scope="col">
+                    <input
+                      aria-label="Select all visible fixtures"
+                      type="checkbox"
+                      checked={allVisibleSelected}
+                      onChange={toggleAllVisibleFixtures}
+                    />
+                  </th>
                   <th scope="col">Fixture</th>
                   {tablePreferences.isColumnVisible("competition") ? (
                     <th scope="col">Competition</th>
@@ -1099,6 +1422,16 @@ export function FixturesPage() {
                         </td>
                       ) : (
                         <>
+                          <td>
+                            <input
+                              aria-label={`Select fixture ${fixture.id}`}
+                              type="checkbox"
+                              checked={selectedFixtureIds.includes(fixture.id)}
+                              onChange={() =>
+                                toggleFixtureSelection(fixture.id)
+                              }
+                            />
+                          </td>
                           <td>
                             {getTeamName(references.teams, fixture.homeTeamId)}{" "}
                             v{" "}
