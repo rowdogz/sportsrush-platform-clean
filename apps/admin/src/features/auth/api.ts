@@ -3,6 +3,10 @@ import { isUserRole } from "../../lib/adminPermissions";
 import type { AdminLoginRequest, AdminLoginResponse } from "./types";
 
 type RawLoginResponse = {
+  readonly data?: RawLoginPayload;
+} & RawLoginPayload;
+
+type RawLoginPayload = {
   readonly accessToken?: string;
   readonly access_token?: string;
   readonly refreshToken?: string;
@@ -12,7 +16,17 @@ type RawLoginResponse = {
     readonly email?: string;
     readonly role?: unknown;
   };
+  readonly profile?: unknown;
+  readonly session?: unknown;
 };
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object";
+}
+
+function getLoginPayload(response: RawLoginResponse): RawLoginPayload {
+  return isRecord(response.data) ? response.data : response;
+}
 
 export async function loginAdmin(
   request: AdminLoginRequest,
@@ -21,17 +35,20 @@ export async function loginAdmin(
     method: "POST",
     body: request,
   });
+  const payload = getLoginPayload(response);
 
   return {
-    accessToken: response.accessToken ?? response.access_token ?? "",
-    refreshToken: response.refreshToken ?? response.refresh_token ?? "",
+    accessToken: payload.accessToken ?? payload.access_token ?? "",
+    refreshToken: payload.refreshToken ?? payload.refresh_token ?? "",
     user:
-      response.user?.id && response.user.email && isUserRole(response.user.role)
+      payload.user?.id && payload.user.email && isUserRole(payload.user.role)
         ? {
-            id: response.user.id,
-            email: response.user.email,
-            role: response.user.role,
+            id: payload.user.id,
+            email: payload.user.email,
+            role: payload.user.role,
           }
         : null,
+    profile: payload.profile ?? null,
+    session: payload.session ?? null,
   };
 }
