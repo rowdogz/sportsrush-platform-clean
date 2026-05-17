@@ -1,0 +1,14 @@
+{
+  "expo": {
+    "name": "SportsRush",
+    "slug": "sportsrush",
+    "version": "0.0.1",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "scheme": "sportsrush",
+    "platforms": ["ios", "android"],
+    "extra": {
+      "apiBaseUrl": "http://localhost:8787"
+    }
+  }
+}
