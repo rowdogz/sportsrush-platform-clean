@@ -2,15 +2,18 @@ import { randomUUID } from "node:crypto";
 import { hasRole } from "@sr/auth";
 import type { Role, TokenPayload } from "@sr/types";
 import type { DbClient } from "../lib/db";
-import { AppError } from "../lib/errors";
+import { AppError, AuthorizationError, NotFoundError } from "../lib/errors";
 import { createAuditEvent } from "../admin/repository";
 import { normalizeSlug } from "../admin/normalization";
 import {
   createPrivateLeague,
+  findLeagueMember,
   findPrivateLeagueById,
+  findPrivateLeagueByInviteCode,
   listLeagueCompetitions,
   listLeagueMembers,
   listPrivateLeagues,
+  listPrivateLeaguesForUser,
   removeLeagueMember,
   replaceLeagueCompetitions,
   updatePrivateLeague,
@@ -19,6 +22,7 @@ import {
   type PrivateLeagueMemberRow,
 } from "./repository";
 import type {
+  PrivateLeagueJoinInput,
   PrivateLeagueListQuery,
   PrivateLeagueMemberWriteInput,
   PrivateLeagueUpdateInput,
@@ -73,6 +77,17 @@ export type PrivateLeagueDetailDto = PrivateLeagueDto & {
     readonly competitionId: string;
     readonly competitionName: string | null;
   }[];
+};
+
+export type MemberPrivateLeagueDto = Omit<PrivateLeagueDto, "inviteCode"> & {
+  readonly viewerRole: "owner" | "admin" | "member" | null;
+};
+
+export type MemberPrivateLeagueDetailDto = Omit<
+  PrivateLeagueDetailDto,
+  "inviteCode"
+> & {
+  readonly viewerRole: "owner" | "admin" | "member" | null;
 };
 
 function assert(
@@ -134,6 +149,14 @@ function toMemberDto(row: PrivateLeagueMemberRow): PrivateLeagueMemberDto {
   };
 }
 
+function toMemberLeagueDto(
+  row: PrivateLeagueDetailRow,
+  viewerRole: "owner" | "admin" | "member" | null,
+): MemberPrivateLeagueDto {
+  const { inviteCode: _inviteCode, ...league } = toDto(row);
+  return { ...league, viewerRole };
+}
+
 async function audit(
   context: PrivateLeagueServiceContext,
   action: string,
@@ -172,6 +195,37 @@ async function detail(
       competitionName: competition.competition_name,
     })),
   };
+}
+
+async function requireMemberAccess(
+  context: PrivateLeagueServiceContext,
+  leagueId: string,
+) {
+  const row = await findPrivateLeagueById(context.db, leagueId);
+  if (row === null) throw new NotFoundError("Private league not found");
+  if (
+    hasRole(
+      {
+        userId: context.actorUserId,
+        role: context.actorRole,
+        sessionId: "private-league-member-service",
+        iat: 0,
+        exp: 0,
+      } as TokenPayload,
+      "admin",
+    )
+  ) {
+    return { row, member: null as PrivateLeagueMemberRow | null };
+  }
+  const member = await findLeagueMember(
+    context.db,
+    leagueId,
+    context.actorUserId,
+  );
+  if (member === null || member.is_active !== 1) {
+    throw new AuthorizationError("Private league membership required");
+  }
+  return { row, member };
 }
 
 export async function listPrivateLeaguesService(
@@ -307,4 +361,68 @@ export async function removePrivateLeagueMemberService(
   const after = await getPrivateLeagueService(context, id);
   await audit(context, "private_league.member.remove", id, before, after);
   return after.members;
+}
+
+export async function listMemberPrivateLeaguesService(
+  context: PrivateLeagueServiceContext,
+  query: PrivateLeagueListQuery,
+) {
+  const result = await listPrivateLeaguesForUser(
+    context.db,
+    context.actorUserId,
+    query,
+  );
+  const rows = await Promise.all(
+    result.rows.map(async (row) => {
+      const membership = await findLeagueMember(
+        context.db,
+        row.id,
+        context.actorUserId,
+      );
+      return toMemberLeagueDto(row, membership?.role ?? null);
+    }),
+  );
+  return { rows, total: result.total };
+}
+
+export async function getMemberPrivateLeagueService(
+  context: PrivateLeagueServiceContext,
+  id: string,
+): Promise<MemberPrivateLeagueDetailDto> {
+  const { row, member } = await requireMemberAccess(context, id);
+  const base = await detail(context.db, row);
+  const { inviteCode: _inviteCode, ...rest } = base;
+  return { ...rest, viewerRole: member?.role ?? null };
+}
+
+export async function joinPrivateLeagueByInviteCodeService(
+  context: PrivateLeagueServiceContext,
+  input: PrivateLeagueJoinInput,
+): Promise<MemberPrivateLeagueDetailDto> {
+  const row = await findPrivateLeagueByInviteCode(context.db, input.inviteCode);
+  if (row === null || row.is_archived === 1) {
+    throw new NotFoundError("Private league not found");
+  }
+  const before = await findLeagueMember(
+    context.db,
+    row.id,
+    context.actorUserId,
+  );
+  await upsertLeagueMember(
+    context.db,
+    randomUUID(),
+    row.id,
+    context.actorUserId,
+    before?.role ?? "member",
+    context.now,
+  );
+  const after = await getMemberPrivateLeagueService(context, row.id);
+  await audit(
+    context,
+    "private_league.member.self_join",
+    row.id,
+    before ? toMemberDto(before) : null,
+    after.viewerRole,
+  );
+  return after;
 }

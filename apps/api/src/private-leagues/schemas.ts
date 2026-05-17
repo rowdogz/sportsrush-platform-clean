@@ -26,6 +26,10 @@ export const PrivateLeagueListQuerySchema = z.object({
   includeArchived: z.enum(["true", "false"]).optional(),
 });
 
+export const PrivateLeagueJoinSchema = z.object({
+  inviteCode: z.string().trim().min(4).max(32),
+});
+
 export type PrivateLeagueWriteInput = z.infer<typeof PrivateLeagueWriteSchema>;
 export type PrivateLeagueUpdateInput = z.infer<
   typeof PrivateLeagueUpdateSchema
@@ -36,3 +40,4 @@ export type PrivateLeagueMemberWriteInput = z.infer<
 export type PrivateLeagueListQuery = z.infer<
   typeof PrivateLeagueListQuerySchema
 >;
+export type PrivateLeagueJoinInput = z.infer<typeof PrivateLeagueJoinSchema>;

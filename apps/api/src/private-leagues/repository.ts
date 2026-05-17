@@ -128,6 +128,66 @@ export async function findPrivateLeagueById(
   return leagueById(db, id);
 }
 
+export async function findPrivateLeagueByInviteCode(
+  db: DbClient,
+  inviteCode: string,
+): Promise<PrivateLeagueDetailRow | null> {
+  return db.queryOne<PrivateLeagueDetailRow>(
+    `SELECT pl.*,
+            COUNT(DISTINCT plm.id) AS member_count,
+            COUNT(DISTINCT plc.id) AS competition_count
+       FROM private_leagues pl
+       LEFT JOIN private_league_members plm ON plm.private_league_id = pl.id AND plm.is_active = 1
+       LEFT JOIN private_league_competitions plc ON plc.private_league_id = pl.id
+      WHERE upper(pl.invite_code) = upper(?)
+      GROUP BY pl.id`,
+    [inviteCode.trim()],
+  );
+}
+
+export async function listPrivateLeaguesForUser(
+  db: DbClient,
+  userId: string,
+  query: PrivateLeagueListQuery,
+): Promise<ListResult<PrivateLeagueDetailRow>> {
+  const params: unknown[] = [userId];
+  const clauses = [
+    "plm.user_id = ?",
+    "plm.is_active = 1",
+    "pl.is_archived = 0",
+  ];
+  if (query.search?.trim()) {
+    clauses.push("(pl.name LIKE ? OR pl.slug LIKE ?)");
+    const search = `%${query.search.trim()}%`;
+    params.push(search, search);
+  }
+  const where = `WHERE ${clauses.join(" AND ")}`;
+  const rows = await db.queryAll<PrivateLeagueDetailRow>(
+    `SELECT pl.*,
+            COUNT(DISTINCT active_members.id) AS member_count,
+            COUNT(DISTINCT plc.id) AS competition_count
+       FROM private_league_members plm
+       JOIN private_leagues pl ON pl.id = plm.private_league_id
+       LEFT JOIN private_league_members active_members
+              ON active_members.private_league_id = pl.id
+             AND active_members.is_active = 1
+       LEFT JOIN private_league_competitions plc ON plc.private_league_id = pl.id
+       ${where}
+      GROUP BY pl.id
+      ORDER BY pl.updated_at DESC, pl.created_at DESC
+      LIMIT ? OFFSET ?`,
+    [...params, query.limit ?? 25, offset(query)],
+  );
+  const total = await db.queryOne<{ count: number }>(
+    `SELECT COUNT(*) AS count
+       FROM private_league_members plm
+       JOIN private_leagues pl ON pl.id = plm.private_league_id
+       ${where}`,
+    params,
+  );
+  return { rows, total: total?.count ?? 0 };
+}
+
 export async function createPrivateLeague(
   db: DbClient,
   id: string,
@@ -241,6 +301,21 @@ export async function listLeagueMembers(
       WHERE plm.private_league_id = ?
       ORDER BY plm.joined_at DESC`,
     [leagueId],
+  );
+}
+
+export async function findLeagueMember(
+  db: DbClient,
+  leagueId: string,
+  userId: string,
+): Promise<PrivateLeagueMemberRow | null> {
+  return db.queryOne<PrivateLeagueMemberRow>(
+    `SELECT plm.*, u.email, up.display_name
+       FROM private_league_members plm
+       LEFT JOIN users u ON u.id = plm.user_id
+       LEFT JOIN user_profiles up ON up.user_id = plm.user_id
+      WHERE plm.private_league_id = ? AND plm.user_id = ?`,
+    [leagueId, userId],
   );
 }
 
