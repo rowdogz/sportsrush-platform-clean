@@ -18,5 +18,6 @@
 JWT_SECRET="REPLACE_WITH_OUTPUT_OF__openssl_rand_-base64_32"
 
 # WEB_ORIGIN is optional in development (CORS defaults to '*').
+# It is required in staging and production by API runtime validation.
 # Set it to restrict CORS to a specific origin during local testing.
 # WEB_ORIGIN="http://localhost:3000"

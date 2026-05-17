@@ -75,3 +75,36 @@ export type HonoEnv = {
     user?: import("@sr/types").TokenPayload;
   };
 };
+
+export type EnvValidationResult =
+  | { readonly ok: true }
+  | { readonly ok: false; readonly issues: readonly string[] };
+
+export function validateEnv(env: Partial<Env>): EnvValidationResult {
+  const issues: string[] = [];
+
+  if (
+    env.ENVIRONMENT !== "development" &&
+    env.ENVIRONMENT !== "staging" &&
+    env.ENVIRONMENT !== "production"
+  ) {
+    issues.push("ENVIRONMENT must be development, staging, or production.");
+  }
+
+  if (!env.API_VERSION?.trim()) {
+    issues.push("API_VERSION is required.");
+  }
+
+  if (!env.JWT_SECRET || env.JWT_SECRET.length < 32) {
+    issues.push("JWT_SECRET must be at least 32 characters.");
+  }
+
+  if (
+    (env.ENVIRONMENT === "staging" || env.ENVIRONMENT === "production") &&
+    !env.WEB_ORIGIN?.trim()
+  ) {
+    issues.push("WEB_ORIGIN is required in staging and production.");
+  }
+
+  return issues.length > 0 ? { ok: false, issues } : { ok: true };
+}

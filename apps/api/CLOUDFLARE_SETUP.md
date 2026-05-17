@@ -111,7 +111,7 @@ Secrets are set per environment and are never stored in `wrangler.toml`.
 ```bash
 # Development (used by `wrangler dev` without --local)
 wrangler secret put JWT_SECRET
-wrangler secret put WEB_ORIGIN       # optional — defaults to '*' if absent
+wrangler secret put WEB_ORIGIN       # optional in development only
 
 # Staging
 wrangler secret put JWT_SECRET  --env staging
@@ -129,6 +129,10 @@ openssl rand -base64 32
 ```
 
 For local development, use `.dev.vars` instead (see `.dev.vars.example`).
+
+The API validates required runtime bindings on every request. `JWT_SECRET`
+must be at least 32 characters, and `WEB_ORIGIN` is required in staging and
+production so CORS cannot silently fall back to `*`.
 
 ---
 

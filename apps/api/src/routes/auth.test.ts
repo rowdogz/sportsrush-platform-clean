@@ -126,7 +126,10 @@ afterAll(() => {
 
 // ── Request helper ────────────────────────────────────────────────────────────
 
-type EnvOverride = { ENVIRONMENT?: "development" | "staging" | "production" };
+type EnvOverride = {
+  ENVIRONMENT?: "development" | "staging" | "production";
+  WEB_ORIGIN?: string;
+};
 
 async function req(
   method: string,
@@ -143,6 +146,7 @@ async function req(
     ENVIRONMENT: envOverride?.ENVIRONMENT ?? ("development" as const),
     API_VERSION: "0.0.1",
     JWT_SECRET: TEST_JWT_SECRET,
+    WEB_ORIGIN: envOverride?.WEB_ORIGIN,
     DB: mockD1,
   };
 
@@ -411,7 +415,10 @@ describe("POST /v1/auth/request-password-reset", () => {
       "/request-password-reset",
       { email },
       undefined,
-      { ENVIRONMENT: "production" },
+      {
+        ENVIRONMENT: "production",
+        WEB_ORIGIN: "https://admin.sportsrush.test",
+      },
     );
     expect(res.status).toBe(200);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

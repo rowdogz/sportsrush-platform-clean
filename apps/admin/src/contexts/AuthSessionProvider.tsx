@@ -9,8 +9,14 @@ import {
 } from "react";
 import { loginAdmin } from "../features/auth/api";
 import type { AdminLoginRequest } from "../features/auth/types";
-import { setAccessTokenProvider } from "../lib/apiClient";
-import { getRoleFromAccessToken } from "../lib/adminPermissions";
+import {
+  setAccessTokenProvider,
+  setUnauthorizedHandler,
+} from "../lib/apiClient";
+import {
+  getRoleFromAccessToken,
+  isAccessTokenUsable,
+} from "../lib/adminPermissions";
 import type { UserRole } from "../features/users/types";
 
 const ACCESS_TOKEN_STORAGE_KEY = "sr_admin_access_token";
@@ -40,6 +46,12 @@ function getStoredSession(): AuthSession {
   }
 
   const accessToken = window.localStorage.getItem(ACCESS_TOKEN_STORAGE_KEY);
+  if (!isAccessTokenUsable(accessToken)) {
+    window.localStorage.removeItem(ACCESS_TOKEN_STORAGE_KEY);
+    window.localStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY);
+    return { accessToken: null, refreshToken: null, role: null };
+  }
+
   return {
     accessToken,
     refreshToken: window.localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY),
@@ -73,13 +85,21 @@ type AuthSessionProviderProps = {
 export function AuthSessionProvider({ children }: AuthSessionProviderProps) {
   const [session, setSession] = useState<AuthSession>(getStoredSession);
 
+  const clearSession = useCallback(() => {
+    const nextSession = { accessToken: null, refreshToken: null, role: null };
+    persistSession(nextSession);
+    setSession(nextSession);
+  }, []);
+
   useEffect(() => {
     setAccessTokenProvider(() => session.accessToken);
+    setUnauthorizedHandler(clearSession);
 
     return () => {
       setAccessTokenProvider(() => null);
+      setUnauthorizedHandler(null);
     };
-  }, [session.accessToken]);
+  }, [clearSession, session.accessToken]);
 
   const login = useCallback(async (request: AdminLoginRequest) => {
     const response = await loginAdmin(request);
@@ -92,11 +112,7 @@ export function AuthSessionProvider({ children }: AuthSessionProviderProps) {
     setSession(nextSession);
   }, []);
 
-  const logout = useCallback(() => {
-    const nextSession = { accessToken: null, refreshToken: null, role: null };
-    persistSession(nextSession);
-    setSession(nextSession);
-  }, []);
+  const logout = clearSession;
 
   const value = useMemo<AuthSessionContextValue>(
     () => ({
