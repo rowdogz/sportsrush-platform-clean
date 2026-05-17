@@ -379,6 +379,222 @@ describe("FixturesPage", () => {
     );
   });
 
+  it("selects fixtures and exposes bulk actions", async () => {
+    const secondFixture = fixture({
+      id: "fixture-2",
+      away_team_id: "team-home",
+      home_team_id: "team-away",
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValueOnce(competitionListResponse())
+        .mockResolvedValueOnce(teamListResponse())
+        .mockResolvedValueOnce(fixtureListResponse([fixture(), secondFixture])),
+    );
+
+    render(<FixturesPage />);
+
+    expect(await screen.findByLabelText("Fixture bulk actions")).toBeTruthy();
+    expect(screen.getByText("0 selected fixtures")).toBeTruthy();
+
+    fireEvent.click(screen.getByLabelText("Select fixture fixture-1"));
+    expect(screen.getByText("1 selected fixture")).toBeTruthy();
+
+    fireEvent.click(screen.getByLabelText("Select all visible fixtures"));
+    expect(screen.getByText("2 selected fixtures")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "Clear selection" }));
+    expect(screen.getByText("0 selected fixtures")).toBeTruthy();
+  });
+
+  it("applies a successful bulk status update and clears selection", async () => {
+    const secondFixture = fixture({
+      id: "fixture-2",
+      away_team_id: "team-home",
+      home_team_id: "team-away",
+    });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(competitionListResponse())
+      .mockResolvedValueOnce(teamListResponse())
+      .mockResolvedValueOnce(fixtureListResponse([fixture(), secondFixture]))
+      .mockResolvedValueOnce(
+        jsonResponse({ data: fixture({ status: "postponed" }) }),
+      )
+      .mockResolvedValueOnce(
+        jsonResponse({
+          data: fixture({ id: "fixture-2", status: "postponed" }),
+        }),
+      )
+      .mockResolvedValueOnce(
+        fixtureListResponse([
+          fixture({ status: "postponed" }),
+          { ...secondFixture, status: "postponed" },
+        ]),
+      );
+    const confirmMock = vi.spyOn(window, "confirm").mockReturnValue(true);
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<FixturesPage />);
+
+    await screen.findByLabelText("Fixture bulk actions");
+    fireEvent.click(screen.getByLabelText("Select all visible fixtures"));
+    fireEvent.change(screen.getByLabelText("Bulk status"), {
+      target: { value: "postponed" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Apply status" }));
+
+    expect(
+      await screen.findByText("Updated status for 2 fixtures."),
+    ).toBeTruthy();
+    expect(screen.getByText("0 selected fixtures")).toBeTruthy();
+    expect(confirmMock).toHaveBeenCalledWith(
+      "Update status for 2 selected fixtures?",
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      4,
+      "/v1/admin/fixtures/fixture-1/transition",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ status: "postponed" }),
+      }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      5,
+      "/v1/admin/fixtures/fixture-2/transition",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ status: "postponed" }),
+      }),
+    );
+  });
+
+  it("applies a bulk round update", async () => {
+    const secondFixture = fixture({
+      id: "fixture-2",
+      away_team_id: "team-home",
+      home_team_id: "team-away",
+    });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(competitionListResponse())
+      .mockResolvedValueOnce(teamListResponse())
+      .mockResolvedValueOnce(fixtureListResponse([fixture(), secondFixture]))
+      .mockResolvedValueOnce(
+        jsonResponse({
+          data: fixture({
+            round_id: "round-2",
+            round: "2",
+            round_name: "Round 2",
+          }),
+        }),
+      )
+      .mockResolvedValueOnce(
+        jsonResponse({
+          data: fixture({
+            id: "fixture-2",
+            round_id: "round-2",
+            round: "2",
+            round_name: "Round 2",
+          }),
+        }),
+      )
+      .mockResolvedValueOnce(
+        fixtureListResponse([
+          fixture({ round_id: "round-2", round: "2", round_name: "Round 2" }),
+          {
+            ...secondFixture,
+            round_id: "round-2",
+            round: "2",
+            round_name: "Round 2",
+          },
+        ]),
+      );
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<FixturesPage />);
+
+    await screen.findByLabelText("Fixture bulk actions");
+    fireEvent.click(screen.getByLabelText("Select all visible fixtures"));
+    fireEvent.change(screen.getByLabelText("Bulk round ID"), {
+      target: { value: "round-2" },
+    });
+    fireEvent.change(screen.getByLabelText("Bulk round"), {
+      target: { value: "2" },
+    });
+    fireEvent.change(screen.getByLabelText("Bulk round name"), {
+      target: { value: "Round 2" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Apply round" }));
+
+    expect(
+      await screen.findByText("Changed round for 2 fixtures."),
+    ).toBeTruthy();
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      4,
+      "/v1/admin/fixtures/fixture-1",
+      expect.objectContaining({
+        method: "PATCH",
+        body: expect.stringContaining('"roundName":"Round 2"'),
+      }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      5,
+      "/v1/admin/fixtures/fixture-2",
+      expect.objectContaining({
+        method: "PATCH",
+        body: expect.stringContaining('"roundName":"Round 2"'),
+      }),
+    );
+  });
+
+  it("reports partial failures from bulk updates", async () => {
+    const secondFixture = fixture({
+      id: "fixture-2",
+      status: "completed",
+      away_team_id: "team-home",
+      home_team_id: "team-away",
+    });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(competitionListResponse())
+      .mockResolvedValueOnce(teamListResponse())
+      .mockResolvedValueOnce(fixtureListResponse([fixture(), secondFixture]))
+      .mockResolvedValueOnce(
+        jsonResponse({ data: fixture({ status: "postponed" }) }),
+      )
+      .mockResolvedValueOnce(
+        jsonResponse(
+          {
+            error: {
+              code: "domain_error",
+              message: "Invalid transition completed -> postponed",
+            },
+          },
+          422,
+        ),
+      )
+      .mockResolvedValueOnce(
+        fixtureListResponse([fixture({ status: "postponed" }), secondFixture]),
+      );
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<FixturesPage />);
+
+    await screen.findByLabelText("Fixture bulk actions");
+    fireEvent.click(screen.getByLabelText("Select all visible fixtures"));
+    fireEvent.click(screen.getByRole("button", { name: "Apply status" }));
+
+    expect(
+      await screen.findByText("Updated status for 1 fixture; 1 failed."),
+    ).toBeTruthy();
+    expect(screen.getByText("2 selected fixtures")).toBeTruthy();
+  });
+
   it("enters a fixture result", async () => {
     const fetchMock = vi
       .fn()
