@@ -57,6 +57,9 @@ pnpm dev
 See [docs/runbooks/local-development.md](docs/runbooks/local-development.md) for the
 full onboarding guide.
 
+For local API database setup and realistic admin seed data, see
+[`apps/api/DEV_SEEDING.md`](apps/api/DEV_SEEDING.md).
+
 ## Commands
 
 | Command             | Description                        |
