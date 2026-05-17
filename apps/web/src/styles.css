@@ -361,6 +361,251 @@ select {
   font-weight: 800;
 }
 
+.prediction-page {
+  display: grid;
+  gap: 1rem;
+}
+
+.prediction-login-banner,
+.prediction-toolbar,
+.prediction-group,
+.prediction-card,
+.prediction-readonly-panel {
+  border: 1px solid var(--border);
+  border-radius: 1.25rem;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.prediction-login-banner,
+.prediction-toolbar,
+.prediction-group {
+  padding: 1rem;
+}
+
+.prediction-login-banner {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+}
+
+.prediction-login-banner p,
+.prediction-context,
+.prediction-group-heading p,
+.prediction-readonly-copy {
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+}
+
+.prediction-toolbar {
+  display: grid;
+  gap: 1rem;
+}
+
+.prediction-selectors,
+.prediction-toolbar-actions {
+  display: flex;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+  align-items: end;
+}
+
+.prediction-selectors label {
+  min-width: min(100%, 220px);
+}
+
+.prediction-group {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.prediction-group-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: end;
+}
+
+.prediction-group-heading h2,
+.prediction-card-header h3 {
+  margin: 0;
+}
+
+.prediction-group-list,
+.prediction-skeleton-list {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.prediction-card {
+  padding: 1rem;
+  display: grid;
+  gap: 1rem;
+}
+
+.prediction-card-live {
+  border-color: color-mix(in srgb, var(--success) 45%, var(--border));
+}
+
+.prediction-card-locked {
+  border-color: color-mix(in srgb, var(--warning) 40%, var(--border));
+}
+
+.prediction-card-completed {
+  border-color: color-mix(in srgb, var(--primary) 35%, var(--border));
+}
+
+.prediction-card-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: start;
+}
+
+.prediction-kickoff {
+  margin: 0 0 0.3rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+.prediction-card-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 360px) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: center;
+}
+
+.prediction-team {
+  display: flex;
+  gap: 0.8rem;
+  align-items: center;
+}
+
+.prediction-team-away {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.prediction-team strong {
+  display: block;
+}
+
+.prediction-team span:not(.team-mark) {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.team-mark {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--secondary), var(--primary));
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+}
+
+.prediction-entry-panel,
+.prediction-readonly-panel {
+  padding: 0.85rem;
+}
+
+.prediction-entry-panel {
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--panel-muted) 88%, var(--bg));
+  border: 1px solid var(--border);
+}
+
+.prediction-score-entry {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: end;
+}
+
+.prediction-input span {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.prediction-input input {
+  text-align: center;
+  font-size: 1.55rem;
+  font-weight: 900;
+  padding-block: 0.85rem;
+}
+
+.prediction-separator {
+  align-self: center;
+  justify-self: center;
+  font-size: 1.75rem;
+  font-weight: 900;
+  color: var(--muted);
+}
+
+.prediction-card-actions {
+  margin-top: 0.85rem;
+  display: flex;
+  gap: 0.85rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.prediction-save-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.prediction-save-state-saving {
+  color: var(--muted);
+}
+
+.prediction-save-state-saved {
+  color: var(--success);
+}
+
+.prediction-save-state-error {
+  color: var(--danger);
+}
+
+.prediction-score-display {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  align-items: center;
+  font-size: 2rem;
+  font-weight: 900;
+}
+
+.prediction-status-badge {
+  align-self: start;
+}
+
+.prediction-skeleton-card {
+  min-height: 220px;
+  border-radius: 1.25rem;
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--panel-muted) 88%, transparent) 20%,
+      color-mix(in srgb, var(--panel-muted) 58%, transparent) 50%,
+      color-mix(in srgb, var(--panel-muted) 88%, transparent) 80%
+    );
+  background-size: 200% 100%;
+  animation: shimmer 1.3s linear infinite;
+}
+
 .form-error {
   color: var(--danger);
   font-weight: 800;
@@ -529,9 +774,24 @@ select {
   }
 }
 
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
 @media (max-width: 880px) {
   .page-grid {
     grid-template-columns: 1fr;
+  }
+
+  .prediction-card-body {
+    grid-template-columns: 1fr;
+  }
+
+  .prediction-team-away {
+    justify-content: flex-start;
+    text-align: left;
   }
 }
 
@@ -553,6 +813,36 @@ select {
 
   .prediction-form {
     align-items: stretch;
+  }
+
+  .prediction-login-banner,
+  .prediction-toolbar-actions,
+  .prediction-card-actions,
+  .prediction-score-entry {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .prediction-login-banner,
+  .prediction-toolbar-actions,
+  .prediction-card-actions {
+    display: grid;
+  }
+
+  .prediction-card-header {
+    grid-template-columns: 1fr;
+  }
+
+  .prediction-selectors {
+    display: grid;
+  }
+
+  .prediction-score-entry {
+    display: grid;
+  }
+
+  .prediction-separator {
+    font-size: 1.2rem;
   }
 
   .site-footer {

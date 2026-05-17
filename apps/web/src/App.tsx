@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import {
   AdSlot,
@@ -18,7 +18,6 @@ import type {
   PublicFixture,
 } from "./features/types";
 import {
-  ApiError,
   listCompetitions,
   listFixtures,
   listLeaderboards,
@@ -28,10 +27,12 @@ import {
   savePrediction,
   type FixtureFilters,
 } from "./lib/apiClient";
+import { type AsyncState, errorMessage, useAsyncData } from "./lib/asyncData";
 import { trackEvent } from "./lib/commercial";
 import { useLiveRefresh } from "./lib/liveRefresh";
+import { PredictionsPage } from "./pages/PredictionsPage";
 
-type Screen =
+export type Screen =
   | "home"
   | "competitions"
   | "fixtures"
@@ -41,42 +42,6 @@ type Screen =
   | "login"
   | "register"
   | "reset";
-
-type AsyncState<T> =
-  | { readonly status: "loading" }
-  | { readonly status: "error"; readonly message: string }
-  | { readonly status: "ready"; readonly data: T };
-
-function errorMessage(error: unknown): string {
-  if (error instanceof ApiError) return error.message;
-  if (error instanceof Error) return error.message;
-  return "Something went wrong.";
-}
-
-function useAsyncData<T>(
-  load: () => Promise<T>,
-  deps: readonly unknown[],
-): readonly [AsyncState<T>, () => void] {
-  const [reloadKey, setReloadKey] = useState(0);
-  const [state, setState] = useState<AsyncState<T>>({ status: "loading" });
-
-  useEffect(() => {
-    let active = true;
-    setState({ status: "loading" });
-    load()
-      .then((data) => {
-        if (active) setState({ status: "ready", data });
-      })
-      .catch((error: unknown) => {
-        if (active) setState({ status: "error", message: errorMessage(error) });
-      });
-    return () => {
-      active = false;
-    };
-  }, [reloadKey, ...deps]);
-
-  return [state, () => setReloadKey((value) => value + 1)];
-}
 
 function AppShell() {
   const [screen, setScreen] = useState<Screen>("home");
@@ -337,58 +302,6 @@ function RankingsPage() {
                 ))}
               </tbody>
             </table>
-          </div>
-        )}
-      </StatefulList>
-    </Page>
-  );
-}
-
-function PredictionsPage({ go }: { readonly go: (screen: Screen) => void }) {
-  const auth = useAuth();
-  const [state, reload] = useAsyncData(
-    async () =>
-      auth.accessToken
-        ? listMyPredictions(auth.accessToken)
-        : ({
-            data: [],
-            meta: { page: 1, limit: 0, total: 0, hasMore: false },
-          } satisfies PaginatedResult<Prediction>),
-    [auth.accessToken],
-  );
-  if (!auth.isAuthenticated) {
-    return (
-      <Page
-        title="Predictions"
-        subtitle="Sign in to save and update score predictions."
-      >
-        <div className="panel">
-          <p>Login or register to enter predictions before kickoff.</p>
-          <button className="button" type="button" onClick={() => go("login")}>
-            Login to predict
-          </button>
-        </div>
-      </Page>
-    );
-  }
-  return (
-    <Page title="My Predictions" subtitle="Your saved fixture predictions.">
-      <StatefulList
-        state={state}
-        retry={reload}
-        empty="You have not made predictions yet."
-      >
-        {(result: PaginatedResult<Prediction>) => (
-          <div className="card-grid">
-            {result.data.map((prediction) => (
-              <article className="entity-card" key={prediction.id}>
-                <p className="eyebrow">Fixture {prediction.fixtureId}</p>
-                <h3>
-                  {prediction.homeScore} - {prediction.awayScore}
-                </h3>
-                <p>Updated {new Date(prediction.updatedAt).toLocaleString()}</p>
-              </article>
-            ))}
           </div>
         )}
       </StatefulList>
