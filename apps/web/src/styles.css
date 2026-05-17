@@ -815,6 +815,166 @@ select {
   animation: shimmer 1.3s linear infinite;
 }
 
+.rankings-page {
+  display: grid;
+  gap: 1rem;
+}
+
+.rankings-toolbar,
+.user-rank-highlight,
+.leaderboard-card {
+  border: 1px solid var(--border);
+  border-radius: 1.25rem;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.rankings-toolbar,
+.user-rank-highlight,
+.leaderboard-card {
+  padding: 1rem;
+}
+
+.rankings-toolbar {
+  display: grid;
+  gap: 1rem;
+}
+
+.leaderboard-filters,
+.rankings-toolbar-actions {
+  display: flex;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+  align-items: end;
+}
+
+.leaderboard-filters label {
+  min-width: min(100%, 220px);
+}
+
+.user-rank-highlight {
+  display: grid;
+  gap: 0.25rem;
+  background: color-mix(in srgb, var(--primary-soft) 75%, var(--panel));
+}
+
+.user-rank-highlight span {
+  color: var(--muted);
+}
+
+.leaderboard-cards {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.leaderboard-card {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.leaderboard-card-current {
+  border-color: color-mix(in srgb, var(--primary) 40%, var(--border));
+  background: color-mix(in srgb, var(--primary-soft) 38%, var(--panel));
+}
+
+.leaderboard-card-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: start;
+}
+
+.leaderboard-card-top h3,
+.leaderboard-rank {
+  margin: 0;
+}
+
+.leaderboard-rank {
+  color: var(--primary);
+  font-size: 0.82rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.leaderboard-card-score {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+}
+
+.leaderboard-card-score strong {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.leaderboard-card-score span {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.leaderboard-card-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.leaderboard-card-metrics div {
+  padding: 0.7rem 0.8rem;
+  border-radius: 0.95rem;
+  background: color-mix(in srgb, var(--panel-muted) 88%, var(--bg));
+  border: 1px solid var(--border);
+}
+
+.leaderboard-card-metrics dt {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.leaderboard-card-metrics dd {
+  margin: 0.35rem 0 0;
+  font-size: 1.1rem;
+  font-weight: 900;
+}
+
+.rank-movement-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 0.42rem 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.rank-movement-up {
+  background: color-mix(in srgb, var(--success) 15%, var(--panel));
+  color: var(--success);
+}
+
+.rank-movement-down {
+  background: color-mix(in srgb, var(--danger) 12%, var(--panel));
+  color: var(--danger);
+}
+
+.rank-movement-neutral {
+  background: color-mix(in srgb, var(--panel-strong) 6%, var(--panel));
+  color: var(--muted);
+}
+
+.leaderboard-table-wrap {
+  display: none;
+}
+
+.leaderboard-row-current {
+  background: color-mix(in srgb, var(--primary-soft) 55%, transparent);
+}
+
 .form-error {
   color: var(--danger);
   font-weight: 800;
@@ -1002,6 +1162,10 @@ select {
     grid-template-columns: 1fr;
   }
 
+  .leaderboard-card-metrics {
+    grid-template-columns: 1fr;
+  }
+
   .prediction-team-away {
     justify-content: flex-start;
     text-align: left;
@@ -1055,8 +1219,10 @@ select {
     display: grid;
   }
 
+  .leaderboard-filters,
   .results-selectors,
-  .results-toolbar-actions {
+  .results-toolbar-actions,
+  .rankings-toolbar-actions {
     display: grid;
   }
 
@@ -1088,5 +1254,13 @@ select {
 
   .site-nav-mobile {
     display: none;
+  }
+
+  .leaderboard-cards {
+    display: none;
+  }
+
+  .leaderboard-table-wrap {
+    display: block;
   }
 }

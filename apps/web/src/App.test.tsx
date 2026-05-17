@@ -208,7 +208,7 @@ function stubFetch({
           paginated([
             {
               rank: 1,
-              movement: null,
+              movement: 2,
               userId: "user-1",
               email: "fan@sportsrush.test",
               displayName: "Fan One",
@@ -216,6 +216,18 @@ function stubFetch({
               exactScores: 1,
               correctResults: 1,
               predictionsScored: 1,
+              lastScoredAt: "2026-01-01T00:00:00.000Z",
+            },
+            {
+              rank: 2,
+              movement: -1,
+              userId: "user-2",
+              email: "other@sportsrush.test",
+              displayName: "Other Player",
+              totalPoints: 9,
+              exactScores: 0,
+              correctResults: 2,
+              predictionsScored: 2,
               lastScoredAt: "2026-01-01T00:00:00.000Z",
             },
           ]),
@@ -480,12 +492,51 @@ describe("SportsRush web app", () => {
     ).toBeTruthy();
   });
 
-  it("renders rankings and password reset flow", async () => {
+  it("renders redesigned rankings with current-user highlighting and local search", async () => {
     stubFetch();
     render(<App />);
 
-    fireEvent.click(screen.getAllByRole("button", { name: "Rankings" })[0]!);
-    expect(await screen.findByText("Fan One")).toBeTruthy();
+    fireEvent.click(screen.getAllByRole("button", { name: "Login" }).at(-1)!);
+    fireEvent.change(screen.getByLabelText("Email"), {
+      target: { value: "fan@sportsrush.test" },
+    });
+    fireEvent.change(screen.getByLabelText("Password"), {
+      target: { value: "Password123!" },
+    });
+    fireEvent.click(screen.getAllByRole("button", { name: "Login" }).at(-1)!);
+    await screen.findByRole("heading", { name: "Fixtures" });
+
+    fireEvent.click(
+      screen.getAllByRole("button", { name: "Rankings" }).at(-1)!,
+    );
+
+    expect(
+      await screen.findByRole("heading", { name: "Rankings" }),
+    ).toBeTruthy();
+    expect(screen.getByLabelText("Leaderboard competition")).toBeTruthy();
+    expect(screen.getByLabelText("Leaderboard search")).toBeTruthy();
+    expect(await screen.findByText("Your standing")).toBeTruthy();
+    expect(screen.getByText("#1 · 11 pts · Fan One")).toBeTruthy();
+    expect(screen.getAllByText("Fan One").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Other Player").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("↑ 2").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("↓ 1").length).toBeGreaterThan(0);
+
+    fireEvent.change(screen.getByLabelText("Leaderboard search"), {
+      target: { value: "other" },
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByText("Your standing")).toBeNull();
+      expect(screen.queryByText("#1 · 11 pts · Fan One")).toBeNull();
+      expect(screen.queryByText("Fan One")).toBeNull();
+      expect(screen.getAllByText("Other Player").length).toBeGreaterThan(0);
+    });
+  });
+
+  it("renders password reset flow", async () => {
+    stubFetch();
+    render(<App />);
 
     fireEvent.click(screen.getByRole("button", { name: "Login" }));
     fireEvent.click(
