@@ -31,6 +31,7 @@ import { type AsyncState, errorMessage, useAsyncData } from "./lib/asyncData";
 import { trackEvent } from "./lib/commercial";
 import { useLiveRefresh } from "./lib/liveRefresh";
 import { PredictionsPage } from "./pages/PredictionsPage";
+import { RankingsPage } from "./pages/RankingsPage";
 import { ResultsPage } from "./pages/ResultsPage";
 
 export type Screen =
@@ -229,67 +230,6 @@ function FixturesPage() {
         retry={reload}
         empty="No fixtures match those filters."
       />
-    </Page>
-  );
-}
-
-function RankingsPage() {
-  const [state, reload] = useAsyncData(() => listLeaderboards(), []);
-  const liveRefresh = useLiveRefresh(reload, true, 60000);
-  return (
-    <Page
-      title="Rankings"
-      subtitle="Leaderboard standings from scored predictions."
-    >
-      <div className="toolbar">
-        <button
-          className="button secondary"
-          type="button"
-          onClick={liveRefresh.refreshNow}
-        >
-          Refresh leaderboard
-        </button>
-        {liveRefresh.lastRefreshAt ? (
-          <span className="muted">
-            Last refreshed{" "}
-            {new Date(liveRefresh.lastRefreshAt).toLocaleTimeString()}
-          </span>
-        ) : null}
-      </div>
-      <StatefulList
-        state={state}
-        retry={reload}
-        empty="No rankings are available yet."
-      >
-        {(result: PaginatedResult<LeaderboardEntry>) => (
-          <div className="table-scroll">
-            <table className="responsive-table">
-              <thead>
-                <tr>
-                  <th>Rank</th>
-                  <th>User</th>
-                  <th>Points</th>
-                  <th>Exact</th>
-                  <th>Correct results</th>
-                  <th>Scored</th>
-                </tr>
-              </thead>
-              <tbody>
-                {result.data.map((entry) => (
-                  <tr key={entry.userId}>
-                    <td>{entry.rank}</td>
-                    <td>{entry.displayName ?? entry.email ?? entry.userId}</td>
-                    <td>{entry.totalPoints}</td>
-                    <td>{entry.exactScores}</td>
-                    <td>{entry.correctResults}</td>
-                    <td>{entry.predictionsScored}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </StatefulList>
     </Page>
   );
 }
