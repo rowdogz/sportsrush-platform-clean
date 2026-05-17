@@ -1,6 +1,6 @@
 import "@testing-library/jest-dom/vitest";
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 import {
   AdminTableEmpty,
   AdminTableError,
@@ -28,5 +28,19 @@ describe("AdminTableState", () => {
 
     expect(screen.getByRole("alert")).toHaveTextContent("Unable to load");
     expect(screen.getByRole("alert")).toHaveTextContent("Forbidden.");
+  });
+
+  it("renders retry actions for shared error states", () => {
+    const onRetry = vi.fn();
+    render(
+      <AdminTableError
+        title="Unable to load"
+        message="Network failed."
+        onRetry={onRetry}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Retry" }));
+    expect(onRetry).toHaveBeenCalledTimes(1);
   });
 });

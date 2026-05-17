@@ -10,6 +10,7 @@ type ApiErrorResponse = {
 };
 
 type AccessTokenProvider = () => string | null;
+type UnauthorizedHandler = () => void;
 
 export type ApiRequestOptions = {
   readonly method?: string;
@@ -23,6 +24,7 @@ export type ApiTextResponse = {
 };
 
 let accessTokenProvider: AccessTokenProvider = () => null;
+let unauthorizedHandler: UnauthorizedHandler | null = null;
 
 export class ApiError extends Error {
   readonly status: number;
@@ -53,11 +55,18 @@ export class ApiError extends Error {
 }
 
 function getApiBaseUrl(): string {
+  if (import.meta.env.MODE === "test") return "";
   return (import.meta.env.VITE_API_BASE_URL ?? "").trim().replace(/\/$/, "");
 }
 
 export function setAccessTokenProvider(provider: AccessTokenProvider): void {
   accessTokenProvider = provider;
+}
+
+export function setUnauthorizedHandler(
+  handler: UnauthorizedHandler | null,
+): void {
+  unauthorizedHandler = handler;
 }
 
 function getAccessToken(): string | null {
@@ -68,6 +77,10 @@ function buildUrl(path: string): string {
   const baseUrl = getApiBaseUrl();
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   return `${baseUrl}${normalizedPath}`;
+}
+
+function shouldHandleUnauthorized(path: string): boolean {
+  return !path.startsWith("/v1/auth/login");
 }
 
 async function readJson(response: Response): Promise<unknown> {
@@ -102,6 +115,7 @@ export async function apiRequest<T>(
   const payload = await readJson(response);
 
   if (!response.ok) {
+    handleAuthFailure(path, response.status);
     throwApiError(response, payload);
   }
 
@@ -122,6 +136,7 @@ export async function apiTextRequest(
     } catch {
       payload = null;
     }
+    handleAuthFailure(path, response.status);
     throwApiError(response, payload);
   }
 
@@ -160,7 +175,6 @@ async function sendApiRequest(
     requestInit.body = body;
   }
 
-  let response: Response;
   try {
     return await fetch(buildUrl(path), requestInit);
   } catch (error) {
@@ -172,6 +186,12 @@ async function sendApiRequest(
           ? error.message
           : "Unable to reach the SportsRush API.",
     });
+  }
+}
+
+function handleAuthFailure(path: string, status: number): void {
+  if (status === 401 && shouldHandleUnauthorized(path)) {
+    unauthorizedHandler?.();
   }
 }
 

@@ -28,12 +28,22 @@ select {
   font: inherit;
 }
 
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+summary:focus-visible {
+  outline: 3px solid rgb(31 94 255 / 35%);
+  outline-offset: 2px;
+}
+
 a {
   color: inherit;
 }
 
 .admin-shell {
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 .admin-header {
@@ -80,6 +90,7 @@ a {
   margin: 0 auto;
   max-width: 1180px;
   padding: 2rem;
+  width: 100%;
 }
 
 .primary-button,
@@ -280,15 +291,39 @@ a {
 }
 
 .state-panel {
+  align-items: flex-start;
   border: 1px solid #d9e2ef;
   border-radius: 0.75rem;
   background: #ffffff;
+  display: grid;
+  gap: 0.65rem;
   padding: 1.5rem;
 }
 
 .state-panel strong {
   display: block;
-  margin-bottom: 0.5rem;
+}
+
+.loading-dot {
+  animation: pulse 1s ease-in-out infinite;
+  background: #1f5eff;
+  border-radius: 999px;
+  display: inline-block;
+  height: 0.65rem;
+  width: 0.65rem;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.9);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .error-panel {
@@ -300,13 +335,16 @@ a {
 .admin-table-wrapper,
 .competitions-table-wrapper {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   border: 1px solid #d9e2ef;
   border-radius: 0.75rem;
   background: #ffffff;
+  position: relative;
 }
 
 .admin-table,
 .competitions-table {
+  min-width: 760px;
   width: 100%;
   border-collapse: collapse;
 }
@@ -647,7 +685,7 @@ a {
 .fixture-actions {
   display: grid;
   gap: 0.5rem;
-  min-width: 260px;
+  min-width: min(260px, 75vw);
 }
 
 .fixture-actions label {
@@ -729,4 +767,113 @@ a {
 .dashboard-card p {
   color: #52627a;
   margin: 0;
+}
+
+@media (max-width: 820px) {
+  .admin-header {
+    align-items: flex-start;
+    padding: 1rem;
+  }
+
+  .admin-header h1 {
+    font-size: 1.25rem;
+  }
+
+  .admin-nav {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: 0.75rem 1rem;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .nav-button {
+    flex: 0 0 auto;
+  }
+
+  .admin-main {
+    padding: 1rem;
+  }
+
+  .page-heading h2 {
+    font-size: 1.45rem;
+  }
+
+  .admin-form,
+  .competition-form,
+  .login-panel {
+    padding: 1rem;
+  }
+
+  .form-grid,
+  .inline-edit-form,
+  .bulk-actions-grid,
+  .table-preferences-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .pagination-bar,
+  .form-actions,
+  .row-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .pagination-bar label,
+  .pagination-bar select,
+  .row-actions button,
+  .form-actions button,
+  .primary-button,
+  .secondary-button {
+    width: 100%;
+  }
+
+  .admin-table-wrapper,
+  .competitions-table-wrapper {
+    margin-inline: -1rem;
+    border-left: 0;
+    border-right: 0;
+    border-radius: 0;
+  }
+
+  .admin-table th,
+  .admin-table td,
+  .competitions-table th,
+  .competitions-table td {
+    padding: 0.7rem 0.75rem;
+  }
+
+  .audit-detail-panel,
+  .audit-diff,
+  .metadata-grid {
+    min-width: 0;
+  }
+
+  .audit-diff-node,
+  .audit-diff-row,
+  .metadata-grid pre,
+  .audit-diff-comparison pre {
+    max-width: calc(100vw - 2rem);
+  }
+}
+
+@media (max-width: 520px) {
+  .login-page {
+    padding: 1rem;
+  }
+
+  .login-heading h1 {
+    font-size: 1.65rem;
+  }
+
+  .admin-header {
+    display: grid;
+  }
+
+  .dashboard-card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bulk-actions-panel {
+    margin-inline: 0;
+  }
 }

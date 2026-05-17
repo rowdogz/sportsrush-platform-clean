@@ -15,6 +15,10 @@ function accessTokenForRole(role: UserRole): string {
   return `header.${window.btoa(JSON.stringify({ role }))}.signature`;
 }
 
+function expiredAccessTokenForRole(role: UserRole): string {
+  return `header.${window.btoa(JSON.stringify({ role, exp: 1 }))}.signature`;
+}
+
 function emptyPaginatedResponse(): Response {
   return jsonResponse({
     data: [],
@@ -99,6 +103,52 @@ describe("Admin app shell", () => {
       screen.getByRole("heading", { name: "SportsRush Admin" }),
     ).toBeTruthy();
     expect(await screen.findByText("No admin data yet")).toBeTruthy();
+  });
+
+  it("clears expired stored session tokens on startup", () => {
+    window.localStorage.setItem(
+      "sr_admin_access_token",
+      expiredAccessTokenForRole("superadmin"),
+    );
+    window.localStorage.setItem(
+      "sr_admin_refresh_token",
+      "stored-refresh-token",
+    );
+    vi.stubGlobal("fetch", vi.fn());
+
+    render(<App />);
+
+    expect(screen.getByRole("heading", { name: "Sign in" })).toBeTruthy();
+    expect(window.localStorage.getItem("sr_admin_access_token")).toBeNull();
+    expect(window.localStorage.getItem("sr_admin_refresh_token")).toBeNull();
+  });
+
+  it("returns to login when an authenticated request is rejected as unauthorized", async () => {
+    window.localStorage.setItem(
+      "sr_admin_access_token",
+      accessTokenForRole("superadmin"),
+    );
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse(
+          {
+            error: {
+              code: "UNAUTHENTICATED",
+              message: "Access token expired.",
+            },
+          },
+          401,
+        ),
+      ),
+    );
+
+    render(<App />);
+
+    expect(
+      await screen.findByRole("heading", { name: "Sign in" }),
+    ).toBeTruthy();
+    expect(window.localStorage.getItem("sr_admin_access_token")).toBeNull();
   });
 
   it("shows admin navigation to authenticated users", async () => {

@@ -45,12 +45,14 @@ export function LoginPage() {
           <h1 id="login-title">Sign in</h1>
         </div>
 
-        <form className="login-form" onSubmit={handleSubmit}>
+        <form className="login-form" noValidate onSubmit={handleSubmit}>
           <label htmlFor="admin-email">Email</label>
           <input
             id="admin-email"
             autoComplete="email"
             type="email"
+            required
+            aria-invalid={Boolean(errorMessage)}
             value={email}
             onChange={(event) => setEmail(event.target.value)}
           />
@@ -60,6 +62,8 @@ export function LoginPage() {
             id="admin-password"
             autoComplete="current-password"
             type="password"
+            required
+            aria-invalid={Boolean(errorMessage)}
             value={password}
             onChange={(event) => setPassword(event.target.value)}
           />

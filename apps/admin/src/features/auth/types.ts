@@ -13,4 +13,6 @@ export type AdminLoginResponse = {
     readonly email: string;
     readonly role: UserRole;
   } | null;
+  readonly profile?: unknown;
+  readonly session?: unknown;
 };

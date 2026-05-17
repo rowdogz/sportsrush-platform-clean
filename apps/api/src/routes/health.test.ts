@@ -86,6 +86,22 @@ describe("GET /health", () => {
     );
     expect(res.headers.get("X-Correlation-ID")).toBe("my-trace-id-1234");
   });
+
+  it("fails clearly when required production environment bindings are missing", async () => {
+    const res = await app.request(
+      "/health",
+      { method: "GET" },
+      {
+        ...mockEnv,
+        ENVIRONMENT: "production" as const,
+        WEB_ORIGIN: undefined,
+      },
+    );
+    const body = (await res.json()) as { error: Record<string, unknown> };
+
+    expect(res.status).toBe(500);
+    expect(body.error.code).toBe("INTERNAL_ERROR");
+  });
 });
 
 // ── GET /version ──────────────────────────────────────────────────────────────
