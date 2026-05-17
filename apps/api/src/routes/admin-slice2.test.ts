@@ -12,6 +12,10 @@ const migrationPaths = [
     "../../migrations/0003_competitions_teams_fixtures_results.sql",
   ),
   resolve(__dirname, "../../migrations/0004_admin_audit_events.sql"),
+  resolve(
+    __dirname,
+    "../../migrations/0005_private_leagues_predictions_rankings.sql",
+  ),
 ];
 const adminRoutePath = resolve(__dirname, "./admin.ts");
 
@@ -43,6 +47,12 @@ async function createSqlDb(): Promise<SqlJsDatabase> {
     `INSERT INTO users
        (id, email, email_normalized, role, is_active, is_legacy_migration, created_at, updated_at)
      VALUES ('admin-user', 'actor-admin@example.test', 'actor-admin@example.test', 'admin', 1, 0, ?, ?)`,
+    [NOW, NOW],
+  );
+  db.run(
+    `INSERT INTO users
+       (id, email, email_normalized, role, is_active, is_legacy_migration, created_at, updated_at)
+     VALUES ('normal-user', 'normal@example.test', 'normal@example.test', 'user', 1, 0, ?, ?)`,
     [NOW, NOW],
   );
   return db;
@@ -237,6 +247,7 @@ async function seedCore(
 
 async function createFixture(
   request: Awaited<ReturnType<typeof createTestHarness>>["request"],
+  scheduledAt = "2026-02-01T20:00:00.000Z",
 ) {
   const { competition, season, homeTeam, awayTeam } = await seedCore(request);
   const response = await request("/v1/admin/fixtures", {
@@ -250,7 +261,7 @@ async function createFixture(
       roundOrder: 1,
       homeTeamId: homeTeam.id,
       awayTeamId: awayTeam.id,
-      scheduledAt: "2026-02-01T20:00:00.000Z",
+      scheduledAt,
       status: "scheduled",
     }),
   });
@@ -523,6 +534,85 @@ describe("admin route slice 2 fixtures", () => {
 
     const badFilter = await request("/v1/admin/fixtures?status=live");
     expect(badFilter.status).toBe(400);
+  });
+});
+
+describe("prediction routes", () => {
+  it("creates, prevents duplicates, updates before kickoff, and lists user predictions", async () => {
+    const { request, userToken } = await createTestHarness();
+    const { fixture } = await createFixture(
+      request,
+      "2099-02-01T20:00:00.000Z",
+    );
+
+    const createResponse = await request(
+      "/v1/predictions",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          fixtureId: fixture.id,
+          homeScore: 20,
+          awayScore: 18,
+        }),
+      },
+      userToken,
+    );
+    expect(createResponse.status).toBe(201);
+
+    const duplicateResponse = await request(
+      "/v1/predictions",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          fixtureId: fixture.id,
+          homeScore: 22,
+          awayScore: 18,
+        }),
+      },
+      userToken,
+    );
+    expect(duplicateResponse.status).toBe(422);
+
+    const updateResponse = await request(
+      "/v1/predictions",
+      {
+        method: "PATCH",
+        body: JSON.stringify({
+          fixtureId: fixture.id,
+          homeScore: 24,
+          awayScore: 18,
+        }),
+      },
+      userToken,
+    );
+    expect(updateResponse.status).toBe(200);
+    expect(((await updateResponse.json()) as any).data.homeScore).toBe(24);
+
+    const listResponse = await request("/v1/predictions/me", {}, userToken);
+    expect(listResponse.status).toBe(200);
+    expect(((await listResponse.json()) as any).data).toHaveLength(1);
+  });
+
+  it("prevents prediction edits after kickoff", async () => {
+    const { request, userToken } = await createTestHarness();
+    const { fixture } = await createFixture(
+      request,
+      "2020-02-01T20:00:00.000Z",
+    );
+
+    const response = await request(
+      "/v1/predictions",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          fixtureId: fixture.id,
+          homeScore: 20,
+          awayScore: 18,
+        }),
+      },
+      userToken,
+    );
+    expect(response.status).toBe(422);
   });
 });
 

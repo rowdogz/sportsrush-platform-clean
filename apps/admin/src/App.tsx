@@ -12,6 +12,7 @@ import { RoundsPage } from "./pages/RoundsPage";
 import { SeasonsPage } from "./pages/SeasonsPage";
 import { TeamAliasesPage } from "./pages/TeamAliasesPage";
 import { TeamsPage } from "./pages/TeamsPage";
+import { PrivateLeaguesPage } from "./pages/PrivateLeaguesPage";
 import { UsersPage } from "./pages/UsersPage";
 import { AuditLogPage } from "./pages/AuditLogPage";
 import { ToastProvider } from "./components/primitives/Toast";
@@ -25,6 +26,7 @@ const adminNavItems: readonly AdminNavItem[] = [
   { id: "competitions", label: "Competitions" },
   { id: "seasons", label: "Seasons" },
   { id: "teams", label: "Teams" },
+  { id: "private-leagues", label: "Private Leagues" },
   { id: "users", label: "Users" },
   { id: "audit", label: "Audit Log" },
   { id: "fixtures", label: "Fixtures" },
@@ -64,6 +66,8 @@ function renderScreen(screen: AdminScreen) {
       return <SeasonsPage />;
     case "teams":
       return <TeamsPage />;
+    case "private-leagues":
+      return <PrivateLeaguesPage />;
     case "users":
       return <UsersPage />;
     case "audit":

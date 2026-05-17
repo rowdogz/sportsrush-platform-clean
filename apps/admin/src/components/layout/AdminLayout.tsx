@@ -6,6 +6,7 @@ export type AdminScreen =
   | "competitions"
   | "seasons"
   | "teams"
+  | "private-leagues"
   | "users"
   | "audit"
   | "fixtures"

@@ -2,7 +2,7 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -88,10 +88,11 @@ export function AuthSessionProvider({ children }: AuthSessionProviderProps) {
   const clearSession = useCallback(() => {
     const nextSession = { accessToken: null, refreshToken: null, role: null };
     persistSession(nextSession);
+    setAccessTokenProvider(() => null);
     setSession(nextSession);
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     setAccessTokenProvider(() => session.accessToken);
     setUnauthorizedHandler(clearSession);
 
@@ -109,6 +110,7 @@ export function AuthSessionProvider({ children }: AuthSessionProviderProps) {
       role: response.user?.role ?? getRoleFromAccessToken(response.accessToken),
     };
     persistSession(nextSession);
+    setAccessTokenProvider(() => nextSession.accessToken);
     setSession(nextSession);
   }, []);
 
