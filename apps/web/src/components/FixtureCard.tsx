@@ -8,17 +8,20 @@ function teamName(team: PublicFixture["homeTeam"]): string {
 export function FixtureCard({
   fixture,
   action,
+  statusLabel,
 }: {
   readonly fixture: PublicFixture;
   readonly action?: ReactNode;
+  readonly statusLabel?: string;
 }) {
   const hasScore = fixture.homeScore !== null && fixture.awayScore !== null;
+  const displayStatus = statusLabel ?? fixture.status;
   return (
     <article className="fixture-card">
       <div className="fixture-meta">
         <span>{new Date(fixture.kickoffTime).toLocaleString()}</span>
-        <span className={`status status-${fixture.status}`}>
-          {fixture.status}
+        <span className={`status status-${displayStatus}`}>
+          {displayStatus}
         </span>
       </div>
       <div className="fixture-scoreline">

@@ -5,9 +5,11 @@ import {
   PremiumHook,
   SponsorshipSlot,
 } from "./components/CommercialSlots";
+import { AppHeader } from "./components/AppHeader";
 import { FixtureCard } from "./components/FixtureCard";
 import { EmptyState, ErrorState, LoadingState } from "./components/PageState";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { ThemeProvider } from "./contexts/ThemeContext";
 import type {
   LeaderboardEntry,
   PaginatedResult,
@@ -101,54 +103,16 @@ function AppShell() {
 
   return (
     <div className="app-shell">
-      <header className="site-header">
-        <button className="brand" type="button" onClick={() => go("home")}>
-          SportsRush
-        </button>
-        <nav className="site-nav" aria-label="Primary navigation">
-          {navItems.map((item) => (
-            <button
-              key={item.screen}
-              type="button"
-              onClick={() => go(item.screen)}
-              aria-current={screen === item.screen ? "page" : undefined}
-            >
-              {item.label}
-            </button>
-          ))}
-        </nav>
-        <div className="auth-actions">
-          {auth.isAuthenticated ? (
-            <>
-              <span>{auth.user?.email}</span>
-              <button
-                className="button secondary"
-                type="button"
-                onClick={auth.signOut}
-              >
-                Logout
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                className="button secondary"
-                type="button"
-                onClick={() => go("login")}
-              >
-                Login
-              </button>
-              <button
-                className="button"
-                type="button"
-                onClick={() => go("register")}
-              >
-                Register
-              </button>
-            </>
-          )}
-        </div>
-      </header>
+      <AppHeader
+        currentScreen={screen}
+        isAuthenticated={auth.isAuthenticated}
+        navItems={navItems}
+        onLogin={() => go("login")}
+        onLogout={auth.signOut}
+        onNavigate={go}
+        onRegister={() => go("register")}
+        user={auth.user}
+      />
       <main>
         {screen === "home" ? <HomePage setScreen={go} /> : null}
         {screen === "competitions" ? <CompetitionsPage /> : null}
@@ -771,19 +735,27 @@ function FixtureList({
     <StatefulList state={state} retry={retry} empty={empty}>
       {(result: PaginatedResult<PublicFixture>) => (
         <div className="fixture-list">
-          {result.data.map((fixture) => (
-            <FixtureCard
-              key={fixture.id}
-              fixture={fixture}
-              action={
-                <PredictionForm
-                  fixture={fixture}
-                  existing={predictionsByFixture.get(fixture.id)}
-                  onSaved={reloadPredictions}
-                />
-              }
-            />
-          ))}
+          {result.data.map((fixture) => {
+            const existingPrediction = predictionsByFixture.get(fixture.id);
+            const isLocked =
+              fixture.status === "scheduled" &&
+              new Date(fixture.kickoffTime).getTime() <= Date.now();
+
+            return (
+              <FixtureCard
+                key={fixture.id}
+                fixture={fixture}
+                {...(isLocked ? { statusLabel: "locked" } : {})}
+                action={
+                  <PredictionForm
+                    fixture={fixture}
+                    existing={existingPrediction}
+                    onSaved={reloadPredictions}
+                  />
+                }
+              />
+            );
+          })}
         </div>
       )}
     </StatefulList>
@@ -833,8 +805,10 @@ function Page({
 
 export function App() {
   return (
-    <AuthProvider>
-      <AppShell />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <AppShell />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

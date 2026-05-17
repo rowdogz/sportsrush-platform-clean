@@ -49,7 +49,11 @@ function paginated<T>(data: readonly T[]) {
   };
 }
 
-function stubFetch(): ReturnType<typeof vi.fn> {
+function stubFetch({
+  role = "user",
+}: {
+  readonly role?: "user" | "admin" | "superadmin";
+} = {}): ReturnType<typeof vi.fn> {
   const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input);
     if (url.includes("/v1/public/competitions")) {
@@ -95,7 +99,7 @@ function stubFetch(): ReturnType<typeof vi.fn> {
       return Promise.resolve(
         jsonResponse({
           data: {
-            user: { id: "user-1", email: "fan@sportsrush.test", role: "user" },
+            user: { id: "user-1", email: "fan@sportsrush.test", role },
             accessToken: "access-token",
             refreshToken: "refresh-token",
             session: { id: "session-1" },
@@ -139,6 +143,7 @@ function stubFetch(): ReturnType<typeof vi.fn> {
 
 beforeEach(() => {
   window.localStorage.clear();
+  document.documentElement.removeAttribute("data-theme");
 });
 
 afterEach(() => {
@@ -150,16 +155,45 @@ describe("SportsRush web app", () => {
     stubFetch();
     render(<App />);
 
+    expect(document.documentElement.dataset.theme).toBe("light");
     expect(
       screen.getByRole("heading", { name: /predict every score/i }),
     ).toBeTruthy();
 
-    fireEvent.click(screen.getByRole("button", { name: "Competitions" }));
+    fireEvent.click(
+      screen.getAllByRole("button", { name: "Competitions" })[0]!,
+    );
 
     expect(
       await screen.findByRole("heading", { name: "Competitions" }),
     ).toBeTruthy();
     expect(await screen.findByText("Super League")).toBeTruthy();
+  });
+
+  it("persists theme changes and shows admin entry only for authorized users", async () => {
+    stubFetch({ role: "admin" });
+    render(<App />);
+
+    expect(screen.queryByRole("link", { name: "Admin" })).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Login" }));
+    fireEvent.change(screen.getByLabelText("Email"), {
+      target: { value: "admin@sportsrush.test" },
+    });
+    fireEvent.change(screen.getByLabelText("Password"), {
+      target: { value: "Password123!" },
+    });
+    fireEvent.click(screen.getAllByRole("button", { name: "Login" }).at(-1)!);
+
+    expect(
+      (await screen.findAllByRole("link", { name: "Admin" }))[0],
+    ).toHaveAttribute("href", "/admin");
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Switch to dark mode" }),
+    );
+    expect(document.documentElement.dataset.theme).toBe("dark");
+    expect(window.localStorage.getItem("sr_theme_mode")).toBe("dark");
   });
 
   it("renders fixtures and saves an authenticated prediction", async () => {
@@ -200,7 +234,7 @@ describe("SportsRush web app", () => {
     stubFetch();
     render(<App />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Rankings" }));
+    fireEvent.click(screen.getAllByRole("button", { name: "Rankings" })[0]!);
     expect(await screen.findByText("Fan One")).toBeTruthy();
 
     fireEvent.click(screen.getByRole("button", { name: "Login" }));
