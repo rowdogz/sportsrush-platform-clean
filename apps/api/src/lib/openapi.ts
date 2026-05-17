@@ -1,5 +1,37 @@
 import { API_VERSION } from "./version";
 
+const paginatedPublicResponse = (itemRef: string) => ({
+  type: "object",
+  required: ["data", "meta"],
+  properties: {
+    data: { type: "array", items: { $ref: itemRef } },
+    meta: {
+      type: "object",
+      required: ["page", "limit", "total", "hasMore"],
+      properties: {
+        page: { type: "integer", minimum: 1 },
+        limit: { type: "integer", minimum: 1, maximum: 100 },
+        total: { type: "integer", minimum: 0 },
+        hasMore: { type: "boolean" },
+      },
+    },
+  },
+});
+
+const publicListParameters = [
+  { name: "page", in: "query", schema: { type: "integer", minimum: 1 } },
+  {
+    name: "limit",
+    in: "query",
+    schema: { type: "integer", minimum: 1, maximum: 100 },
+  },
+];
+
+const publicJsonResponse = (schema: unknown) => ({
+  description: "OK",
+  content: { "application/json": { schema } },
+});
+
 /**
  * OpenAPI 3.0 specification skeleton for the SportsRush API.
  *
@@ -10,7 +42,6 @@ import { API_VERSION } from "./version";
  * UI (future): GET /docs  →  Swagger UI or Scalar
  *
  * As endpoints are implemented in later PRs, add their path objects here.
- * The paths object uses the standard OpenAPI 3.0 path item structure.
  */
 export function buildOpenApiSpec(baseUrl: string) {
   return {
@@ -20,19 +51,10 @@ export function buildOpenApiSpec(baseUrl: string) {
       version: API_VERSION,
       description:
         "The SportsRush 2.0 platform API. Built on Cloudflare Workers + Hono.",
-      contact: {
-        name: "SportsRush Engineering",
-      },
-      license: {
-        name: "Proprietary",
-      },
+      contact: { name: "SportsRush Engineering" },
+      license: { name: "Proprietary" },
     },
-    servers: [
-      {
-        url: baseUrl,
-        description: "Current environment",
-      },
-    ],
+    servers: [{ url: baseUrl, description: "Current environment" }],
     components: {
       securitySchemes: {
         bearerAuth: {
@@ -79,6 +101,110 @@ export function buildOpenApiSpec(baseUrl: string) {
             },
           },
         },
+        PublicCompetition: {
+          type: "object",
+          required: [
+            "id",
+            "sportId",
+            "slug",
+            "name",
+            "shortName",
+            "countryCode",
+          ],
+          properties: {
+            id: { type: "string" },
+            sportId: { type: "string" },
+            slug: { type: "string" },
+            name: { type: "string" },
+            shortName: { type: "string", nullable: true },
+            countryCode: { type: "string", nullable: true },
+          },
+        },
+        PublicSeason: {
+          type: "object",
+          required: [
+            "id",
+            "competitionId",
+            "slug",
+            "name",
+            "startsOn",
+            "endsOn",
+            "competition",
+          ],
+          properties: {
+            id: { type: "string" },
+            competitionId: { type: "string" },
+            slug: { type: "string" },
+            name: { type: "string" },
+            startsOn: { type: "string", nullable: true },
+            endsOn: { type: "string", nullable: true },
+            competition: { type: "object" },
+          },
+        },
+        PublicRound: {
+          type: "object",
+          required: [
+            "id",
+            "seasonId",
+            "round",
+            "name",
+            "displayOrder",
+            "startsAt",
+            "endsAt",
+            "season",
+            "competition",
+          ],
+          properties: {
+            id: { type: "string" },
+            seasonId: { type: "string" },
+            round: { type: "string" },
+            name: { type: "string" },
+            displayOrder: { type: "integer" },
+            startsAt: { type: "string", nullable: true },
+            endsAt: { type: "string", nullable: true },
+            season: { type: "object" },
+            competition: { type: "object" },
+          },
+        },
+        PublicFixture: {
+          type: "object",
+          required: [
+            "id",
+            "kickoffTime",
+            "venue",
+            "status",
+            "homeScore",
+            "awayScore",
+            "homeTeam",
+            "awayTeam",
+            "round",
+            "season",
+            "competition",
+          ],
+          properties: {
+            id: { type: "string" },
+            kickoffTime: { type: "string", format: "date-time" },
+            venue: { type: "string", nullable: true },
+            status: {
+              type: "string",
+              enum: [
+                "scheduled",
+                "live",
+                "completed",
+                "postponed",
+                "cancelled",
+                "abandoned",
+              ],
+            },
+            homeScore: { type: "integer", nullable: true },
+            awayScore: { type: "integer", nullable: true },
+            homeTeam: { type: "object" },
+            awayTeam: { type: "object" },
+            round: { type: "object" },
+            season: { type: "object" },
+            competition: { type: "object" },
+          },
+        },
       },
     },
     paths: {
@@ -90,14 +216,9 @@ export function buildOpenApiSpec(baseUrl: string) {
             "Always returns 200. Use /ready for a readiness probe that checks downstream dependencies.",
           tags: ["System"],
           responses: {
-            "200": {
-              description: "Service is healthy",
-              content: {
-                "application/json": {
-                  schema: { $ref: "#/components/schemas/HealthResponse" },
-                },
-              },
-            },
+            "200": publicJsonResponse({
+              $ref: "#/components/schemas/HealthResponse",
+            }),
           },
         },
       },
@@ -107,12 +228,7 @@ export function buildOpenApiSpec(baseUrl: string) {
           summary: "Version info",
           description: "Returns the deployed API version and environment.",
           tags: ["System"],
-          responses: {
-            "200": {
-              description: "Version information",
-              content: { "application/json": { schema: {} } },
-            },
-          },
+          responses: { "200": publicJsonResponse({}) },
         },
       },
       "/ready": {
@@ -120,23 +236,13 @@ export function buildOpenApiSpec(baseUrl: string) {
           operationId: "getReady",
           summary: "Readiness probe",
           description:
-            "Returns 200 when all downstream dependencies (D1, KV) are reachable. " +
-            "Returns 503 if any dependency is unavailable. " +
-            "D1 check is added in PR-05.",
+            "Returns 200 when all downstream dependencies (D1, KV) are reachable. Returns 503 if any dependency is unavailable. D1 check is added in PR-05.",
           tags: ["System"],
           responses: {
-            "200": {
-              description: "All dependencies reachable",
-              content: { "application/json": { schema: {} } },
-            },
-            "503": {
-              description: "One or more dependencies unavailable",
-              content: {
-                "application/json": {
-                  schema: { $ref: "#/components/schemas/ErrorResponse" },
-                },
-              },
-            },
+            "200": publicJsonResponse({}),
+            "503": publicJsonResponse({
+              $ref: "#/components/schemas/ErrorResponse",
+            }),
           },
         },
       },
@@ -148,6 +254,122 @@ export function buildOpenApiSpec(baseUrl: string) {
           tags: ["System"],
           responses: {
             "200": { description: "OpenAPI specification document" },
+          },
+        },
+      },
+      "/v1/public/competitions": {
+        get: {
+          operationId: "listPublicCompetitions",
+          summary: "List public competitions",
+          tags: ["Public"],
+          parameters: publicListParameters,
+          responses: {
+            "200": publicJsonResponse(
+              paginatedPublicResponse("#/components/schemas/PublicCompetition"),
+            ),
+          },
+        },
+      },
+      "/v1/public/seasons": {
+        get: {
+          operationId: "listPublicSeasons",
+          summary: "List public seasons",
+          tags: ["Public"],
+          parameters: [
+            ...publicListParameters,
+            { name: "competitionId", in: "query", schema: { type: "string" } },
+          ],
+          responses: {
+            "200": publicJsonResponse(
+              paginatedPublicResponse("#/components/schemas/PublicSeason"),
+            ),
+          },
+        },
+      },
+      "/v1/public/rounds": {
+        get: {
+          operationId: "listPublicRounds",
+          summary: "List public rounds",
+          tags: ["Public"],
+          parameters: [
+            ...publicListParameters,
+            { name: "competitionId", in: "query", schema: { type: "string" } },
+            { name: "seasonId", in: "query", schema: { type: "string" } },
+          ],
+          responses: {
+            "200": publicJsonResponse(
+              paginatedPublicResponse("#/components/schemas/PublicRound"),
+            ),
+          },
+        },
+      },
+      "/v1/public/fixtures": {
+        get: {
+          operationId: "listPublicFixtures",
+          summary: "List public fixtures",
+          tags: ["Public"],
+          parameters: [
+            ...publicListParameters,
+            { name: "competitionId", in: "query", schema: { type: "string" } },
+            { name: "seasonId", in: "query", schema: { type: "string" } },
+            { name: "roundId", in: "query", schema: { type: "string" } },
+            {
+              name: "status",
+              in: "query",
+              schema: {
+                type: "string",
+                enum: [
+                  "scheduled",
+                  "live",
+                  "completed",
+                  "postponed",
+                  "cancelled",
+                  "abandoned",
+                ],
+              },
+            },
+            {
+              name: "fromDate",
+              in: "query",
+              schema: { type: "string", format: "date-time" },
+            },
+            {
+              name: "toDate",
+              in: "query",
+              schema: { type: "string", format: "date-time" },
+            },
+          ],
+          responses: {
+            "200": publicJsonResponse(
+              paginatedPublicResponse("#/components/schemas/PublicFixture"),
+            ),
+          },
+        },
+      },
+      "/v1/public/fixtures/{id}": {
+        get: {
+          operationId: "getPublicFixture",
+          summary: "Get public fixture by ID",
+          tags: ["Public"],
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "string" },
+            },
+          ],
+          responses: {
+            "200": publicJsonResponse({
+              type: "object",
+              required: ["data"],
+              properties: {
+                data: { $ref: "#/components/schemas/PublicFixture" },
+              },
+            }),
+            "404": publicJsonResponse({
+              $ref: "#/components/schemas/ErrorResponse",
+            }),
           },
         },
       },

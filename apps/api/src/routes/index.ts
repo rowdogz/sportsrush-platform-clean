@@ -3,6 +3,7 @@ import type { HonoEnv } from "../env";
 import { healthRoutes } from "./health";
 import { authRoutes } from "./auth";
 import { adminRoutes } from "./admin";
+import { publicRoutes } from "./public";
 
 /**
  * Route aggregator — mounts all route groups onto the main Hono app.
@@ -15,6 +16,7 @@ import { adminRoutes } from "./admin";
  *   PR-04: /health, /version, /ready, /openapi.json
  *   PR-07: /v1/auth/*   (register, login, logout, refresh, password reset, magic link, me)
  *   PR-11: /v1/admin/*  (admin competitions, seasons, teams slice)
+ *   PR-39: /v1/public/* (public read API foundation)
  */
 export function registerRoutes(app: Hono<HonoEnv>): void {
   // Unversioned system routes
@@ -24,5 +26,6 @@ export function registerRoutes(app: Hono<HonoEnv>): void {
   const v1 = new Hono<HonoEnv>();
   v1.route("/auth", authRoutes);
   v1.route("/admin", adminRoutes);
+  v1.route("/public", publicRoutes);
   app.route("/v1", v1);
 }
