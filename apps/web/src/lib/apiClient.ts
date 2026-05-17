@@ -1,8 +1,11 @@
 import type {
+  AuthMe,
   AuthResponse,
   LeaderboardEntry,
   PaginatedResult,
   Prediction,
+  PrivateLeagueDetail,
+  PrivateLeagueSummary,
   PublicCompetition,
   PublicFixture,
   PublicRound,
@@ -280,6 +283,56 @@ export async function confirmPasswordReset(
   );
 }
 
+export async function getMe(token: string): Promise<AuthMe> {
+  return unwrap(
+    await apiRequest<ApiSuccessResponse<AuthMe>>("/v1/auth/me", {
+      token,
+    }),
+  );
+}
+
+export async function listPrivateLeagues(
+  token: string,
+  search?: string,
+): Promise<PaginatedResult<PrivateLeagueSummary>> {
+  const query = new URLSearchParams({ page: "1", limit: "25" });
+  if (search?.trim()) query.set("search", search.trim());
+  return unwrapPaginated(
+    await apiRequest<ApiSuccessResponse<readonly PrivateLeagueSummary[]>>(
+      `/v1/private-leagues?${query.toString()}`,
+      { token },
+    ),
+  );
+}
+
+export async function getPrivateLeague(
+  token: string,
+  id: string,
+): Promise<PrivateLeagueDetail> {
+  return unwrap(
+    await apiRequest<ApiSuccessResponse<PrivateLeagueDetail>>(
+      `/v1/private-leagues/${id}`,
+      { token },
+    ),
+  );
+}
+
+export async function joinPrivateLeague(
+  token: string,
+  inviteCode: string,
+): Promise<PrivateLeagueDetail> {
+  return unwrap(
+    await apiRequest<ApiSuccessResponse<PrivateLeagueDetail>>(
+      "/v1/private-leagues/join",
+      {
+        method: "POST",
+        token,
+        body: { inviteCode },
+      },
+    ),
+  );
+}
+
 export async function savePrediction(
   token: string,
   fixtureId: string,
@@ -302,6 +355,26 @@ export async function listMyPredictions(
   return unwrapPaginated(
     await apiRequest<ApiSuccessResponse<readonly Prediction[]>>(
       "/v1/predictions/me?page=1&limit=100",
+      { token },
+    ),
+  );
+}
+
+export async function listMyLeaderboards(
+  token: string,
+  filters: {
+    readonly competitionId?: string;
+    readonly privateLeagueId?: string;
+  } = {},
+): Promise<PaginatedResult<LeaderboardEntry>> {
+  const search = new URLSearchParams({ page: "1", limit: "25" });
+  if (filters.competitionId) search.set("competitionId", filters.competitionId);
+  if (filters.privateLeagueId) {
+    search.set("privateLeagueId", filters.privateLeagueId);
+  }
+  return unwrapPaginated(
+    await apiRequest<ApiSuccessResponse<readonly LeaderboardEntry[]>>(
+      `/v1/predictions/leaderboards?${search.toString()}`,
       { token },
     ),
   );

@@ -255,6 +255,167 @@ function stubFetch({
         }),
       );
     }
+    if (url.includes("/v1/auth/me")) {
+      return Promise.resolve(
+        jsonResponse({
+          data: {
+            user: { id: "user-1", email: "fan@sportsrush.test", role },
+            profile: { displayName: "Fan One", timezone: "UTC" },
+          },
+        }),
+      );
+    }
+    if (url.includes("/v1/private-leagues/join")) {
+      return Promise.resolve(
+        jsonResponse(
+          {
+            data: {
+              id: "league-1",
+              slug: "test-league",
+              name: "Test League",
+              description: "Member test league",
+              logoUrl: "https://cdn.example.test/logo.svg",
+              bannerUrl: "https://cdn.example.test/banner.jpg",
+              ownerUserId: "user-1",
+              isArchived: false,
+              memberCount: 2,
+              competitionCount: 1,
+              createdAt: "2026-01-01T00:00:00.000Z",
+              updatedAt: "2026-01-01T00:00:00.000Z",
+              archivedAt: null,
+              viewerRole: "member",
+              competitions: [
+                {
+                  competitionId: "competition-1",
+                  competitionName: "Super League",
+                },
+              ],
+              members: [
+                {
+                  userId: "user-1",
+                  email: "fan@sportsrush.test",
+                  displayName: "Fan One",
+                  role: "owner",
+                  isActive: true,
+                  joinedAt: "2026-01-01T00:00:00.000Z",
+                },
+                {
+                  userId: "user-2",
+                  email: "other@sportsrush.test",
+                  displayName: "Other Player",
+                  role: "member",
+                  isActive: true,
+                  joinedAt: "2026-01-02T00:00:00.000Z",
+                },
+              ],
+            },
+          },
+          201,
+        ),
+      );
+    }
+    if (url.includes("/v1/private-leagues/league-1")) {
+      return Promise.resolve(
+        jsonResponse({
+          data: {
+            id: "league-1",
+            slug: "test-league",
+            name: "Test League",
+            description: "Member test league",
+            logoUrl: "https://cdn.example.test/logo.svg",
+            bannerUrl: "https://cdn.example.test/banner.jpg",
+            ownerUserId: "user-1",
+            isArchived: false,
+            memberCount: 2,
+            competitionCount: 1,
+            createdAt: "2026-01-01T00:00:00.000Z",
+            updatedAt: "2026-01-01T00:00:00.000Z",
+            archivedAt: null,
+            viewerRole: "owner",
+            competitions: [
+              {
+                competitionId: "competition-1",
+                competitionName: "Super League",
+              },
+            ],
+            members: [
+              {
+                userId: "user-1",
+                email: "fan@sportsrush.test",
+                displayName: "Fan One",
+                role: "owner",
+                isActive: true,
+                joinedAt: "2026-01-01T00:00:00.000Z",
+              },
+              {
+                userId: "user-2",
+                email: "other@sportsrush.test",
+                displayName: "Other Player",
+                role: "member",
+                isActive: true,
+                joinedAt: "2026-01-02T00:00:00.000Z",
+              },
+            ],
+          },
+        }),
+      );
+    }
+    if (url.includes("/v1/private-leagues")) {
+      return Promise.resolve(
+        jsonResponse(
+          paginated([
+            {
+              id: "league-1",
+              slug: "test-league",
+              name: "Test League",
+              description: "Member test league",
+              logoUrl: "https://cdn.example.test/logo.svg",
+              bannerUrl: "https://cdn.example.test/banner.jpg",
+              ownerUserId: "user-1",
+              isArchived: false,
+              memberCount: 2,
+              competitionCount: 1,
+              createdAt: "2026-01-01T00:00:00.000Z",
+              updatedAt: "2026-01-01T00:00:00.000Z",
+              archivedAt: null,
+              viewerRole: "owner",
+            },
+          ]),
+        ),
+      );
+    }
+    if (url.includes("/v1/predictions/leaderboards")) {
+      return Promise.resolve(
+        jsonResponse(
+          paginated([
+            {
+              rank: 1,
+              movement: null,
+              userId: "user-1",
+              email: "fan@sportsrush.test",
+              displayName: "Fan One",
+              totalPoints: 11,
+              exactScores: 1,
+              correctResults: 1,
+              predictionsScored: 1,
+              lastScoredAt: "2026-01-01T00:00:00.000Z",
+            },
+            {
+              rank: 2,
+              movement: null,
+              userId: "user-2",
+              email: "other@sportsrush.test",
+              displayName: "Other Player",
+              totalPoints: 9,
+              exactScores: 0,
+              correctResults: 2,
+              predictionsScored: 2,
+              lastScoredAt: "2026-01-01T00:00:00.000Z",
+            },
+          ]),
+        ),
+      );
+    }
     if (url.includes("/v1/predictions/me")) {
       return Promise.resolve(
         jsonResponse(
@@ -585,5 +746,64 @@ describe("SportsRush web app", () => {
         /scoring points are not yet exposed by the current api/i,
       ),
     ).toBeTruthy();
+  });
+
+  it("renders private leagues experience with join flow and standings preview", async () => {
+    stubFetch();
+    render(<App />);
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Login" }).at(-1)!);
+    fireEvent.change(screen.getByLabelText("Email"), {
+      target: { value: "fan@sportsrush.test" },
+    });
+    fireEvent.change(screen.getByLabelText("Password"), {
+      target: { value: "Password123!" },
+    });
+    fireEvent.click(screen.getAllByRole("button", { name: "Login" }).at(-1)!);
+    await screen.findByRole("heading", { name: "Fixtures" });
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Leagues" }).at(-1)!);
+
+    expect(
+      await screen.findByRole("heading", { name: "Leagues" }),
+    ).toBeTruthy();
+    expect(await screen.findByText("Test League")).toBeTruthy();
+    expect(await screen.findByText("League standings")).toBeTruthy();
+    expect(screen.getAllByText("Other Player").length).toBeGreaterThan(0);
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Join with invite code" }),
+    );
+    fireEvent.change(screen.getByLabelText("Invite code"), {
+      target: { value: "league2026" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Join league" }));
+
+    expect(await screen.findByText("Joined Test League.")).toBeTruthy();
+  });
+
+  it("renders profile summary and account placeholders for authenticated users", async () => {
+    stubFetch();
+    render(<App />);
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Login" }).at(-1)!);
+    fireEvent.change(screen.getByLabelText("Email"), {
+      target: { value: "fan@sportsrush.test" },
+    });
+    fireEvent.change(screen.getByLabelText("Password"), {
+      target: { value: "Password123!" },
+    });
+    fireEvent.click(screen.getAllByRole("button", { name: "Login" }).at(-1)!);
+    await screen.findByRole("heading", { name: "Fixtures" });
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Profile" }).at(-1)!);
+
+    expect(
+      await screen.findByRole("heading", { name: "Profile" }),
+    ).toBeTruthy();
+    expect(screen.getByText("Fan One")).toBeTruthy();
+    expect(screen.getByText("Favourite team")).toBeTruthy();
+    expect(screen.getByText("Notification preferences")).toBeTruthy();
+    expect(screen.getByText("Recent prediction activity")).toBeTruthy();
   });
 });

@@ -86,8 +86,15 @@ export function AppHeader<TScreen extends string>({
               </div>
               <div className="account-copy">
                 <strong>{user?.email ?? "Signed in"}</strong>
-                <span>Account menu placeholder</span>
+                <span>Profile and session controls available</span>
               </div>
+              <button
+                className="button secondary compact"
+                type="button"
+                onClick={() => onNavigate("profile" as TScreen)}
+              >
+                Profile
+              </button>
               <button
                 className="button secondary"
                 type="button"

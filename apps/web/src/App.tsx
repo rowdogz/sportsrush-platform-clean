@@ -33,14 +33,18 @@ import { useLiveRefresh } from "./lib/liveRefresh";
 import { PredictionsPage } from "./pages/PredictionsPage";
 import { RankingsPage } from "./pages/RankingsPage";
 import { ResultsPage } from "./pages/ResultsPage";
+import { LeaguesPage } from "./pages/LeaguesPage";
+import { ProfilePage } from "./pages/ProfilePage";
 
 export type Screen =
   | "home"
   | "competitions"
   | "fixtures"
+  | "leagues"
   | "results"
   | "rankings"
   | "predictions"
+  | "profile"
   | "login"
   | "register"
   | "reset";
@@ -55,9 +59,11 @@ function AppShell() {
     { screen: "home", label: "Home" },
     { screen: "competitions", label: "Competitions" },
     { screen: "fixtures", label: "Fixtures" },
+    { screen: "leagues", label: "Leagues" },
     { screen: "results", label: "Results" },
     { screen: "rankings", label: "Rankings" },
     { screen: "predictions", label: "Predictions" },
+    { screen: "profile", label: "Profile" },
   ];
 
   function go(nextScreen: Screen): void {
@@ -84,9 +90,15 @@ function AppShell() {
         {screen === "home" ? <HomePage setScreen={go} /> : null}
         {screen === "competitions" ? <CompetitionsPage /> : null}
         {screen === "fixtures" ? <FixturesPage /> : null}
+        {screen === "leagues" ? (
+          <LeaguesPage onLogin={() => go("login")} />
+        ) : null}
         {screen === "results" ? <ResultsPage /> : null}
         {screen === "rankings" ? <RankingsPage /> : null}
         {screen === "predictions" ? <PredictionsPage go={go} /> : null}
+        {screen === "profile" ? (
+          <ProfilePage onLogin={() => go("login")} />
+        ) : null}
         {screen === "login" ? <AuthPage mode="login" go={go} /> : null}
         {screen === "register" ? <AuthPage mode="register" go={go} /> : null}
         {screen === "reset" ? <PasswordResetPage go={go} /> : null}
@@ -130,9 +142,9 @@ function HomePage({
           <button
             className="button secondary"
             type="button"
-            onClick={() => setScreen("rankings")}
+            onClick={() => setScreen("leagues")}
           >
-            View rankings
+            Explore leagues
           </button>
         </div>
       </section>

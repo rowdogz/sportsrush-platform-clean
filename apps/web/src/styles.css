@@ -975,6 +975,207 @@ select {
   background: color-mix(in srgb, var(--primary-soft) 55%, transparent);
 }
 
+.profile-section-header,
+.league-card-top,
+.league-standings-header,
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+}
+
+.league-search {
+  min-width: 16rem;
+}
+
+.league-layout {
+  display: grid;
+  grid-template-columns: minmax(18rem, 24rem) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.league-list,
+.league-detail-column,
+.profile-layout {
+  display: grid;
+  gap: 1rem;
+}
+
+.profile-layout {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.league-card,
+.league-detail-card,
+.profile-summary-card,
+.profile-preferences-card,
+.activity-feed-card,
+.modal-card {
+  border: 1px solid var(--border);
+  border-radius: 1.25rem;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.league-card-banner,
+.league-detail-banner {
+  min-height: 7rem;
+  background-size: cover;
+  background-position: center;
+  border-radius: 1.25rem 1.25rem 0 0;
+}
+
+.league-card-body,
+.league-detail-body,
+.profile-summary-card,
+.profile-preferences-card,
+.activity-feed-card,
+.modal-card {
+  padding: 1.25rem;
+}
+
+.league-card-top h3,
+.league-detail-body h2,
+.profile-summary-card h2,
+.profile-preferences-card h3,
+.activity-feed-card h3 {
+  margin: 0;
+}
+
+.league-card-metrics,
+.profile-meta-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.league-card-metrics div,
+.profile-meta-list div {
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 0.75rem;
+  background: var(--panel-muted);
+}
+
+.league-card-metrics dt,
+.profile-meta-list dt {
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin-bottom: 0.25rem;
+}
+
+.league-card-metrics dd,
+.profile-meta-list dd {
+  margin: 0;
+  font-weight: 700;
+}
+
+.league-detail-meta,
+.league-member-row,
+.profile-preference-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+}
+
+.league-detail-meta,
+.league-members-panel,
+.profile-preference-row,
+.activity-feed-list {
+  margin-top: 1rem;
+}
+
+.league-members-list,
+.activity-feed-list,
+.league-standings-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.league-member-row,
+.activity-feed-item,
+.league-standing-row {
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 0.85rem 1rem;
+  background: var(--panel-muted);
+}
+
+.league-standing-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.league-standing-row-current {
+  border-color: color-mix(in srgb, var(--primary) 55%, var(--border));
+  background: color-mix(in srgb, var(--primary-soft) 70%, var(--panel-muted));
+}
+
+.league-standing-copy {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.league-standing-rank {
+  font-weight: 800;
+}
+
+.status-chip {
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  background: var(--panel-muted);
+  color: var(--text);
+  border: 1px solid var(--border);
+  font-size: 0.8rem;
+  text-transform: capitalize;
+}
+
+.league-card-active {
+  border-color: color-mix(in srgb, var(--primary) 55%, var(--border));
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(5, 12, 9, 0.55);
+}
+
+.modal-card {
+  width: min(30rem, calc(100vw - 2rem));
+}
+
+.profile-summary-card {
+  display: grid;
+  gap: 1rem;
+}
+
+.profile-preference-row {
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+}
+
+.profile-preference-row:first-of-type {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.activity-feed-item {
+  display: flex;
+  gap: 0.35rem;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
 .form-error {
   color: var(--danger);
   font-weight: 800;
@@ -1166,6 +1367,11 @@ select {
     grid-template-columns: 1fr;
   }
 
+  .league-layout,
+  .profile-layout {
+    grid-template-columns: 1fr;
+  }
+
   .prediction-team-away {
     justify-content: flex-start;
     text-align: left;
@@ -1224,6 +1430,20 @@ select {
   .results-toolbar-actions,
   .rankings-toolbar-actions {
     display: grid;
+  }
+
+  .profile-section-header,
+  .league-card-top,
+  .league-detail-meta,
+  .league-member-row,
+  .profile-preference-row,
+  .modal-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .league-search {
+    min-width: 100%;
   }
 
   .prediction-score-entry {

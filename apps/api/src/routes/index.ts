@@ -5,6 +5,7 @@ import { authRoutes } from "./auth";
 import { adminRoutes } from "./admin";
 import { publicRoutes } from "./public";
 import { privateLeagueRoutes } from "./private-leagues";
+import { memberPrivateLeagueRoutes } from "./member-private-leagues";
 import { predictionRoutes } from "./predictions";
 
 /**
@@ -20,6 +21,7 @@ import { predictionRoutes } from "./predictions";
  *   PR-11: /v1/admin/*  (admin competitions, seasons, teams slice)
  *   PR-39: /v1/public/* (public read API foundation)
  *   PR-41: /v1/admin/private-leagues, /v1/predictions
+ *   PR-47: /v1/private-leagues (authenticated member league UX)
  */
 export function registerRoutes(app: Hono<HonoEnv>): void {
   // Unversioned system routes
@@ -30,6 +32,7 @@ export function registerRoutes(app: Hono<HonoEnv>): void {
   v1.route("/auth", authRoutes);
   v1.route("/admin", adminRoutes);
   v1.route("/admin/private-leagues", privateLeagueRoutes);
+  v1.route("/private-leagues", memberPrivateLeagueRoutes);
   v1.route("/predictions", predictionRoutes);
   v1.route("/public", publicRoutes);
   app.route("/v1", v1);

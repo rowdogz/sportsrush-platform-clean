@@ -115,10 +115,52 @@ export type AuthUser = {
   readonly role: string;
 };
 
+export type AuthProfile = {
+  readonly displayName?: string | null;
+  readonly timezone?: string | null;
+};
+
 export type AuthResponse = {
   readonly user?: AuthUser | null;
   readonly accessToken: string;
   readonly refreshToken: string;
-  readonly profile?: unknown;
+  readonly profile?: AuthProfile | null;
   readonly session?: unknown;
+};
+
+export type AuthMe = {
+  readonly user: AuthUser;
+  readonly profile: AuthProfile;
+};
+
+export type PrivateLeagueSummary = {
+  readonly id: string;
+  readonly slug: string;
+  readonly name: string;
+  readonly description: string | null;
+  readonly logoUrl: string | null;
+  readonly bannerUrl: string | null;
+  readonly ownerUserId: string | null;
+  readonly isArchived: boolean;
+  readonly memberCount: number;
+  readonly competitionCount: number;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+  readonly archivedAt: string | null;
+  readonly viewerRole: "owner" | "admin" | "member" | null;
+};
+
+export type PrivateLeagueDetail = PrivateLeagueSummary & {
+  readonly members: readonly {
+    readonly userId: string;
+    readonly email: string | null;
+    readonly displayName: string | null;
+    readonly role: "owner" | "admin" | "member";
+    readonly isActive: boolean;
+    readonly joinedAt: string;
+  }[];
+  readonly competitions: readonly {
+    readonly competitionId: string;
+    readonly competitionName: string | null;
+  }[];
 };
