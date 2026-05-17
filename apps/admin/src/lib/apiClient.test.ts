@@ -69,4 +69,26 @@ describe("apiClient auth failure handling", () => {
     ).rejects.toMatchObject({ status: 401 });
     expect(onUnauthorized).not.toHaveBeenCalled();
   });
+
+  it("does not clear the session for stale requests that sent no token", async () => {
+    const onUnauthorized = vi.fn();
+    setAccessTokenProvider(() => null);
+    setUnauthorizedHandler(onUnauthorized);
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(
+          jsonResponse(
+            { error: { code: "MISSING_TOKEN", message: "Missing token" } },
+            401,
+          ),
+        ),
+    );
+
+    await expect(apiRequest("/v1/admin/competitions")).rejects.toMatchObject({
+      status: 401,
+    });
+    expect(onUnauthorized).not.toHaveBeenCalled();
+  });
 });

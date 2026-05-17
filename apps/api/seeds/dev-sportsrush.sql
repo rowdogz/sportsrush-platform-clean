@@ -224,3 +224,64 @@ ON CONFLICT(id) DO UPDATE SET
   before_metadata = excluded.before_metadata,
   after_metadata = excluded.after_metadata,
   created_at = excluded.created_at;
+
+INSERT INTO private_leagues
+  (id, slug, name, description, logo_url, banner_url, invite_code, owner_user_id, is_archived, created_at, updated_at, archived_at)
+VALUES
+  ('league-dev-super-league', 'dev-super-league-predictors', 'Dev Super League Predictors', 'Seeded private league for admin and leaderboard testing.', 'https://cdn.sportsrush.test/logos/dev-league.svg', 'https://cdn.sportsrush.test/banners/dev-league.jpg', 'SLDEV2026', 'sr-dev-superadmin', 0, '2026-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z', NULL)
+ON CONFLICT(id) DO UPDATE SET
+  slug = excluded.slug,
+  name = excluded.name,
+  description = excluded.description,
+  logo_url = excluded.logo_url,
+  banner_url = excluded.banner_url,
+  invite_code = excluded.invite_code,
+  owner_user_id = excluded.owner_user_id,
+  is_archived = excluded.is_archived,
+  updated_at = excluded.updated_at,
+  archived_at = excluded.archived_at;
+
+INSERT INTO private_league_members
+  (id, private_league_id, user_id, role, is_active, joined_at, updated_at)
+VALUES
+  ('league-member-dev-admin', 'league-dev-super-league', 'sr-dev-superadmin', 'owner', 1, '2026-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z')
+ON CONFLICT(private_league_id, user_id) DO UPDATE SET
+  role = excluded.role,
+  is_active = excluded.is_active,
+  updated_at = excluded.updated_at;
+
+INSERT INTO private_league_competitions
+  (id, private_league_id, competition_id, created_at)
+VALUES
+  ('league-comp-dev-sl', 'league-dev-super-league', 'comp-super-league', '2026-01-01T00:00:00.000Z')
+ON CONFLICT(private_league_id, competition_id) DO UPDATE SET
+  created_at = excluded.created_at;
+
+INSERT INTO predictions
+  (id, user_id, fixture_id, home_score, away_score, created_at, updated_at)
+VALUES
+  ('prediction-dev-admin-001', 'sr-dev-superadmin', 'fixture-sl-2026-001', 24, 18, '2026-02-01T12:00:00.000Z', '2026-02-01T12:00:00.000Z'),
+  ('prediction-dev-admin-002', 'sr-dev-superadmin', 'fixture-sl-2026-002', 18, 20, '2026-02-01T12:00:00.000Z', '2026-02-01T12:00:00.000Z'),
+  ('prediction-dev-admin-003', 'sr-dev-superadmin', 'fixture-sl-2026-005', 28, 12, '2026-05-01T12:00:00.000Z', '2026-05-01T12:00:00.000Z')
+ON CONFLICT(user_id, fixture_id) DO UPDATE SET
+  home_score = excluded.home_score,
+  away_score = excluded.away_score,
+  updated_at = excluded.updated_at;
+
+INSERT INTO prediction_scores
+  (id, prediction_id, user_id, fixture_id, competition_id, season_id, round_id,
+   scored_at, total_points, exact_score_points, correct_result_points,
+   home_score_points, away_score_points, goal_difference_points, breakdown_json)
+VALUES
+  ('prediction-score-dev-admin-001', 'prediction-dev-admin-001', 'sr-dev-superadmin', 'fixture-sl-2026-001', 'comp-super-league', 'season-super-league-2026', 'round-sl-2026-01', '2026-02-12T22:00:00.000Z', 11, 5, 3, 1, 1, 1, '{"exactScore":5,"correctResult":3,"homeScore":1,"awayScore":1,"goalDifference":1,"total":11}'),
+  ('prediction-score-dev-admin-002', 'prediction-dev-admin-002', 'sr-dev-superadmin', 'fixture-sl-2026-002', 'comp-super-league', 'season-super-league-2026', 'round-sl-2026-01', '2026-02-13T22:00:00.000Z', 5, 0, 3, 0, 1, 1, '{"exactScore":0,"correctResult":3,"homeScore":0,"awayScore":1,"goalDifference":1,"total":5}'),
+  ('prediction-score-dev-admin-003', 'prediction-dev-admin-003', 'sr-dev-superadmin', 'fixture-sl-2026-005', 'comp-super-league', 'season-super-league-2026', 'round-sl-2026-03', '2026-05-15T22:00:00.000Z', 5, 0, 3, 0, 1, 1, '{"exactScore":0,"correctResult":3,"homeScore":0,"awayScore":1,"goalDifference":1,"total":5}')
+ON CONFLICT(prediction_id, fixture_id) DO UPDATE SET
+  scored_at = excluded.scored_at,
+  total_points = excluded.total_points,
+  exact_score_points = excluded.exact_score_points,
+  correct_result_points = excluded.correct_result_points,
+  home_score_points = excluded.home_score_points,
+  away_score_points = excluded.away_score_points,
+  goal_difference_points = excluded.goal_difference_points,
+  breakdown_json = excluded.breakdown_json;

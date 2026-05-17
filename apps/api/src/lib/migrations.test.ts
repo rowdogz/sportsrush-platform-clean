@@ -60,7 +60,9 @@ beforeAll(async () => {
   // Apply all migrations in order — same sequence as production wrangler apply.
   db.run(readMigration("0001_foundation.sql"));
   db.run(readMigration("0002_auth_schema.sql"));
+  db.run(readMigration("0003_competitions_teams_fixtures_results.sql"));
   db.run(readMigration("0004_admin_audit_events.sql"));
+  db.run(readMigration("0005_private_leagues_predictions_rankings.sql"));
 });
 
 afterAll(() => {
@@ -108,6 +110,11 @@ describe("0002_auth_schema — tables", () => {
     "password_reset_tokens",
     "auth_audit_log",
     "audit_events",
+    "private_leagues",
+    "private_league_members",
+    "private_league_competitions",
+    "predictions",
+    "prediction_scores",
   ];
 
   it.each(expectedTables)("creates table: %s", (table) => {
@@ -209,6 +216,10 @@ describe("0002_auth_schema — indexes", () => {
     "idx_audit_events_action",
     "idx_audit_events_target",
     "idx_audit_events_created_at",
+    "idx_private_leagues_archived",
+    "idx_private_league_members_user",
+    "idx_predictions_user",
+    "idx_prediction_scores_competition",
   ];
 
   it.each(expectedIndexes)("creates index: %s", (idx) => {

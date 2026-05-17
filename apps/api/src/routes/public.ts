@@ -23,6 +23,7 @@ import {
   listPublicSeasonsService,
   type PublicServiceContext,
 } from "../public/service";
+import { listLeaderboardService } from "../predictions/service";
 
 function parseQuery<T>(
   schema: z.ZodType<T>,
@@ -139,4 +140,44 @@ publicRoutes.get("/fixtures/:id", async (c) => {
     c,
     await getPublicFixtureService(await makePublicServiceContext(c), params.id),
   );
+});
+
+publicRoutes.get("/leaderboards", async (c) => {
+  const query = parseQuery(
+    PublicFixtureListQuerySchema.pick({
+      page: true,
+      limit: true,
+      competitionId: true,
+      roundId: true,
+    }).extend({
+      privateLeagueId: z.string().min(1).optional(),
+      month: z
+        .string()
+        .regex(/^[0-9]{4}-[0-9]{2}$/)
+        .optional(),
+    }),
+    {
+      page: c.req.query("page"),
+      limit: c.req.query("limit"),
+      competitionId: c.req.query("competitionId"),
+      roundId: c.req.query("roundId"),
+      privateLeagueId: c.req.query("privateLeagueId"),
+      month: c.req.query("month"),
+    },
+  );
+  const leaderboardQuery = {
+    ...query,
+    page: query.page ?? 1,
+    limit: query.limit ?? 25,
+  };
+  const result = await listLeaderboardService(
+    {
+      db: await requireDb(c),
+      now: new Date().toISOString(),
+      correlationId: c.var.correlationId ?? "public",
+      actorUserId: "public",
+    },
+    leaderboardQuery,
+  );
+  return sendPaginated(c, result.rows, result.total, leaderboardQuery);
 });

@@ -13,6 +13,10 @@ const migrationPaths = [
     "../../migrations/0003_competitions_teams_fixtures_results.sql",
   ),
   resolve(__dirname, "../../migrations/0004_admin_audit_events.sql"),
+  resolve(
+    __dirname,
+    "../../migrations/0005_private_leagues_predictions_rankings.sql",
+  ),
 ];
 const adminRoutePath = resolve(__dirname, "./admin.ts");
 
@@ -706,6 +710,79 @@ describe("admin route slice 1 teams", () => {
       body: JSON.stringify({ name: "Missing sport and slug" }),
     });
     expect(response.status).toBe(400);
+  });
+});
+
+describe("admin private leagues", () => {
+  it("creates, updates, archives, unarchives, and manages members", async () => {
+    const { request, sqlDb } = await createTestHarness();
+    seedUser(sqlDb, {
+      id: "member-user",
+      email: "member@example.test",
+      displayName: "Member User",
+    });
+    const competitionResponse = await createCompetition(request);
+    const competition = (await competitionResponse.json()) as any;
+
+    const createResponse = await request("/v1/admin/private-leagues", {
+      method: "POST",
+      body: JSON.stringify({
+        slug: "test-league",
+        name: "Test League",
+        ownerUserId: "admin-user",
+        competitionIds: [competition.data.id],
+        logoUrl: "https://cdn.example.test/logo.svg",
+        bannerUrl: "https://cdn.example.test/banner.jpg",
+      }),
+    });
+    expect(createResponse.status).toBe(201);
+    const created = (await createResponse.json()) as any;
+    expect(created.data.inviteCode).toMatch(/^[A-F0-9]{10}$/);
+    expect(created.data.competitionCount).toBe(1);
+
+    const memberResponse = await request(
+      `/v1/admin/private-leagues/${created.data.id}/members`,
+      {
+        method: "POST",
+        body: JSON.stringify({ userId: "member-user", role: "member" }),
+      },
+    );
+    expect(memberResponse.status).toBe(200);
+    const members = (await memberResponse.json()) as any;
+    expect(members.data[0].userId).toBe("member-user");
+
+    const updateResponse = await request(
+      `/v1/admin/private-leagues/${created.data.id}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ name: "Updated League" }),
+      },
+    );
+    expect(updateResponse.status).toBe(200);
+    const updated = (await updateResponse.json()) as any;
+    expect(updated.data.name).toBe("Updated League");
+
+    const archiveResponse = await request(
+      `/v1/admin/private-leagues/${created.data.id}/archive`,
+      { method: "POST" },
+    );
+    expect(archiveResponse.status).toBe(200);
+    expect(((await archiveResponse.json()) as any).data.isArchived).toBe(true);
+
+    const unarchiveResponse = await request(
+      `/v1/admin/private-leagues/${created.data.id}/unarchive`,
+      { method: "POST" },
+    );
+    expect(unarchiveResponse.status).toBe(200);
+    expect(((await unarchiveResponse.json()) as any).data.isArchived).toBe(
+      false,
+    );
+  });
+
+  it("requires admin access", async () => {
+    const { request, userToken } = await createTestHarness();
+    const response = await request("/v1/admin/private-leagues", {}, userToken);
+    expect(response.status).toBe(403);
   });
 });
 

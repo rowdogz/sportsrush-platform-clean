@@ -111,11 +111,15 @@ export async function apiRequest<T>(
   path: string,
   options: ApiRequestOptions = {},
 ): Promise<T> {
-  const response = await sendApiRequest(path, options, "application/json");
+  const { response, hadAccessToken } = await sendApiRequest(
+    path,
+    options,
+    "application/json",
+  );
   const payload = await readJson(response);
 
   if (!response.ok) {
-    handleAuthFailure(path, response.status);
+    handleAuthFailure(path, response.status, hadAccessToken);
     throwApiError(response, payload);
   }
 
@@ -126,7 +130,11 @@ export async function apiTextRequest(
   path: string,
   options: ApiRequestOptions = {},
 ): Promise<ApiTextResponse> {
-  const response = await sendApiRequest(path, options, "text/csv");
+  const { response, hadAccessToken } = await sendApiRequest(
+    path,
+    options,
+    "text/csv",
+  );
   const text = await response.text();
 
   if (!response.ok) {
@@ -136,7 +144,7 @@ export async function apiTextRequest(
     } catch {
       payload = null;
     }
-    handleAuthFailure(path, response.status);
+    handleAuthFailure(path, response.status, hadAccessToken);
     throwApiError(response, payload);
   }
 
@@ -147,8 +155,9 @@ async function sendApiRequest(
   path: string,
   options: ApiRequestOptions,
   accept: string,
-): Promise<Response> {
+): Promise<{ readonly response: Response; readonly hadAccessToken: boolean }> {
   const token = getAccessToken();
+  const hadAccessToken = Boolean(token);
   const headers = new Headers({ Accept: accept });
 
   if (options.headers) {
@@ -176,7 +185,10 @@ async function sendApiRequest(
   }
 
   try {
-    return await fetch(buildUrl(path), requestInit);
+    return {
+      response: await fetch(buildUrl(path), requestInit),
+      hadAccessToken,
+    };
   } catch (error) {
     throw new ApiError({
       status: 0,
@@ -189,8 +201,12 @@ async function sendApiRequest(
   }
 }
 
-function handleAuthFailure(path: string, status: number): void {
-  if (status === 401 && shouldHandleUnauthorized(path)) {
+function handleAuthFailure(
+  path: string,
+  status: number,
+  hadAccessToken: boolean,
+): void {
+  if (status === 401 && hadAccessToken && shouldHandleUnauthorized(path)) {
     unauthorizedHandler?.();
   }
 }
