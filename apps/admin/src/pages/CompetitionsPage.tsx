@@ -106,6 +106,37 @@ export function CompetitionsPage() {
   const [editValues, setEditValues] = useState<FormValues>(emptyFormValues);
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
+  const competitionMetrics =
+    state.status === "success"
+      ? [
+          {
+            label: "Competitions",
+            value: state.competitions.length,
+            description: "Visible competition records",
+          },
+          {
+            label: "Active records",
+            value: state.competitions.filter(
+              (competition) => competition.isActive,
+            ).length,
+            description: "Currently available in SportsRush",
+          },
+          {
+            label: "Inactive",
+            value: state.competitions.filter(
+              (competition) => !competition.isActive,
+            ).length,
+            description: "Archived or disabled records",
+          },
+          {
+            label: "Legacy linked",
+            value: state.competitions.filter(
+              (competition) => competition.legacyId,
+            ).length,
+            description: "Mapped to legacy source IDs",
+          },
+        ]
+      : [];
 
   const loadCompetitions = useCallback(
     async ({
@@ -208,86 +239,137 @@ export function CompetitionsPage() {
         <p>Manage competitions configured in SportsRush.</p>
       </div>
 
-      <form className="competition-form" onSubmit={handleCreateSubmit}>
-        <div className="form-heading">
-          <h3>Create competition</h3>
+      {competitionMetrics.length > 0 ? (
+        <div className="ops-summary-grid" aria-label="Competition overview">
+          {competitionMetrics.map((metric) => (
+            <article className="ops-summary-card" key={metric.label}>
+              <span>{metric.label}</span>
+              <strong>{metric.value}</strong>
+              <p>{metric.description}</p>
+            </article>
+          ))}
         </div>
-        <div className="form-grid">
-          <label>
-            Sport ID
-            <input
-              value={createValues.sportId}
-              onChange={(event) =>
-                setCreateValues({
-                  ...createValues,
-                  sportId: event.target.value,
-                })
-              }
-            />
-          </label>
-          <label>
-            Slug
-            <input
-              value={createValues.slug}
-              onChange={(event) =>
-                setCreateValues({ ...createValues, slug: event.target.value })
-              }
-            />
-          </label>
-          <label>
-            Name
-            <input
-              value={createValues.name}
-              onChange={(event) =>
-                setCreateValues({ ...createValues, name: event.target.value })
-              }
-            />
-          </label>
-          <label>
-            Short name
-            <input
-              value={createValues.shortName}
-              onChange={(event) =>
-                setCreateValues({
-                  ...createValues,
-                  shortName: event.target.value,
-                })
-              }
-            />
-          </label>
-          <label>
-            Country code
-            <input
-              value={createValues.countryCode}
-              onChange={(event) =>
-                setCreateValues({
-                  ...createValues,
-                  countryCode: event.target.value,
-                })
-              }
-            />
-          </label>
-          <label>
-            Legacy ID
-            <input
-              value={createValues.legacyId}
-              onChange={(event) =>
-                setCreateValues({
-                  ...createValues,
-                  legacyId: event.target.value,
-                })
-              }
-            />
-          </label>
-        </div>
-        <button
-          className="primary-button"
-          type="submit"
-          disabled={pendingAction === "create"}
+      ) : null}
+
+      <div className="ops-stage-grid">
+        <form
+          className="competition-form ops-section-card"
+          onSubmit={handleCreateSubmit}
         >
-          {pendingAction === "create" ? "Creating..." : "Create competition"}
-        </button>
-      </form>
+          <div className="form-heading ops-section-card-header">
+            <div>
+              <h3>Create competition</h3>
+              <p>
+                Add a new competition record without leaving the operational
+                list.
+              </p>
+            </div>
+          </div>
+          <div className="form-grid">
+            <label>
+              Sport ID
+              <input
+                value={createValues.sportId}
+                onChange={(event) =>
+                  setCreateValues({
+                    ...createValues,
+                    sportId: event.target.value,
+                  })
+                }
+              />
+            </label>
+            <label>
+              Slug
+              <input
+                value={createValues.slug}
+                onChange={(event) =>
+                  setCreateValues({ ...createValues, slug: event.target.value })
+                }
+              />
+            </label>
+            <label>
+              Name
+              <input
+                value={createValues.name}
+                onChange={(event) =>
+                  setCreateValues({ ...createValues, name: event.target.value })
+                }
+              />
+            </label>
+            <label>
+              Short name
+              <input
+                value={createValues.shortName}
+                onChange={(event) =>
+                  setCreateValues({
+                    ...createValues,
+                    shortName: event.target.value,
+                  })
+                }
+              />
+            </label>
+            <label>
+              Country code
+              <input
+                value={createValues.countryCode}
+                onChange={(event) =>
+                  setCreateValues({
+                    ...createValues,
+                    countryCode: event.target.value,
+                  })
+                }
+              />
+            </label>
+            <label>
+              Legacy ID
+              <input
+                value={createValues.legacyId}
+                onChange={(event) =>
+                  setCreateValues({
+                    ...createValues,
+                    legacyId: event.target.value,
+                  })
+                }
+              />
+            </label>
+          </div>
+          <div className="form-actions">
+            <button
+              className="primary-button"
+              type="submit"
+              disabled={pendingAction === "create"}
+            >
+              {pendingAction === "create"
+                ? "Creating..."
+                : "Create competition"}
+            </button>
+          </div>
+        </form>
+
+        <aside
+          className="ops-section-card ops-guidance-panel"
+          aria-label="Competition workflow guidance"
+        >
+          <div className="ops-section-card-header">
+            <div>
+              <h3>Operational notes</h3>
+              <p>
+                Keep competition records consistent for downstream seasons,
+                rounds, and fixtures.
+              </p>
+            </div>
+          </div>
+          <ul className="ops-guidance-list">
+            <li>
+              Use stable slugs because downstream references depend on them.
+            </li>
+            <li>Set short names for compact table and fixture displays.</li>
+            <li>
+              Link legacy IDs where migration or scraper mapping already exists.
+            </li>
+          </ul>
+        </aside>
+      </div>
 
       <AdminFeedback feedback={feedback} />
 
@@ -310,180 +392,194 @@ export function CompetitionsPage() {
       ) : null}
 
       {state.status === "success" && state.competitions.length > 0 ? (
-        <div className="competitions-table-wrapper">
-          <table className="competitions-table">
-            <thead>
-              <tr>
-                <th scope="col">Name</th>
-                <th scope="col">Slug</th>
-                <th scope="col">Sport ID</th>
-                <th scope="col">Short name</th>
-                <th scope="col">Country</th>
-                <th scope="col">Legacy ID</th>
-                <th scope="col">Status</th>
-                <th scope="col">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {state.competitions.map((competition) => (
-                <tr key={competition.id}>
-                  {editingId === competition.id ? (
-                    <td colSpan={8}>
-                      <form
-                        className="inline-edit-form"
-                        onSubmit={(event) =>
-                          void handleEditSubmit(event, competition)
-                        }
-                      >
-                        <label>
-                          Name
-                          <input
-                            aria-label="Edit name"
-                            value={editValues.name}
-                            onChange={(event) =>
-                              setEditValues({
-                                ...editValues,
-                                name: event.target.value,
-                              })
-                            }
-                          />
-                        </label>
-                        <label>
-                          Slug
-                          <input
-                            aria-label="Edit slug"
-                            value={editValues.slug}
-                            onChange={(event) =>
-                              setEditValues({
-                                ...editValues,
-                                slug: event.target.value,
-                              })
-                            }
-                          />
-                        </label>
-                        <label>
-                          Sport ID
-                          <input
-                            aria-label="Edit sport ID"
-                            value={editValues.sportId}
-                            onChange={(event) =>
-                              setEditValues({
-                                ...editValues,
-                                sportId: event.target.value,
-                              })
-                            }
-                          />
-                        </label>
-                        <label>
-                          Short name
-                          <input
-                            aria-label="Edit short name"
-                            value={editValues.shortName}
-                            onChange={(event) =>
-                              setEditValues({
-                                ...editValues,
-                                shortName: event.target.value,
-                              })
-                            }
-                          />
-                        </label>
-                        <label>
-                          Country code
-                          <input
-                            aria-label="Edit country code"
-                            value={editValues.countryCode}
-                            onChange={(event) =>
-                              setEditValues({
-                                ...editValues,
-                                countryCode: event.target.value,
-                              })
-                            }
-                          />
-                        </label>
-                        <label>
-                          Legacy ID
-                          <input
-                            aria-label="Edit legacy ID"
-                            value={editValues.legacyId}
-                            onChange={(event) =>
-                              setEditValues({
-                                ...editValues,
-                                legacyId: event.target.value,
-                              })
-                            }
-                          />
-                        </label>
-                        <div className="row-actions">
-                          <button
-                            className="primary-button compact-button"
-                            type="submit"
-                            disabled={
-                              pendingAction === `edit:${competition.id}`
-                            }
-                          >
-                            {pendingAction === `edit:${competition.id}`
-                              ? "Saving..."
-                              : "Save"}
-                          </button>
-                          <button
-                            className="secondary-button compact-button"
-                            type="button"
-                            onClick={() => setEditingId(null)}
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </form>
-                    </td>
-                  ) : (
-                    <>
-                      <td>{competition.name}</td>
-                      <td>{competition.slug}</td>
-                      <td>{competition.sportId}</td>
-                      <td>{competition.shortName ?? "—"}</td>
-                      <td>{competition.countryCode ?? "—"}</td>
-                      <td>{competition.legacyId ?? "—"}</td>
-                      <td>
-                        <span
-                          className={
-                            competition.isActive
-                              ? "status-pill status-pill-active"
-                              : "status-pill status-pill-inactive"
+        <section
+          className="ops-section-card"
+          aria-labelledby="competitions-table-title"
+        >
+          <div className="ops-table-toolbar">
+            <div>
+              <h3 id="competitions-table-title">Competition records</h3>
+              <p>
+                Review status, make inline changes, and archive stale
+                competitions.
+              </p>
+            </div>
+          </div>
+          <div className="competitions-table-wrapper">
+            <table className="competitions-table">
+              <thead>
+                <tr>
+                  <th scope="col">Name</th>
+                  <th scope="col">Slug</th>
+                  <th scope="col">Sport ID</th>
+                  <th scope="col">Short name</th>
+                  <th scope="col">Country</th>
+                  <th scope="col">Legacy ID</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {state.competitions.map((competition) => (
+                  <tr key={competition.id}>
+                    {editingId === competition.id ? (
+                      <td colSpan={8}>
+                        <form
+                          className="inline-edit-form"
+                          onSubmit={(event) =>
+                            void handleEditSubmit(event, competition)
                           }
                         >
-                          {competition.isActive ? "Active" : "Inactive"}
-                        </span>
+                          <label>
+                            Name
+                            <input
+                              aria-label="Edit name"
+                              value={editValues.name}
+                              onChange={(event) =>
+                                setEditValues({
+                                  ...editValues,
+                                  name: event.target.value,
+                                })
+                              }
+                            />
+                          </label>
+                          <label>
+                            Slug
+                            <input
+                              aria-label="Edit slug"
+                              value={editValues.slug}
+                              onChange={(event) =>
+                                setEditValues({
+                                  ...editValues,
+                                  slug: event.target.value,
+                                })
+                              }
+                            />
+                          </label>
+                          <label>
+                            Sport ID
+                            <input
+                              aria-label="Edit sport ID"
+                              value={editValues.sportId}
+                              onChange={(event) =>
+                                setEditValues({
+                                  ...editValues,
+                                  sportId: event.target.value,
+                                })
+                              }
+                            />
+                          </label>
+                          <label>
+                            Short name
+                            <input
+                              aria-label="Edit short name"
+                              value={editValues.shortName}
+                              onChange={(event) =>
+                                setEditValues({
+                                  ...editValues,
+                                  shortName: event.target.value,
+                                })
+                              }
+                            />
+                          </label>
+                          <label>
+                            Country code
+                            <input
+                              aria-label="Edit country code"
+                              value={editValues.countryCode}
+                              onChange={(event) =>
+                                setEditValues({
+                                  ...editValues,
+                                  countryCode: event.target.value,
+                                })
+                              }
+                            />
+                          </label>
+                          <label>
+                            Legacy ID
+                            <input
+                              aria-label="Edit legacy ID"
+                              value={editValues.legacyId}
+                              onChange={(event) =>
+                                setEditValues({
+                                  ...editValues,
+                                  legacyId: event.target.value,
+                                })
+                              }
+                            />
+                          </label>
+                          <div className="row-actions">
+                            <button
+                              className="primary-button compact-button"
+                              type="submit"
+                              disabled={
+                                pendingAction === `edit:${competition.id}`
+                              }
+                            >
+                              {pendingAction === `edit:${competition.id}`
+                                ? "Saving..."
+                                : "Save"}
+                            </button>
+                            <button
+                              className="secondary-button compact-button"
+                              type="button"
+                              onClick={() => setEditingId(null)}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </form>
                       </td>
-                      <td>
-                        <div className="row-actions">
-                          <button
-                            className="secondary-button compact-button"
-                            type="button"
-                            onClick={() => startEditing(competition)}
-                          >
-                            Edit
-                          </button>
-                          <button
-                            className="secondary-button compact-button danger-button"
-                            type="button"
-                            disabled={
-                              pendingAction === `archive:${competition.id}`
+                    ) : (
+                      <>
+                        <td>{competition.name}</td>
+                        <td>{competition.slug}</td>
+                        <td>{competition.sportId}</td>
+                        <td>{competition.shortName ?? "—"}</td>
+                        <td>{competition.countryCode ?? "—"}</td>
+                        <td>{competition.legacyId ?? "—"}</td>
+                        <td>
+                          <span
+                            className={
+                              competition.isActive
+                                ? "status-pill status-pill-active"
+                                : "status-pill status-pill-inactive"
                             }
-                            onClick={() => void handleArchive(competition)}
                           >
-                            {pendingAction === `archive:${competition.id}`
-                              ? "Archiving..."
-                              : "Archive"}
-                          </button>
-                        </div>
-                      </td>
-                    </>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                            {competition.isActive ? "Active" : "Inactive"}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="row-actions">
+                            <button
+                              className="secondary-button compact-button"
+                              type="button"
+                              onClick={() => startEditing(competition)}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              className="secondary-button compact-button danger-button"
+                              type="button"
+                              disabled={
+                                pendingAction === `archive:${competition.id}`
+                              }
+                              onClick={() => void handleArchive(competition)}
+                            >
+                              {pendingAction === `archive:${competition.id}`
+                                ? "Archiving..."
+                                : "Archive"}
+                            </button>
+                          </div>
+                        </td>
+                      </>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
       ) : null}
     </section>
   );

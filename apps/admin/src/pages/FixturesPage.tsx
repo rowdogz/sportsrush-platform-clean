@@ -436,6 +436,35 @@ export function FixturesPage() {
   const allVisibleSelected =
     visibleFixtures.length > 0 &&
     visibleFixtures.every((fixture) => selectedFixtureIds.includes(fixture.id));
+  const fixtureMetrics =
+    state.status === "success"
+      ? [
+          {
+            label: "Visible fixtures",
+            value: state.fixtures.length,
+            description: "Current table result set",
+          },
+          {
+            label: "Selected",
+            value: selectedFixtures.length,
+            description: "Ready for safe bulk actions",
+          },
+          {
+            label: "Scheduled",
+            value: state.fixtures.filter(
+              (fixture) => fixture.status === "scheduled",
+            ).length,
+            description: "Pending kickoff or result entry",
+          },
+          {
+            label: "Completed",
+            value: state.fixtures.filter(
+              (fixture) => fixture.status === "completed",
+            ).length,
+            description: "Available for corrections only",
+          },
+        ]
+      : [];
 
   const loadFixtures = useCallback(
     async (
@@ -863,269 +892,308 @@ export function FixturesPage() {
         <p>Manage fixture schedules, statuses, and results.</p>
       </div>
 
-      <form className="admin-form" onSubmit={handleFilterSubmit}>
-        <div className="form-heading">
-          <h3>Filter fixtures</h3>
+      {fixtureMetrics.length > 0 ? (
+        <div className="ops-summary-grid" aria-label="Fixture overview">
+          {fixtureMetrics.map((metric) => (
+            <article className="ops-summary-card" key={metric.label}>
+              <span>{metric.label}</span>
+              <strong>{metric.value}</strong>
+              <p>{metric.description}</p>
+            </article>
+          ))}
         </div>
-        <div className="form-grid">
-          <label>
-            Filter competition
-            <select
-              value={filters.competitionId}
-              onChange={(event) =>
-                setFilters({ ...filters, competitionId: event.target.value })
-              }
-            >
-              <option value="">All competitions</option>
-              {references.competitions.map((competition) => (
-                <option key={competition.id} value={competition.id}>
-                  {competition.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Filter season ID
-            <input
-              value={filters.seasonId}
-              onChange={(event) =>
-                setFilters({ ...filters, seasonId: event.target.value })
-              }
-            />
-          </label>
-          <label>
-            Filter round
-            <input
-              value={filters.round}
-              onChange={(event) =>
-                setFilters({ ...filters, round: event.target.value })
-              }
-            />
-          </label>
-          <label>
-            Filter status
-            <select
-              value={filters.status}
-              onChange={(event) =>
-                setFilters({ ...filters, status: event.target.value })
-              }
-            >
-              <option value="">All statuses</option>
-              {fixtureStatuses.map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Date from
-            <input
-              value={filters.dateFrom}
-              onChange={(event) =>
-                setFilters({ ...filters, dateFrom: event.target.value })
-              }
-            />
-          </label>
-          <label>
-            Date to
-            <input
-              value={filters.dateTo}
-              onChange={(event) =>
-                setFilters({ ...filters, dateTo: event.target.value })
-              }
-            />
-          </label>
-        </div>
-        <button className="secondary-button" type="submit">
-          Apply filters
-        </button>
-      </form>
+      ) : null}
 
-      <form className="admin-form" onSubmit={handleCreateSubmit}>
-        <div className="form-heading">
-          <h3>Create fixture</h3>
-        </div>
-        <div className="form-grid">
-          <label>
-            Sport ID
-            <input
-              value={createValues.sportId}
-              onChange={(event) =>
-                setCreateValues({
-                  ...createValues,
-                  sportId: event.target.value,
-                })
-              }
-            />
-          </label>
-          <label>
-            Competition
-            <select
-              value={createValues.competitionId}
-              onChange={(event) =>
-                setCreateValues({
-                  ...createValues,
-                  competitionId: event.target.value,
-                })
-              }
-            >
-              <option value="">Select competition</option>
-              {references.competitions.map((competition) => (
-                <option key={competition.id} value={competition.id}>
-                  {competition.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Season ID
-            <input
-              value={createValues.seasonId}
-              onChange={(event) => updateCreateSeasonId(event.target.value)}
-            />
-          </label>
-          <label>
-            Round ID
-            <select
-              value={createValues.roundId}
-              onChange={(event) =>
-                setCreateValues({
-                  ...createValues,
-                  roundId: event.target.value,
-                })
-              }
-            >
-              <option value="">No linked round</option>
-              {references.rounds.map((round) => (
-                <option key={round.id} value={round.id}>
-                  {round.roundName}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Round
-            <input
-              value={createValues.round}
-              onChange={(event) =>
-                setCreateValues({ ...createValues, round: event.target.value })
-              }
-            />
-          </label>
-          <label>
-            Round name
-            <input
-              value={createValues.roundName}
-              onChange={(event) =>
-                setCreateValues({
-                  ...createValues,
-                  roundName: event.target.value,
-                })
-              }
-            />
-          </label>
-          <label>
-            Round order
-            <input
-              value={createValues.roundOrder}
-              onChange={(event) =>
-                setCreateValues({
-                  ...createValues,
-                  roundOrder: event.target.value,
-                })
-              }
-            />
-          </label>
-          <label>
-            Home team
-            <select
-              value={createValues.homeTeamId}
-              onChange={(event) =>
-                setCreateValues({
-                  ...createValues,
-                  homeTeamId: event.target.value,
-                })
-              }
-            >
-              <option value="">Select home team</option>
-              {references.teams.map((team) => (
-                <option key={team.id} value={team.id}>
-                  {team.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Away team
-            <select
-              value={createValues.awayTeamId}
-              onChange={(event) =>
-                setCreateValues({
-                  ...createValues,
-                  awayTeamId: event.target.value,
-                })
-              }
-            >
-              <option value="">Select away team</option>
-              {references.teams.map((team) => (
-                <option key={team.id} value={team.id}>
-                  {team.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Scheduled at
-            <input
-              value={createValues.scheduledAt}
-              onChange={(event) =>
-                setCreateValues({
-                  ...createValues,
-                  scheduledAt: event.target.value,
-                })
-              }
-            />
-          </label>
-          <label>
-            Venue
-            <input
-              value={createValues.venueName}
-              onChange={(event) =>
-                setCreateValues({
-                  ...createValues,
-                  venueName: event.target.value,
-                })
-              }
-            />
-          </label>
-          <label>
-            Status
-            <select
-              value={createValues.status}
-              onChange={(event) =>
-                setCreateValues({
-                  ...createValues,
-                  status: event.target.value as FixtureStatus,
-                })
-              }
-            >
-              {fixtureStatuses.map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-        <button
-          className="primary-button"
-          type="submit"
-          disabled={pendingAction === "create"}
+      <div className="ops-stage-grid ops-stage-grid-wide">
+        <form
+          className="admin-form ops-section-card"
+          onSubmit={handleFilterSubmit}
         >
-          {pendingAction === "create" ? "Creating..." : "Create fixture"}
-        </button>
-      </form>
+          <div className="form-heading ops-section-card-header">
+            <div>
+              <h3>Filter fixtures</h3>
+              <p>
+                Refine the operational queue before editing, scoring, or bulk
+                updates.
+              </p>
+            </div>
+          </div>
+          <div className="form-grid">
+            <label>
+              Filter competition
+              <select
+                value={filters.competitionId}
+                onChange={(event) =>
+                  setFilters({ ...filters, competitionId: event.target.value })
+                }
+              >
+                <option value="">All competitions</option>
+                {references.competitions.map((competition) => (
+                  <option key={competition.id} value={competition.id}>
+                    {competition.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Filter season ID
+              <input
+                value={filters.seasonId}
+                onChange={(event) =>
+                  setFilters({ ...filters, seasonId: event.target.value })
+                }
+              />
+            </label>
+            <label>
+              Filter round
+              <input
+                value={filters.round}
+                onChange={(event) =>
+                  setFilters({ ...filters, round: event.target.value })
+                }
+              />
+            </label>
+            <label>
+              Filter status
+              <select
+                value={filters.status}
+                onChange={(event) =>
+                  setFilters({ ...filters, status: event.target.value })
+                }
+              >
+                <option value="">All statuses</option>
+                {fixtureStatuses.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Date from
+              <input
+                value={filters.dateFrom}
+                onChange={(event) =>
+                  setFilters({ ...filters, dateFrom: event.target.value })
+                }
+              />
+            </label>
+            <label>
+              Date to
+              <input
+                value={filters.dateTo}
+                onChange={(event) =>
+                  setFilters({ ...filters, dateTo: event.target.value })
+                }
+              />
+            </label>
+          </div>
+          <div className="form-actions">
+            <button className="secondary-button" type="submit">
+              Apply filters
+            </button>
+          </div>
+        </form>
+
+        <form
+          className="admin-form ops-section-card"
+          onSubmit={handleCreateSubmit}
+        >
+          <div className="form-heading ops-section-card-header">
+            <div>
+              <h3>Create fixture</h3>
+              <p>
+                Create and stage new fixtures without leaving the main
+                operational surface.
+              </p>
+            </div>
+          </div>
+          <div className="form-grid">
+            <label>
+              Sport ID
+              <input
+                value={createValues.sportId}
+                onChange={(event) =>
+                  setCreateValues({
+                    ...createValues,
+                    sportId: event.target.value,
+                  })
+                }
+              />
+            </label>
+            <label>
+              Competition
+              <select
+                value={createValues.competitionId}
+                onChange={(event) =>
+                  setCreateValues({
+                    ...createValues,
+                    competitionId: event.target.value,
+                  })
+                }
+              >
+                <option value="">Select competition</option>
+                {references.competitions.map((competition) => (
+                  <option key={competition.id} value={competition.id}>
+                    {competition.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Season ID
+              <input
+                value={createValues.seasonId}
+                onChange={(event) => updateCreateSeasonId(event.target.value)}
+              />
+            </label>
+            <label>
+              Round ID
+              <select
+                value={createValues.roundId}
+                onChange={(event) =>
+                  setCreateValues({
+                    ...createValues,
+                    roundId: event.target.value,
+                  })
+                }
+              >
+                <option value="">No linked round</option>
+                {references.rounds.map((round) => (
+                  <option key={round.id} value={round.id}>
+                    {round.roundName}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Round
+              <input
+                value={createValues.round}
+                onChange={(event) =>
+                  setCreateValues({
+                    ...createValues,
+                    round: event.target.value,
+                  })
+                }
+              />
+            </label>
+            <label>
+              Round name
+              <input
+                value={createValues.roundName}
+                onChange={(event) =>
+                  setCreateValues({
+                    ...createValues,
+                    roundName: event.target.value,
+                  })
+                }
+              />
+            </label>
+            <label>
+              Round order
+              <input
+                value={createValues.roundOrder}
+                onChange={(event) =>
+                  setCreateValues({
+                    ...createValues,
+                    roundOrder: event.target.value,
+                  })
+                }
+              />
+            </label>
+            <label>
+              Home team
+              <select
+                value={createValues.homeTeamId}
+                onChange={(event) =>
+                  setCreateValues({
+                    ...createValues,
+                    homeTeamId: event.target.value,
+                  })
+                }
+              >
+                <option value="">Select home team</option>
+                {references.teams.map((team) => (
+                  <option key={team.id} value={team.id}>
+                    {team.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Away team
+              <select
+                value={createValues.awayTeamId}
+                onChange={(event) =>
+                  setCreateValues({
+                    ...createValues,
+                    awayTeamId: event.target.value,
+                  })
+                }
+              >
+                <option value="">Select away team</option>
+                {references.teams.map((team) => (
+                  <option key={team.id} value={team.id}>
+                    {team.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Scheduled at
+              <input
+                value={createValues.scheduledAt}
+                onChange={(event) =>
+                  setCreateValues({
+                    ...createValues,
+                    scheduledAt: event.target.value,
+                  })
+                }
+              />
+            </label>
+            <label>
+              Venue
+              <input
+                value={createValues.venueName}
+                onChange={(event) =>
+                  setCreateValues({
+                    ...createValues,
+                    venueName: event.target.value,
+                  })
+                }
+              />
+            </label>
+            <label>
+              Status
+              <select
+                value={createValues.status}
+                onChange={(event) =>
+                  setCreateValues({
+                    ...createValues,
+                    status: event.target.value as FixtureStatus,
+                  })
+                }
+              >
+                {fixtureStatuses.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <div className="form-actions">
+            <button
+              className="primary-button"
+              type="submit"
+              disabled={pendingAction === "create"}
+            >
+              {pendingAction === "create" ? "Creating..." : "Create fixture"}
+            </button>
+          </div>
+        </form>
+      </div>
 
       <AdminFeedback feedback={feedback} />
 
@@ -1148,7 +1216,19 @@ export function FixturesPage() {
       ) : null}
 
       {state.status === "success" && state.fixtures.length > 0 ? (
-        <>
+        <section
+          className="ops-section-card"
+          aria-labelledby="fixtures-table-title"
+        >
+          <div className="ops-table-toolbar">
+            <div>
+              <h3 id="fixtures-table-title">Fixture operations</h3>
+              <p>
+                Use filters, inline editing, result entry, and bulk actions from
+                the same workspace.
+              </p>
+            </div>
+          </div>
           <AdminTablePreferences
             columns={fixtureTableColumns}
             density={tablePreferences.density}
@@ -1662,7 +1742,7 @@ export function FixturesPage() {
               </tbody>
             </table>
           </div>
-        </>
+        </section>
       ) : null}
     </section>
   );
