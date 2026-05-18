@@ -1048,6 +1048,89 @@ a {
   margin: 0;
 }
 
+.operations-panel {
+  margin-bottom: 1.5rem;
+  padding: 1.25rem;
+}
+
+.operations-inline-form {
+  margin-bottom: 1rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.operations-health-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+}
+
+.operations-health-item {
+  border: 1px solid #d9e2ef;
+  border-radius: 0.9rem;
+  background: #f8fbff;
+  display: grid;
+  gap: 0.45rem;
+  padding: 1rem;
+}
+
+.operations-health-item strong {
+  color: #152033;
+}
+
+.operations-health-item span {
+  color: #1f5eff;
+  font-size: 1.3rem;
+  font-weight: 800;
+}
+
+.operations-health-item p {
+  color: #52627a;
+  margin: 0;
+}
+
+.operations-health-item-muted span {
+  color: #52627a;
+}
+
+.operations-correction-panel {
+  margin-top: 0.75rem;
+}
+
+.operations-timeline {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.operations-timeline-item {
+  border: 1px solid #d9e2ef;
+  border-radius: 0.9rem;
+  background: #f8fbff;
+  padding: 0.9rem 1rem;
+}
+
+.operations-timeline-item header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.35rem;
+}
+
+.operations-timeline-item header span,
+.operations-timeline-item p,
+.operations-timeline-item small {
+  color: #52627a;
+}
+
+.operations-timeline-item p,
+.operations-timeline-item small {
+  display: block;
+  margin: 0.15rem 0 0;
+}
+
 @media (max-width: 820px) {
   .admin-shell-grid {
     grid-template-columns: 1fr;
@@ -1190,6 +1273,15 @@ a {
 
   .ops-summary-grid {
     grid-template-columns: 1fr;
+  }
+
+  .operations-health-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .operations-timeline-item header {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .bulk-actions-panel {

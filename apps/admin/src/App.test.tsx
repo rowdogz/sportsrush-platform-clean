@@ -170,6 +170,7 @@ describe("Admin app shell", () => {
       "aria-current",
       "page",
     );
+    expect(screen.getByRole("button", { name: "Operations" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Competitions" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Seasons" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Teams" })).toBeTruthy();
@@ -242,6 +243,29 @@ describe("Admin app shell", () => {
     fireEvent.click(screen.getByRole("button", { name: "Teams" }));
     expect(await screen.findByRole("heading", { name: "Teams" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Create team" })).toBeTruthy();
+  });
+
+  it("opens the Operations page from admin navigation", async () => {
+    window.localStorage.setItem(
+      "sr_admin_access_token",
+      accessTokenForRole("superadmin"),
+    );
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockImplementation(() => Promise.resolve(emptyPaginatedResponse())),
+    );
+
+    render(<App />);
+
+    await screen.findByRole("heading", { name: "Dashboard" });
+
+    fireEvent.click(screen.getByRole("button", { name: "Operations" }));
+    expect(
+      await screen.findByRole("heading", { name: "Operations" }),
+    ).toBeTruthy();
+    expect(screen.getByText("Automation health")).toBeTruthy();
   });
 
   it("opens the Users page from admin navigation", async () => {

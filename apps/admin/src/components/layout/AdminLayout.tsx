@@ -5,6 +5,7 @@ import { AdminTopbar } from "./AdminTopbar";
 
 export type AdminScreen =
   | "dashboard"
+  | "operations"
   | "competitions"
   | "seasons"
   | "teams"
