@@ -936,6 +936,118 @@ a {
   margin: 0;
 }
 
+.ops-summary-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  margin-bottom: 1.5rem;
+}
+
+.ops-summary-card {
+  border: 1px solid #d9e2ef;
+  border-radius: 1rem;
+  background: linear-gradient(
+    180deg,
+    rgb(255 255 255 / 98%),
+    rgb(244 247 251 / 96%)
+  );
+  box-shadow: 0 12px 34px rgb(16 32 51 / 6%);
+  padding: 1.15rem 1.2rem;
+}
+
+.ops-summary-card span {
+  color: #52627a;
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.55rem;
+  text-transform: uppercase;
+}
+
+.ops-summary-card strong {
+  color: #152033;
+  display: block;
+  font-size: 1.9rem;
+  line-height: 1;
+  margin-bottom: 0.55rem;
+}
+
+.ops-summary-card p {
+  color: #52627a;
+  margin: 0;
+}
+
+.ops-stage-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: minmax(0, 2fr) minmax(18rem, 1fr);
+  margin-bottom: 1.5rem;
+}
+
+.ops-stage-grid-wide {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ops-section-card {
+  border: 1px solid #d9e2ef;
+  border-radius: 1rem;
+  background: rgb(255 255 255 / 92%);
+  box-shadow: 0 12px 34px rgb(16 32 51 / 6%);
+}
+
+.ops-section-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.ops-section-card-header h3 {
+  margin: 0 0 0.25rem;
+}
+
+.ops-section-card-header p {
+  color: #52627a;
+  margin: 0;
+}
+
+.ops-guidance-panel {
+  display: grid;
+  align-content: start;
+  gap: 1.25rem;
+  padding: 1.5rem;
+}
+
+.ops-guidance-list {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding-left: 1.1rem;
+  color: #3d4c63;
+}
+
+.ops-guidance-list li::marker {
+  color: #1f5eff;
+}
+
+.ops-table-toolbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.ops-table-toolbar h3 {
+  margin: 0 0 0.25rem;
+}
+
+.ops-table-toolbar p {
+  color: #52627a;
+  margin: 0;
+}
+
 @media (max-width: 820px) {
   .admin-shell-grid {
     grid-template-columns: 1fr;
@@ -1012,7 +1124,9 @@ a {
   .form-grid,
   .inline-edit-form,
   .bulk-actions-grid,
-  .table-preferences-panel {
+  .table-preferences-panel,
+  .ops-stage-grid,
+  .ops-stage-grid-wide {
     grid-template-columns: 1fr;
   }
 
@@ -1071,6 +1185,10 @@ a {
   }
 
   .dashboard-card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ops-summary-grid {
     grid-template-columns: 1fr;
   }
 
