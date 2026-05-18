@@ -21,6 +21,7 @@ The seed file lives at `apps/api/seeds/dev-sportsrush.sql` and includes:
 - Representative teams and aliases.
 - Scheduled, postponed, and completed fixtures with realistic venues and scores.
 - A dev superadmin user for logging into the admin app.
+- A regular demo user for public web/mobile prediction flows.
 - A few audit events so dashboard/audit screens have data.
 
 ## Dev admin login
@@ -31,12 +32,17 @@ Use this account only for local development:
 - Password: `password-123`
 - Role: `superadmin`
 
+Public app demo user:
+
+- Email: `fan@sportsrush.test`
+- Password: `password-123`
+- Role: `user`
+
 ## Apply from a clean local D1 database
 
 From the repository root:
 
 ```bash
-cd apps/api
 pnpm db:migrate:local
 pnpm db:seed:dev
 ```
@@ -56,35 +62,36 @@ The local D1 SQLite file is created under `apps/api/.wrangler/`, which is gitign
 The seed command is idempotent. To refresh seeded rows after code changes:
 
 ```bash
-cd apps/api
 pnpm db:seed:dev
 ```
 
 Existing seeded IDs are updated in place. Data you create manually through the admin UI is left alone unless it reuses the same IDs or unique keys as this seed file.
 
-## Start local admin testing
+## Start local platform testing
 
-In one terminal:
-
-```bash
-cd apps/api
-pnpm dev -- --local
-```
-
-In another terminal:
+From the repository root:
 
 ```bash
-cd apps/admin
+pnpm db:reset:local
 pnpm dev
 ```
 
-Make sure `apps/admin/.env.local` points to the local API, for example:
+Expected local ports:
+
+- API: `http://localhost:8788`
+- Web: `http://localhost:3000`
+- Admin: `http://localhost:3001`
+- Expo Metro: `http://localhost:8081`
+
+If you only need API, web, and admin:
 
 ```bash
-VITE_API_BASE_URL=http://localhost:8788
+pnpm dev:core
 ```
 
-Then open the admin app and log in with the dev admin credentials above. The dashboard, competitions, seasons, rounds, teams, aliases, fixtures, users, and audit log screens should show seeded data.
+Then open the admin app and log in with the dev admin credentials above. The
+dashboard, competitions, seasons, rounds, teams, aliases, fixtures, users,
+private leagues, operations, and audit log screens should show seeded data.
 
 ## Guardrails
 

@@ -56,7 +56,12 @@ export class ApiError extends Error {
 
 function getApiBaseUrl(): string {
   if (import.meta.env.MODE === "test") return "";
-  return (import.meta.env.VITE_API_BASE_URL ?? "").trim().replace(/\/$/, "");
+  const configuredBaseUrl = (import.meta.env.VITE_API_BASE_URL ?? "")
+    .trim()
+    .replace(/\/$/, "");
+  if (configuredBaseUrl) return configuredBaseUrl;
+  if (import.meta.env.DEV) return "http://localhost:8788";
+  return "";
 }
 
 export function setAccessTokenProvider(provider: AccessTokenProvider): void {

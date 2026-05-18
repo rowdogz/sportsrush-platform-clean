@@ -4,7 +4,7 @@
   "private": true,
   "description": "SportsRush API — Cloudflare Workers + Hono",
   "scripts": {
-    "dev": "wrangler dev",
+    "dev": "wrangler dev --port 8788",
     "deploy": "wrangler deploy",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src --ext .ts",
