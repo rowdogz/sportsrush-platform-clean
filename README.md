@@ -47,10 +47,13 @@ docs/
 # Install dependencies
 pnpm install
 
-# Copy environment template
-cp .env.example .env
+# Copy the local API secrets template
+cp apps/api/.dev.vars.example apps/api/.dev.vars
 
-# Run all apps in dev mode
+# Reset, migrate, and seed the local D1 database
+pnpm db:reset:local
+
+# Run the full platform locally
 pnpm dev
 ```
 
@@ -62,16 +65,22 @@ For local API database setup and realistic admin seed data, see
 
 ## Commands
 
-| Command             | Description                        |
-| ------------------- | ---------------------------------- |
-| `pnpm dev`          | Start all apps in development mode |
-| `pnpm build`        | Build all apps and packages        |
-| `pnpm test`         | Run all unit tests                 |
-| `pnpm lint`         | Lint all packages                  |
-| `pnpm typecheck`    | Type-check all packages            |
-| `pnpm format`       | Format all files with Prettier     |
-| `pnpm format:check` | Check formatting without writing   |
-| `pnpm clean`        | Remove all build artefacts         |
+| Command                  | Description                              |
+| ------------------------ | ---------------------------------------- |
+| `pnpm dev`               | Start API, web, admin, and Expo together |
+| `pnpm dev:core`          | Start API, web, and admin only           |
+| `pnpm dev:mobile`        | Start Expo only                          |
+| `pnpm build`             | Build all apps and packages              |
+| `pnpm test`              | Run all unit tests                       |
+| `pnpm lint`              | Lint all packages                        |
+| `pnpm typecheck`         | Type-check all packages                  |
+| `pnpm db:migrate:local`  | Apply local D1 migrations                |
+| `pnpm db:seed:dev`       | Seed the local D1 demo dataset           |
+| `pnpm db:reset:local`    | Recreate and reseed local D1             |
+| `pnpm healthcheck:local` | Verify local API/web/admin               |
+| `pnpm format`            | Format all files with Prettier           |
+| `pnpm format:check`      | Check formatting without writing         |
+| `pnpm clean`             | Remove all build artefacts               |
 
 ## Key Constraints
 

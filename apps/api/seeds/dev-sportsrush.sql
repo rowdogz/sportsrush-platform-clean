@@ -30,6 +30,20 @@ VALUES
     NULL,
     '2026-01-01T00:00:00.000Z',
     '2026-01-01T00:00:00.000Z'
+  ),
+  (
+    'sr-demo-user',
+    'fan@sportsrush.test',
+    'fan@sportsrush.test',
+    '2026-01-01T00:00:00.000Z',
+    '$pbkdf2-sha256$600000$c3ItZGV2LXNlZWQtc2FsdA$K2bAKdrLwnAmp8OqELBVQ0_9gXmcl2NVyDoshF3Sz7U',
+    'user',
+    1,
+    0,
+    NULL,
+    NULL,
+    '2026-01-01T00:00:00.000Z',
+    '2026-01-01T00:00:00.000Z'
   )
 ON CONFLICT(id) DO UPDATE SET
   email = excluded.email,
@@ -43,7 +57,8 @@ ON CONFLICT(id) DO UPDATE SET
 INSERT INTO user_profiles
   (user_id, display_name, avatar_url, timezone, created_at, updated_at)
 VALUES
-  ('sr-dev-superadmin', 'SportsRush Dev Admin', NULL, 'Europe/London', '2026-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z')
+  ('sr-dev-superadmin', 'SportsRush Dev Admin', NULL, 'Europe/London', '2026-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z'),
+  ('sr-demo-user', 'SportsRush Demo Fan', NULL, 'Europe/London', '2026-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z')
 ON CONFLICT(user_id) DO UPDATE SET
   display_name = excluded.display_name,
   avatar_url = excluded.avatar_url,
@@ -244,7 +259,8 @@ ON CONFLICT(id) DO UPDATE SET
 INSERT INTO private_league_members
   (id, private_league_id, user_id, role, is_active, joined_at, updated_at)
 VALUES
-  ('league-member-dev-admin', 'league-dev-super-league', 'sr-dev-superadmin', 'owner', 1, '2026-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z')
+  ('league-member-dev-admin', 'league-dev-super-league', 'sr-dev-superadmin', 'owner', 1, '2026-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z'),
+  ('league-member-demo-user', 'league-dev-super-league', 'sr-demo-user', 'member', 1, '2026-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z')
 ON CONFLICT(private_league_id, user_id) DO UPDATE SET
   role = excluded.role,
   is_active = excluded.is_active,
@@ -262,7 +278,10 @@ INSERT INTO predictions
 VALUES
   ('prediction-dev-admin-001', 'sr-dev-superadmin', 'fixture-sl-2026-001', 24, 18, '2026-02-01T12:00:00.000Z', '2026-02-01T12:00:00.000Z'),
   ('prediction-dev-admin-002', 'sr-dev-superadmin', 'fixture-sl-2026-002', 18, 20, '2026-02-01T12:00:00.000Z', '2026-02-01T12:00:00.000Z'),
-  ('prediction-dev-admin-003', 'sr-dev-superadmin', 'fixture-sl-2026-005', 28, 12, '2026-05-01T12:00:00.000Z', '2026-05-01T12:00:00.000Z')
+  ('prediction-dev-admin-003', 'sr-dev-superadmin', 'fixture-sl-2026-005', 28, 12, '2026-05-01T12:00:00.000Z', '2026-05-01T12:00:00.000Z'),
+  ('prediction-demo-user-003', 'sr-demo-user', 'fixture-sl-2026-001', 20, 18, '2026-02-01T12:30:00.000Z', '2026-02-01T12:30:00.000Z'),
+  ('prediction-demo-user-001', 'sr-demo-user', 'fixture-sl-2026-003', 18, 14, '2026-02-19T12:00:00.000Z', '2026-02-19T12:00:00.000Z'),
+  ('prediction-demo-user-002', 'sr-demo-user', 'fixture-nrl-2026-001', 22, 20, '2026-03-05T08:00:00.000Z', '2026-03-05T08:00:00.000Z')
 ON CONFLICT(user_id, fixture_id) DO UPDATE SET
   home_score = excluded.home_score,
   away_score = excluded.away_score,
@@ -275,7 +294,8 @@ INSERT INTO prediction_scores
 VALUES
   ('prediction-score-dev-admin-001', 'prediction-dev-admin-001', 'sr-dev-superadmin', 'fixture-sl-2026-001', 'comp-super-league', 'season-super-league-2026', 'round-sl-2026-01', '2026-02-12T22:00:00.000Z', 11, 5, 3, 1, 1, 1, '{"exactScore":5,"correctResult":3,"homeScore":1,"awayScore":1,"goalDifference":1,"total":11}'),
   ('prediction-score-dev-admin-002', 'prediction-dev-admin-002', 'sr-dev-superadmin', 'fixture-sl-2026-002', 'comp-super-league', 'season-super-league-2026', 'round-sl-2026-01', '2026-02-13T22:00:00.000Z', 5, 0, 3, 0, 1, 1, '{"exactScore":0,"correctResult":3,"homeScore":0,"awayScore":1,"goalDifference":1,"total":5}'),
-  ('prediction-score-dev-admin-003', 'prediction-dev-admin-003', 'sr-dev-superadmin', 'fixture-sl-2026-005', 'comp-super-league', 'season-super-league-2026', 'round-sl-2026-03', '2026-05-15T22:00:00.000Z', 5, 0, 3, 0, 1, 1, '{"exactScore":0,"correctResult":3,"homeScore":0,"awayScore":1,"goalDifference":1,"total":5}')
+  ('prediction-score-dev-admin-003', 'prediction-dev-admin-003', 'sr-dev-superadmin', 'fixture-sl-2026-005', 'comp-super-league', 'season-super-league-2026', 'round-sl-2026-03', '2026-05-15T22:00:00.000Z', 5, 0, 3, 0, 1, 1, '{"exactScore":0,"correctResult":3,"homeScore":0,"awayScore":1,"goalDifference":1,"total":5}'),
+  ('prediction-score-demo-user-001', 'prediction-demo-user-003', 'sr-demo-user', 'fixture-sl-2026-001', 'comp-super-league', 'season-super-league-2026', 'round-sl-2026-01', '2026-02-12T22:00:00.000Z', 4, 0, 3, 0, 1, 0, '{"exactScore":0,"correctResult":3,"homeScore":0,"awayScore":1,"goalDifference":0,"total":4}')
 ON CONFLICT(prediction_id, fixture_id) DO UPDATE SET
   scored_at = excluded.scored_at,
   total_points = excluded.total_points,

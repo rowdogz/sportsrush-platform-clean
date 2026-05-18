@@ -13,8 +13,17 @@ This app is intentionally thin in PR-42:
 Run locally after installing workspace dependencies:
 
 ```sh
-pnpm --filter @sr/mobile start
+pnpm --filter @sr/mobile dev
 ```
 
-Follow-up work should add full login/register/reset screens, native navigation
-tabs, device-specific polish, and production environment configuration.
+For iOS Simulator on the same Mac, the default API base URL of
+`http://localhost:8788` works with the local Workers API.
+
+For Expo Go on a physical device, create `apps/mobile/.env.local` with your Mac's
+LAN IP, for example:
+
+```sh
+EXPO_PUBLIC_API_BASE_URL=http://192.168.1.249:8788
+```
+
+Then restart Expo.

@@ -4,11 +4,17 @@
   "version": "0.0.1",
   "description": "SportsRush platform monorepo",
   "scripts": {
-    "dev": "turbo dev",
+    "dev": "turbo dev --filter=@sr/api --filter=@sr/web --filter=@sr/admin --filter=@sr/mobile",
+    "dev:core": "turbo dev --filter=@sr/api --filter=@sr/web --filter=@sr/admin",
+    "dev:mobile": "pnpm --filter @sr/mobile dev",
     "build": "turbo build",
     "test": "turbo test",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
+    "db:migrate:local": "pnpm --filter @sr/api db:migrate:local",
+    "db:seed:dev": "pnpm --filter @sr/api db:seed:dev",
+    "db:reset:local": "node scripts/local/reset-local-db.mjs",
+    "healthcheck:local": "node scripts/local/healthcheck-local.mjs",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md,yaml}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,json,md,yaml}\"",
     "clean": "turbo clean && find . -name 'node_modules' -type d -prune -exec rm -rf {} + 2>/dev/null; true"

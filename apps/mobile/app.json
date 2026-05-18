@@ -8,7 +8,7 @@
     "scheme": "sportsrush",
     "platforms": ["ios", "android"],
     "extra": {
-      "apiBaseUrl": "http://localhost:8787"
+      "apiBaseUrl": "http://localhost:8788"
     }
   }
 }

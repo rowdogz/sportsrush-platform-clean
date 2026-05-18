@@ -1,6 +1,25 @@
 import type { LeaderboardEntry, PaginatedResult, PublicFixture } from "./types";
 
-const API_BASE_URL = "http://localhost:8787";
+declare const process:
+  | {
+      readonly env?: Record<string, string | undefined>;
+    }
+  | undefined;
+
+const DEFAULT_API_BASE_URL = "http://localhost:8788";
+
+function getApiBaseUrl(): string {
+  const configuredUrl =
+    typeof process !== "undefined" &&
+    process.env &&
+    typeof process.env.EXPO_PUBLIC_API_BASE_URL === "string"
+      ? process.env.EXPO_PUBLIC_API_BASE_URL.trim()
+      : "";
+
+  return (configuredUrl || DEFAULT_API_BASE_URL).replace(/\/$/, "");
+}
+
+const API_BASE_URL = getApiBaseUrl();
 
 async function request<T>(
   path: string,
