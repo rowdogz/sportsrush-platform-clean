@@ -1,5 +1,7 @@
-import type { ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useAuthSession } from "../../contexts/AuthSessionProvider";
+import { AdminSidebar } from "./AdminSidebar";
+import { AdminTopbar } from "./AdminTopbar";
 
 export type AdminScreen =
   | "dashboard"
@@ -31,34 +33,48 @@ export function AdminLayout({
   navItems,
   onNavigate,
 }: AdminLayoutProps) {
-  const { logout } = useAuthSession();
+  const { logout, userRole } = useAuthSession();
+  const [navigationOpen, setNavigationOpen] = useState(false);
+  const activeLabel = useMemo(
+    () =>
+      navItems.find((item) => item.id === activeScreen)?.label ??
+      "Admin screen",
+    [activeScreen, navItems],
+  );
 
   return (
     <div className="admin-shell">
-      <header className="admin-header">
-        <h1>SportsRush Admin</h1>
-        <button className="secondary-button" type="button" onClick={logout}>
-          Log out
-        </button>
-      </header>
-      <nav className="admin-nav" aria-label="Admin navigation">
-        {navItems.map((item) => (
-          <button
-            key={item.id}
-            className={
-              item.id === activeScreen
-                ? "nav-button nav-button-active"
-                : "nav-button"
-            }
-            type="button"
-            aria-current={item.id === activeScreen ? "page" : undefined}
-            onClick={() => onNavigate(item.id)}
-          >
-            {item.label}
-          </button>
-        ))}
-      </nav>
-      <main className="admin-main">{children}</main>
+      <div
+        className={
+          navigationOpen
+            ? "admin-shell-grid admin-shell-grid-open"
+            : "admin-shell-grid"
+        }
+      >
+        <div
+          className="admin-nav-backdrop"
+          aria-hidden="true"
+          onClick={() => setNavigationOpen(false)}
+        />
+        <div className="admin-nav-rail">
+          <AdminSidebar
+            activeScreen={activeScreen}
+            navItems={navItems}
+            onNavigate={onNavigate}
+            onClose={() => setNavigationOpen(false)}
+          />
+        </div>
+
+        <div className="admin-content">
+          <AdminTopbar
+            currentLabel={activeLabel}
+            onLogout={logout}
+            onToggleNavigation={() => setNavigationOpen((open) => !open)}
+            userRole={userRole}
+          />
+          <main className="admin-main">{children}</main>
+        </div>
+      </div>
     </div>
   );
 }
