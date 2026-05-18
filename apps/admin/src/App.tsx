@@ -8,6 +8,7 @@ import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { CompetitionsPage } from "./pages/CompetitionsPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { FixturesPage } from "./pages/FixturesPage";
+import { OperationsPage } from "./pages/OperationsPage";
 import { RoundsPage } from "./pages/RoundsPage";
 import { SeasonsPage } from "./pages/SeasonsPage";
 import { TeamAliasesPage } from "./pages/TeamAliasesPage";
@@ -23,6 +24,7 @@ import { AdminTableError } from "./components/admin/AdminTableState";
 
 const adminNavItems: readonly AdminNavItem[] = [
   { id: "dashboard", label: "Dashboard" },
+  { id: "operations", label: "Operations" },
   { id: "competitions", label: "Competitions" },
   { id: "seasons", label: "Seasons" },
   { id: "teams", label: "Teams" },
@@ -36,6 +38,7 @@ const adminNavItems: readonly AdminNavItem[] = [
 
 const screenPaths: Partial<Record<AdminScreen, string>> = {
   dashboard: "/",
+  operations: "/operations",
   audit: "/audit",
 };
 
@@ -60,6 +63,8 @@ function renderScreen(screen: AdminScreen) {
   switch (screen) {
     case "dashboard":
       return <DashboardPage />;
+    case "operations":
+      return <OperationsPage />;
     case "competitions":
       return <CompetitionsPage />;
     case "seasons":

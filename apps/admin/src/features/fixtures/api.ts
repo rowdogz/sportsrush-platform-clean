@@ -67,6 +67,16 @@ type RawFixtureResponse =
       readonly data: RawFixture;
     };
 
+type RawFixtureRecalculationResponse =
+  | {
+      readonly scoredPredictions: number;
+    }
+  | {
+      readonly data: {
+        readonly scoredPredictions: number;
+      };
+    };
+
 function toNullableString(value: string | null | undefined): string | null {
   if (value === null || value === undefined || value === "") {
     return null;
@@ -121,6 +131,12 @@ function normalizeFixture(fixture: RawFixture): AdminFixture {
 
 function normalizeFixtureResponse(response: RawFixtureResponse): AdminFixture {
   return normalizeFixture("data" in response ? response.data : response);
+}
+
+function normalizeFixtureRecalculationResponse(
+  response: RawFixtureRecalculationResponse,
+): { readonly scoredPredictions: number } {
+  return "data" in response ? response.data : response;
 }
 
 function appendOptionalParam(
@@ -234,6 +250,19 @@ export async function correctFixtureResult(
   );
 
   return normalizeFixtureResponse(response);
+}
+
+export async function recalculateFixturePredictionScores(
+  id: string,
+): Promise<{ readonly scoredPredictions: number }> {
+  const response = await apiRequest<RawFixtureRecalculationResponse>(
+    `/v1/predictions/fixtures/${id}/recalculate`,
+    {
+      method: "POST",
+    },
+  );
+
+  return normalizeFixtureRecalculationResponse(response);
 }
 
 export function toFixtureWritePayload(
